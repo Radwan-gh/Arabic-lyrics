@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { z } from "zod";
 import { prisma } from "@/lib/prisma";
 import { getCurrentUser } from "@/lib/session";
+import { sanitizeLyricsHtml } from "@/lib/sanitize-lyrics";
 
 const PAGE_SIZE = 12;
 
@@ -73,12 +74,17 @@ export async function POST(req: Request) {
 
   const { title, artist, album, content, tags } = parsed.data;
 
+  const cleanedContent = sanitizeLyricsHtml(content);
+  if (!cleanedContent.replace(/<[^>]*>/g, "").trim()) {
+    return NextResponse.json({ error: "نص الكلمات مطلوب" }, { status: 400 });
+  }
+
   const lyrics = await prisma.lyrics.create({
     data: {
       title,
       artist: artist || null,
       album: album || null,
-      content,
+      content: cleanedContent,
       tags: tags ?? [],
       createdById: session.userId,
     },

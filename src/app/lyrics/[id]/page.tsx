@@ -2,6 +2,9 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { getCurrentUser } from "@/lib/session";
 import { getLyricsAndIncrementViews } from "@/lib/lyrics";
+import { renderLyricsHtml } from "@/lib/render-lyrics";
+import { lyricsProseCls } from "@/lib/lyrics-prose";
+import { formatDate } from "@/lib/format";
 import { DeleteLyricsButton } from "@/components/DeleteLyricsButton";
 
 export default async function LyricsPage({ params }: { params: Promise<{ id: string }> }) {
@@ -20,11 +23,11 @@ export default async function LyricsPage({ params }: { params: Promise<{ id: str
         {lyrics.artist && <p className="text-emerald-700">{lyrics.artist}</p>}
         {lyrics.album && <p className="text-sm text-neutral-400">{lyrics.album}</p>}
         <p className="text-xs text-neutral-400">
-          أضافها {lyrics.createdBy?.name ?? "مستخدم محذوف"} · {lyrics.viewCount} مشاهدة
+          أضافها {lyrics.createdBy?.name ?? "مستخدم محذوف"} · {formatDate(lyrics.createdAt)} · {lyrics.viewCount} مشاهدة
         </p>
       </header>
 
-      <p className="whitespace-pre-wrap text-lg leading-loose">{lyrics.content}</p>
+      <div dir="rtl" className={lyricsProseCls} dangerouslySetInnerHTML={{ __html: renderLyricsHtml(lyrics.content) }} />
 
       {lyrics.tags.length > 0 && (
         <div className="mt-4 flex flex-wrap gap-2">

@@ -1,7 +1,9 @@
 import Link from "next/link";
 import { prisma } from "@/lib/prisma";
+import { renderLyricsHtml } from "@/lib/render-lyrics";
 import { SearchBar } from "@/components/SearchBar";
 import { TagFilterBar } from "@/components/TagFilterBar";
+import { LyricsCard } from "@/components/LyricsCard";
 
 const PAGE_SIZE = 12;
 
@@ -35,10 +37,12 @@ export default async function HomePage({
       orderBy: { createdAt: "desc" },
       skip: (page - 1) * PAGE_SIZE,
       take: PAGE_SIZE,
-      select: { id: true, title: true, artist: true, album: true, tags: true, createdAt: true },
+      select: { id: true, title: true, artist: true, album: true, tags: true, createdAt: true, content: true },
     }),
     prisma.lyrics.count({ where }),
   ]);
+
+  const cards = items.map((item) => ({ ...item, contentHtml: renderLyricsHtml(item.content) }));
 
   const pageCount = Math.max(1, Math.ceil(total / PAGE_SIZE));
 
@@ -68,30 +72,17 @@ export default async function HomePage({
         </p>
       ) : (
         <ul className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
-          {items.map((item) => (
-            <li
+          {cards.map((item) => (
+            <LyricsCard
               key={item.id}
-              className="rounded-xl border border-neutral-200 bg-white p-4 shadow-sm transition hover:-translate-y-0.5 hover:shadow-md"
-            >
-              <Link href={`/lyrics/${item.id}`} className="block">
-                <h2 className="truncate text-lg font-bold text-neutral-900">{item.title}</h2>
-                {item.artist && <p className="truncate text-sm text-emerald-700">{item.artist}</p>}
-                {item.album && <p className="truncate text-xs text-neutral-400">{item.album}</p>}
-              </Link>
-              {item.tags.length > 0 && (
-                <div className="mt-2 flex flex-wrap gap-1.5">
-                  {item.tags.map((t) => (
-                    <Link
-                      key={t}
-                      href={`/?tags=${encodeURIComponent(t)}`}
-                      className="rounded-full bg-neutral-100 px-2 py-0.5 text-[11px] text-neutral-600 hover:bg-neutral-200"
-                    >
-                      #{t}
-                    </Link>
-                  ))}
-                </div>
-              )}
-            </li>
+              id={item.id}
+              title={item.title}
+              artist={item.artist}
+              album={item.album}
+              tags={item.tags}
+              createdAt={item.createdAt}
+              contentHtml={item.contentHtml}
+            />
           ))}
         </ul>
       )}

@@ -3,6 +3,8 @@
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { TagPicker } from "./TagPicker";
+import { RichTextEditor } from "./RichTextEditor";
+import { toEditableHtml } from "@/lib/lyrics-content";
 
 interface LyricsFormValues {
   title: string;
@@ -32,6 +34,7 @@ export function LyricsForm({
     content: initialValues?.content ?? "",
     tags: initialValues?.tags ?? [],
   });
+  const [initialContentHtml] = useState(() => toEditableHtml(initialValues?.content ?? ""));
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
 
@@ -97,12 +100,9 @@ export function LyricsForm({
       </Field>
 
       <Field label="الكلمات">
-        <textarea
-          required
-          rows={12}
-          value={values.content}
-          onChange={(e) => setValues({ ...values, content: e.target.value })}
-          className={`${inputCls} leading-loose`}
+        <RichTextEditor
+          content={initialContentHtml}
+          onChange={(html) => setValues((v) => ({ ...v, content: html }))}
         />
       </Field>
 

@@ -3,6 +3,7 @@ import { z } from "zod";
 import { prisma } from "@/lib/prisma";
 import { getCurrentUser } from "@/lib/session";
 import { getLyricsAndIncrementViews } from "@/lib/lyrics";
+import { sanitizeLyricsHtml } from "@/lib/sanitize-lyrics";
 
 export async function GET(_req: Request, { params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
@@ -48,10 +49,15 @@ export async function PUT(req: Request, { params }: { params: Promise<{ id: stri
 
   const { title, artist, album, content, tags } = parsed.data;
 
+  const cleanedContent = sanitizeLyricsHtml(content);
+  if (!cleanedContent.replace(/<[^>]*>/g, "").trim()) {
+    return NextResponse.json({ error: "نص الكلمات مطلوب" }, { status: 400 });
+  }
+
   const lyrics = await prisma.lyrics
     .update({
       where: { id },
-      data: { title, artist: artist || null, album: album || null, content, tags: tags ?? [] },
+      data: { title, artist: artist || null, album: album || null, content: cleanedContent, tags: tags ?? [] },
     })
     .catch(() => null);
 
