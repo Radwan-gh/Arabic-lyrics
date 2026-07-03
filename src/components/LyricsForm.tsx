@@ -2,13 +2,14 @@
 
 import { useRouter } from "next/navigation";
 import { useState } from "react";
+import { TagPicker } from "./TagPicker";
 
 interface LyricsFormValues {
   title: string;
   artist: string;
   album: string;
   content: string;
-  tags: string;
+  tags: string[];
 }
 
 const inputCls =
@@ -29,7 +30,7 @@ export function LyricsForm({
     artist: initialValues?.artist ?? "",
     album: initialValues?.album ?? "",
     content: initialValues?.content ?? "",
-    tags: initialValues?.tags ?? "",
+    tags: initialValues?.tags ?? [],
   });
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
@@ -44,10 +45,7 @@ export function LyricsForm({
       artist: values.artist,
       album: values.album,
       content: values.content,
-      tags: values.tags
-        .split(",")
-        .map((t) => t.trim())
-        .filter(Boolean),
+      tags: values.tags,
     };
 
     const res = await fetch(mode === "create" ? "/api/lyrics" : `/api/lyrics/${lyricsId}`, {
@@ -108,12 +106,12 @@ export function LyricsForm({
         />
       </Field>
 
-      <Field label="وسوم (مفصولة بفاصلة)">
-        <input
+      <Field label="وسوم (اختياري)">
+        <TagPicker
           value={values.tags}
-          onChange={(e) => setValues({ ...values, tags: e.target.value })}
-          placeholder="طرب, كلاسيكي"
-          className={inputCls}
+          onChange={(tags) => setValues({ ...values, tags })}
+          allowCreate
+          placeholder="اكتب لإضافة وسم جديد أو اختر من الموجود..."
         />
       </Field>
 

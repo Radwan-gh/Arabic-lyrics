@@ -24,7 +24,7 @@ export default async function EditLyricsPage({ params }: { params: Promise<{ id:
           artist: lyrics.artist ?? "",
           album: lyrics.album ?? "",
           content: lyrics.content,
-          tags: lyrics.tags.join(", "),
+          tags: lyrics.tags,
         }}
       />
     </div>

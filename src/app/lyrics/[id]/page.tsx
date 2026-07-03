@@ -31,7 +31,7 @@ export default async function LyricsPage({ params }: { params: Promise<{ id: str
           {lyrics.tags.map((tag) => (
             <Link
               key={tag}
-              href={`/?tag=${encodeURIComponent(tag)}`}
+              href={`/?tags=${encodeURIComponent(tag)}`}
               className="rounded-full bg-neutral-100 px-3 py-1 text-xs text-neutral-600 hover:bg-neutral-200"
             >
               #{tag}

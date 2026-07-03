@@ -1,15 +1,20 @@
 import Link from "next/link";
 import { prisma } from "@/lib/prisma";
 import { SearchBar } from "@/components/SearchBar";
+import { TagFilterBar } from "@/components/TagFilterBar";
 
 const PAGE_SIZE = 12;
 
 export default async function HomePage({
   searchParams,
 }: {
-  searchParams: Promise<{ q?: string; tag?: string; page?: string }>;
+  searchParams: Promise<{ q?: string; tags?: string; page?: string }>;
 }) {
-  const { q = "", tag = "", page: pageParam } = await searchParams;
+  const { q = "", tags: tagsParam = "", page: pageParam } = await searchParams;
+  const tags = tagsParam
+    .split(",")
+    .map((t) => t.trim())
+    .filter(Boolean);
   const page = Math.max(1, Number(pageParam) || 1);
 
   const where = {
@@ -21,7 +26,7 @@ export default async function HomePage({
           ],
         }
       : {}),
-    ...(tag ? { tags: { has: tag } } : {}),
+    ...(tags.length ? { tags: { hasSome: tags } } : {}),
   };
 
   const [items, total] = await Promise.all([
@@ -40,7 +45,7 @@ export default async function HomePage({
   function queryString(overrides: Record<string, string>) {
     const params = new URLSearchParams();
     if (q) params.set("q", q);
-    if (tag) params.set("tag", tag);
+    if (tags.length) params.set("tags", tags.join(","));
     for (const [key, value] of Object.entries(overrides)) {
       if (value) params.set(key, value);
       else params.delete(key);
@@ -50,21 +55,16 @@ export default async function HomePage({
 
   return (
     <div className="flex flex-col gap-6">
-      <SearchBar defaultValue={q} tag={tag} />
+      <SearchBar defaultValue={q} tags={tags} />
 
-      {tag && (
-        <div className="flex items-center gap-2 text-sm text-neutral-600">
-          <span>تصفية حسب الوسم:</span>
-          <span className="rounded-full bg-emerald-50 px-3 py-1 font-medium text-emerald-700">#{tag}</span>
-          <Link href={`/?${queryString({ tag: "", page: "" })}`} className="text-neutral-400 hover:text-neutral-600">
-            إزالة ×
-          </Link>
-        </div>
-      )}
+      <div className="flex flex-col gap-1.5">
+        <span className="text-sm font-medium text-neutral-700">تصفية حسب الوسوم</span>
+        <TagFilterBar selected={tags} q={q} />
+      </div>
 
       {items.length === 0 ? (
         <p className="rounded-lg border border-dashed border-neutral-300 p-8 text-center text-neutral-500">
-          {q || tag ? "لا توجد نتائج مطابقة لبحثك" : "لا توجد كلمات أغاني بعد"}
+          {q || tags.length ? "لا توجد نتائج مطابقة لبحثك" : "لا توجد كلمات أغاني بعد"}
         </p>
       ) : (
         <ul className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
@@ -83,7 +83,7 @@ export default async function HomePage({
                   {item.tags.map((t) => (
                     <Link
                       key={t}
-                      href={`/?tag=${encodeURIComponent(t)}`}
+                      href={`/?tags=${encodeURIComponent(t)}`}
                       className="rounded-full bg-neutral-100 px-2 py-0.5 text-[11px] text-neutral-600 hover:bg-neutral-200"
                     >
                       #{t}

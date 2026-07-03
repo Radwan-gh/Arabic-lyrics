@@ -8,7 +8,7 @@ const PAGE_SIZE = 12;
 export async function GET(req: Request) {
   const { searchParams } = new URL(req.url);
   const q = searchParams.get("q")?.trim() || "";
-  const tag = searchParams.get("tag")?.trim() || "";
+  const tags = (searchParams.get("tags")?.split(",") ?? []).map((t) => t.trim()).filter(Boolean);
   const page = Math.max(1, Number(searchParams.get("page")) || 1);
 
   const where = {
@@ -20,7 +20,7 @@ export async function GET(req: Request) {
           ],
         }
       : {}),
-    ...(tag ? { tags: { has: tag } } : {}),
+    ...(tags.length ? { tags: { hasSome: tags } } : {}),
   };
 
   const [items, total] = await Promise.all([
