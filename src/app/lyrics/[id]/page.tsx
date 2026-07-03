@@ -17,7 +17,7 @@ export default async function LyricsPage({ params }: { params: Promise<{ id: str
     <article className="rounded-xl border border-neutral-200 bg-white p-6 shadow-sm">
       <header className="mb-4 flex flex-col gap-1 border-b border-neutral-100 pb-4">
         <h1 className="text-2xl font-extrabold">{lyrics.title}</h1>
-        <p className="text-emerald-700">{lyrics.artist}</p>
+        {lyrics.artist && <p className="text-emerald-700">{lyrics.artist}</p>}
         {lyrics.album && <p className="text-sm text-neutral-400">{lyrics.album}</p>}
         <p className="text-xs text-neutral-400">
           أضافها {lyrics.createdBy?.name ?? "مستخدم محذوف"} · {lyrics.viewCount} مشاهدة
@@ -29,9 +29,13 @@ export default async function LyricsPage({ params }: { params: Promise<{ id: str
       {lyrics.tags.length > 0 && (
         <div className="mt-4 flex flex-wrap gap-2">
           {lyrics.tags.map((tag) => (
-            <span key={tag} className="rounded-full bg-neutral-100 px-3 py-1 text-xs text-neutral-600">
+            <Link
+              key={tag}
+              href={`/?tag=${encodeURIComponent(tag)}`}
+              className="rounded-full bg-neutral-100 px-3 py-1 text-xs text-neutral-600 hover:bg-neutral-200"
+            >
               #{tag}
-            </span>
+            </Link>
           ))}
         </div>
       )}

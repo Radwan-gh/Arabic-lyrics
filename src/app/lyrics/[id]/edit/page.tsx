@@ -21,7 +21,7 @@ export default async function EditLyricsPage({ params }: { params: Promise<{ id:
         lyricsId={lyrics.id}
         initialValues={{
           title: lyrics.title,
-          artist: lyrics.artist,
+          artist: lyrics.artist ?? "",
           album: lyrics.album ?? "",
           content: lyrics.content,
           tags: lyrics.tags.join(", "),

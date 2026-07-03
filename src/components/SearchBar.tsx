@@ -3,7 +3,7 @@
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 
-export function SearchBar({ defaultValue }: { defaultValue: string }) {
+export function SearchBar({ defaultValue, tag }: { defaultValue: string; tag?: string }) {
   const [value, setValue] = useState(defaultValue);
   const router = useRouter();
 
@@ -11,6 +11,7 @@ export function SearchBar({ defaultValue }: { defaultValue: string }) {
     e.preventDefault();
     const params = new URLSearchParams();
     if (value.trim()) params.set("q", value.trim());
+    if (tag) params.set("tag", tag);
     router.push(`/?${params.toString()}`);
   }
 

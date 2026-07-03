@@ -8,16 +8,20 @@ const PAGE_SIZE = 12;
 export async function GET(req: Request) {
   const { searchParams } = new URL(req.url);
   const q = searchParams.get("q")?.trim() || "";
+  const tag = searchParams.get("tag")?.trim() || "";
   const page = Math.max(1, Number(searchParams.get("page")) || 1);
 
-  const where = q
-    ? {
-        OR: [
-          { title: { contains: q, mode: "insensitive" as const } },
-          { artist: { contains: q, mode: "insensitive" as const } },
-        ],
-      }
-    : {};
+  const where = {
+    ...(q
+      ? {
+          OR: [
+            { title: { contains: q, mode: "insensitive" as const } },
+            { artist: { contains: q, mode: "insensitive" as const } },
+          ],
+        }
+      : {}),
+    ...(tag ? { tags: { has: tag } } : {}),
+  };
 
   const [items, total] = await Promise.all([
     prisma.lyrics.findMany({
@@ -49,7 +53,7 @@ export async function GET(req: Request) {
 
 const lyricsSchema = z.object({
   title: z.string().trim().min(1, "العنوان مطلوب").max(200),
-  artist: z.string().trim().min(1, "اسم الفنان مطلوب").max(200),
+  artist: z.string().trim().max(200).optional().or(z.literal("")),
   album: z.string().trim().max(200).optional().or(z.literal("")),
   content: z.string().min(1, "نص الكلمات مطلوب").max(20000),
   tags: z.array(z.string().trim().max(30)).max(10).optional(),
@@ -72,7 +76,7 @@ export async function POST(req: Request) {
   const lyrics = await prisma.lyrics.create({
     data: {
       title,
-      artist,
+      artist: artist || null,
       album: album || null,
       content,
       tags: tags ?? [],

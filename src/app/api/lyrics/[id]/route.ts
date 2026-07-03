@@ -16,7 +16,7 @@ export async function GET(_req: Request, { params }: { params: Promise<{ id: str
 
 const updateSchema = z.object({
   title: z.string().trim().min(1, "العنوان مطلوب").max(200),
-  artist: z.string().trim().min(1, "اسم الفنان مطلوب").max(200),
+  artist: z.string().trim().max(200).optional().or(z.literal("")),
   album: z.string().trim().max(200).optional().or(z.literal("")),
   content: z.string().min(1, "نص الكلمات مطلوب").max(20000),
   tags: z.array(z.string().trim().max(30)).max(10).optional(),
@@ -51,7 +51,7 @@ export async function PUT(req: Request, { params }: { params: Promise<{ id: stri
   const lyrics = await prisma.lyrics
     .update({
       where: { id },
-      data: { title, artist, album: album || null, content, tags: tags ?? [] },
+      data: { title, artist: artist || null, album: album || null, content, tags: tags ?? [] },
     })
     .catch(() => null);
 

@@ -82,9 +82,8 @@ export function LyricsForm({
         />
       </Field>
 
-      <Field label="الفنان">
+      <Field label="الفنان (اختياري)">
         <input
-          required
           value={values.artist}
           onChange={(e) => setValues({ ...values, artist: e.target.value })}
           className={inputCls}

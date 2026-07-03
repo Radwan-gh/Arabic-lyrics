@@ -77,6 +77,11 @@ function NavLinks({
           إدارة المستخدمين
         </Link>
       )}
+      {user?.role === "ADMIN" && (
+        <Link href="/admin/tags" className={linkCls} onClick={onNavigate}>
+          إدارة الوسوم
+        </Link>
+      )}
       {user ? (
         <>
           <span className={mobile ? "px-3 py-1 text-sm text-neutral-500" : "text-sm text-neutral-500"}>
