@@ -82,8 +82,14 @@ npm run build
 npm run start
 ```
 
-Run `npx prisma migrate deploy` against your production database before
-starting the app for the first time (and after every schema change).
+`npm run start` runs `prisma db push` before booting Next.js, which syncs
+`prisma/schema.prisma` straight to the database — no migration files
+required. This is intentional for now since the repo doesn't yet have a
+`prisma/migrations` history (it was built without a database available to
+generate one against). If you want proper tracked migrations going forward,
+run `npx prisma migrate dev --name init` locally against a dev database once,
+commit the generated `prisma/migrations` folder, and switch the `start`
+script back to `prisma migrate deploy`.
 
 ## Deploying to Railway
 
