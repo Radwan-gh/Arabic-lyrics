@@ -26,9 +26,26 @@ body {
 .ql-editor {
   min-height: 12rem;
   line-height: 2;
+  /* Quill's own stylesheet is loaded after this one (dynamic import),
+     so !important guards against it winning an equal-specificity tie */
+  direction: rtl !important;
+  text-align: right !important;
 }
 
 .ql-editor.ql-blank::before {
   font-style: normal;
   color: rgb(163 163 163);
+  right: 15px !important;
+  left: auto !important;
+  text-align: right !important;
+}
+
+.ql-toolbar.ql-snow {
+  direction: rtl !important;
+  text-align: right !important;
+}
+
+.ql-toolbar.ql-snow .ql-formats {
+  margin-right: 0 !important;
+  margin-left: 15px !important;
 }
