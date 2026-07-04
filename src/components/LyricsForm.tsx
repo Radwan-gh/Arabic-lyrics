@@ -2,9 +2,14 @@
 
 import { useRouter } from "next/navigation";
 import { useState } from "react";
+import dynamic from "next/dynamic";
 import { TagPicker } from "./TagPicker";
-import { RichTextEditor } from "./RichTextEditor";
 import { toEditableHtml } from "@/lib/lyrics-content";
+
+const RichTextEditor = dynamic(() => import("./RichTextEditor").then((m) => m.RichTextEditor), {
+  ssr: false,
+  loading: () => <div className="min-h-[12rem] rounded-lg border border-neutral-300 bg-neutral-50" />,
+});
 
 interface LyricsFormValues {
   title: string;
