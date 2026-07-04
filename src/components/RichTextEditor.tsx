@@ -39,5 +39,5 @@ export function RichTextEditor({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  return <div ref={containerRef} />;
+  return <div ref={containerRef} dir="rtl" />;
 }
