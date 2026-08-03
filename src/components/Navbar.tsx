@@ -72,6 +72,11 @@ function NavLinks({
           إضافة كلمات
         </Link>
       )}
+      {user && (
+        <Link href="/playlists" className={linkCls} onClick={onNavigate}>
+          قوائمي
+        </Link>
+      )}
       {user?.role === "ADMIN" && (
         <Link href="/admin/users" className={linkCls} onClick={onNavigate}>
           إدارة المستخدمين

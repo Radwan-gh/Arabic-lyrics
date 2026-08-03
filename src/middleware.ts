@@ -5,8 +5,9 @@ export async function middleware(req: NextRequest) {
   const { pathname } = req.nextUrl;
   const needsAdmin = pathname.startsWith("/admin");
   const needsEditor = !needsAdmin && (pathname === "/lyrics/new" || /^\/lyrics\/[^/]+\/edit$/.test(pathname));
+  const needsAuth = !needsAdmin && !needsEditor && pathname.startsWith("/playlists");
 
-  if (!needsAdmin && !needsEditor) {
+  if (!needsAdmin && !needsEditor && !needsAuth) {
     return NextResponse.next();
   }
 
@@ -31,5 +32,5 @@ export async function middleware(req: NextRequest) {
 }
 
 export const config = {
-  matcher: ["/admin/:path*", "/lyrics/new", "/lyrics/:id/edit"],
+  matcher: ["/admin/:path*", "/lyrics/new", "/lyrics/:id/edit", "/playlists/:path*"],
 };
