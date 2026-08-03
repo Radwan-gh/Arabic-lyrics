@@ -11,7 +11,7 @@
   "scripts": {
     "dev": "next dev",
     "build": "next build",
-    "start": "prisma db push --accept-data-loss --skip-generate && next start -p ${PORT:-3000}",
+    "start": "prisma db push --accept-data-loss --skip-generate && sh -c 'if [ \"$SEED_ON_START\" = \"true\" ]; then npm run db:seed || true; fi' && next start -p ${PORT:-3000}",
     "lint": "next lint",
     "postinstall": "prisma generate",
     "db:generate": "prisma generate",
