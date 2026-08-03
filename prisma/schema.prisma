@@ -23,7 +23,8 @@ model User {
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
 
-  lyrics Lyrics[]
+  lyrics    Lyrics[]
+  playlists Playlist[]
 }
 
 model Lyrics {
@@ -38,9 +39,45 @@ model Lyrics {
   createdBy   User?   @relation(fields: [createdById], references: [id], onDelete: SetNull)
   createdById String?
 
+  playlistItems PlaylistItem[]
+
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
   @@index([title])
   @@index([artist])
+}
+
+model Playlist {
+  id          String  @id @default(cuid())
+  title       String
+  description String?
+  isPublic    Boolean @default(false)
+  shareToken  String  @unique @default(cuid())
+
+  owner   User   @relation(fields: [ownerId], references: [id], onDelete: Cascade)
+  ownerId String
+
+  items PlaylistItem[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([ownerId])
+}
+
+model PlaylistItem {
+  id       String @id @default(cuid())
+  position Int    @default(0)
+
+  playlist   Playlist @relation(fields: [playlistId], references: [id], onDelete: Cascade)
+  playlistId String
+
+  lyrics   Lyrics @relation(fields: [lyricsId], references: [id], onDelete: Cascade)
+  lyricsId String
+
+  addedAt DateTime @default(now())
+
+  @@unique([playlistId, lyricsId])
+  @@index([playlistId])
 }

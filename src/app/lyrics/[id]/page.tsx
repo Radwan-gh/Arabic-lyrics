@@ -6,6 +6,7 @@ import { renderLyricsHtml } from "@/lib/render-lyrics";
 import { lyricsProseCls } from "@/lib/lyrics-prose";
 import { formatDate } from "@/lib/format";
 import { DeleteLyricsButton } from "@/components/DeleteLyricsButton";
+import { AddToPlaylist } from "@/components/AddToPlaylist";
 
 export default async function LyricsPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
@@ -43,17 +44,20 @@ export default async function LyricsPage({ params }: { params: Promise<{ id: str
         </div>
       )}
 
-      {canModify && (
-        <div className="mt-6 flex gap-3 border-t border-neutral-100 pt-4">
-          <Link
-            href={`/lyrics/${lyrics.id}/edit`}
-            className="rounded-md border border-neutral-300 px-4 py-2 text-sm font-medium hover:bg-neutral-50"
-          >
-            تعديل
-          </Link>
-          <DeleteLyricsButton id={lyrics.id} />
-        </div>
-      )}
+      <div className="mt-6 flex flex-wrap gap-3 border-t border-neutral-100 pt-4">
+        {session && <AddToPlaylist lyricsId={lyrics.id} />}
+        {canModify && (
+          <>
+            <Link
+              href={`/lyrics/${lyrics.id}/edit`}
+              className="rounded-md border border-neutral-300 px-4 py-2 text-sm font-medium hover:bg-neutral-50"
+            >
+              تعديل
+            </Link>
+            <DeleteLyricsButton id={lyrics.id} />
+          </>
+        )}
+      </div>
     </article>
   );
 }
