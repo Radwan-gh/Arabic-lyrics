@@ -67,6 +67,9 @@ function NavLinks({
       <Link href="/" className={linkCls} onClick={onNavigate}>
         الرئيسية
       </Link>
+      <Link href="/discover" className={linkCls} onClick={onNavigate}>
+        استكشاف
+      </Link>
       {user && (user.role === "ADMIN" || user.role === "EDITOR") && (
         <Link href="/lyrics/new" className={linkCls} onClick={onNavigate}>
           إضافة كلمات
