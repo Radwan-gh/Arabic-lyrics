@@ -2,6 +2,7 @@
 
 import { useRouter } from "next/navigation";
 import { useState } from "react";
+import { inputCls, btnPrimary } from "@/lib/ui";
 
 export function PlaylistSearchBar({ defaultValue }: { defaultValue: string }) {
   const [value, setValue] = useState(defaultValue);
@@ -22,12 +23,10 @@ export function PlaylistSearchBar({ defaultValue }: { defaultValue: string }) {
         value={value}
         onChange={(e) => setValue(e.target.value)}
         placeholder="ابحث في الوصلات العامة بالاسم أو الوصف..."
-        className="w-full rounded-lg border border-neutral-300 px-4 py-2.5 text-base focus:border-emerald-600 focus:outline-none focus:ring-2 focus:ring-emerald-100"
+        aria-label="ابحث في الوصلات العامة"
+        className={inputCls}
       />
-      <button
-        type="submit"
-        className="shrink-0 rounded-lg bg-emerald-700 px-4 py-2.5 text-sm font-semibold text-white hover:bg-emerald-800"
-      >
+      <button type="submit" className={`${btnPrimary} shrink-0`}>
         بحث
       </button>
     </form>

@@ -3,6 +3,8 @@ import type { Prisma } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
 import { formatDate } from "@/lib/format";
 import { PlaylistSearchBar } from "@/components/PlaylistSearchBar";
+import { Pagination } from "@/components/Pagination";
+import { focusRing } from "@/lib/ui";
 
 export const dynamic = "force-dynamic";
 
@@ -75,13 +77,13 @@ export default async function DiscoverPage({
           {items.map((p) => (
             <li
               key={p.shareToken}
-              className="rounded-xl border border-neutral-200 bg-white p-4 shadow-sm transition hover:-translate-y-0.5 hover:shadow-md"
+              className="rounded-xl border border-neutral-200 bg-white p-4 shadow-sm transition hover:-translate-y-0.5 hover:shadow-md motion-reduce:transition-none motion-reduce:hover:translate-y-0"
             >
-              <Link href={`/p/${p.shareToken}`} className="block">
+              <Link href={`/p/${p.shareToken}`} className={`block rounded-sm ${focusRing}`}>
                 <h2 className="truncate text-lg font-bold text-neutral-900">{p.title}</h2>
                 {p.description && <p className="mt-0.5 line-clamp-2 text-sm text-neutral-500">{p.description}</p>}
               </Link>
-              <p className="mt-2 text-xs text-neutral-400">
+              <p className="mt-2 text-xs text-neutral-500">
                 {p.owner?.name ?? "مستخدم"} · {p._count.items} نشيد · {formatDate(p.createdAt)}
               </p>
             </li>
@@ -89,23 +91,7 @@ export default async function DiscoverPage({
         </ul>
       )}
 
-      {pageCount > 1 && (
-        <div className="flex flex-wrap items-center justify-center gap-2 text-sm">
-          {Array.from({ length: pageCount }, (_, i) => i + 1).map((p) => (
-            <Link
-              key={p}
-              href={pageHref(p)}
-              className={`rounded-md px-3 py-1.5 ${
-                p === page
-                  ? "bg-emerald-700 text-white"
-                  : "border border-neutral-200 text-neutral-600 hover:bg-neutral-100"
-              }`}
-            >
-              {p}
-            </Link>
-          ))}
-        </div>
-      )}
+      <Pagination page={page} pageCount={pageCount} hrefFor={pageHref} />
     </div>
   );
 }

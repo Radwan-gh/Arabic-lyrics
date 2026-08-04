@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
+import { btnSecondary, focusRing } from "@/lib/ui";
 
 interface PlaylistOption {
   id: string;
@@ -49,19 +50,21 @@ export function AddToPlaylist({ lyricsId }: { lyricsId: string }) {
       <button
         type="button"
         onClick={() => setOpen((v) => !v)}
-        className="rounded-md border border-neutral-300 px-4 py-2 text-sm font-medium hover:bg-neutral-50"
+        aria-haspopup="menu"
+        aria-expanded={open}
+        className={`${btnSecondary} px-4 py-2`}
       >
         + إضافة إلى وصلة
       </button>
 
       {open && (
-        <div className="absolute z-10 mt-1 max-h-72 w-64 overflow-auto rounded-lg border border-neutral-200 bg-white p-2 shadow-lg">
+        <div role="menu" className="absolute z-10 mt-1 max-h-72 w-64 overflow-auto rounded-lg border border-neutral-200 bg-white p-2 shadow-lg">
           {playlists === null ? (
-            <p className="p-2 text-sm text-neutral-400">جارٍ التحميل…</p>
+            <p className="p-2 text-sm text-neutral-500">جارٍ التحميل…</p>
           ) : playlists.length === 0 ? (
             <div className="p-2 text-sm text-neutral-500">
               لا توجد وصلات بعد.{" "}
-              <Link href="/playlists" className="text-emerald-700 hover:underline">
+              <Link href="/playlists" className={`rounded-sm text-emerald-700 hover:underline ${focusRing}`}>
                 أنشئ وصلة
               </Link>
             </div>
@@ -73,9 +76,10 @@ export function AddToPlaylist({ lyricsId }: { lyricsId: string }) {
                   <li key={p.id}>
                     <button
                       type="button"
+                      role="menuitem"
                       onClick={() => add(p.id)}
                       disabled={st === "adding" || st === "added"}
-                      className="flex w-full items-center justify-between gap-2 rounded-md px-3 py-2 text-right text-sm hover:bg-neutral-100 disabled:opacity-60"
+                      className={`flex w-full items-center justify-between gap-2 rounded-md px-3 py-2 text-start text-sm hover:bg-neutral-100 disabled:opacity-60 ${focusRing}`}
                     >
                       <span className="truncate">{p.title}</span>
                       {st === "added" ? (
