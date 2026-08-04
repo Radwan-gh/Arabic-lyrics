@@ -2,8 +2,6 @@ import { readFileSync } from "node:fs";
 import path from "node:path";
 import { PrismaClient, type Prisma } from "@prisma/client";
 
-const prisma = new PrismaClient();
-
 type NasheedRecord = {
   title: string;
   artist: string | null;
@@ -17,7 +15,7 @@ function loadAnaasheed(): NasheedRecord[] {
   return JSON.parse(readFileSync(file, "utf8")) as NasheedRecord[];
 }
 
-async function resolveAdminId(): Promise<string | null> {
+async function resolveAdminId(prisma: PrismaClient): Promise<string | null> {
   const adminEmail = process.env.ADMIN_EMAIL || "admin@example.com";
   const byEmail = await prisma.user.findUnique({ where: { email: adminEmail } });
   if (byEmail) return byEmail.id;
@@ -25,15 +23,16 @@ async function resolveAdminId(): Promise<string | null> {
   return anyAdmin?.id ?? null;
 }
 
-async function main() {
+// Insert the bundled أناشيد. Idempotent — safe to run on every deploy / seed.
+export async function seedAnaasheed(prisma: PrismaClient): Promise<void> {
   const anaasheed = loadAnaasheed();
-  const createdById = await resolveAdminId();
+  const createdById = await resolveAdminId(prisma);
 
   // Idempotency: skip anaasheed already present, keyed by (title, maqam, lyrics).
   // Content is part of the key so that distinct anaasheed which happen to share a
   // title and maqam are both kept, while exact repeats and re-runs are skipped.
   const keyOf = (l: { title: string; album: string | null; content: string }) =>
-    [l.title, l.album ?? "", l.content].join("");
+    [l.title, l.album ?? "", l.content].join("");
   const existing = await prisma.lyrics.findMany({
     select: { title: true, album: true, content: true },
   });
@@ -66,11 +65,15 @@ async function main() {
   );
 }
 
-main()
-  .catch((error) => {
-    console.error(error);
-    process.exit(1);
-  })
-  .finally(async () => {
-    await prisma.$disconnect();
-  });
+// Run standalone when invoked directly (e.g. `npm run db:seed:anaasheed`).
+if (require.main === module) {
+  const prisma = new PrismaClient();
+  seedAnaasheed(prisma)
+    .catch((error) => {
+      console.error(error);
+      process.exit(1);
+    })
+    .finally(async () => {
+      await prisma.$disconnect();
+    });
+}

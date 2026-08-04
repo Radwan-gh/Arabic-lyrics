@@ -1,5 +1,6 @@
 import { PrismaClient } from "@prisma/client";
 import bcrypt from "bcryptjs";
+import { seedAnaasheed } from "./seed-anaasheed";
 
 const prisma = new PrismaClient();
 
@@ -31,6 +32,9 @@ async function main() {
       },
     });
   }
+
+  // Seed the bundled أناشيد collection (idempotent — safe to re-run on every deploy).
+  await seedAnaasheed(prisma);
 
   console.log(`تم تجهيز قاعدة البيانات. حساب المدير: ${adminEmail}`);
 }

@@ -66,23 +66,18 @@ npx prisma migrate dev --name init
 npm run db:seed
 ```
 
-This creates (or updates) the admin account from `ADMIN_EMAIL`/`ADMIN_PASSWORD`
-and one sample lyrics entry. Since there is no public self-registration, run
-this at least once to bootstrap the first Admin account — everyone else is
-created afterwards from **إدارة المستخدمين** in the app.
+This creates (or updates) the admin account from `ADMIN_EMAIL`/`ADMIN_PASSWORD`,
+one sample lyrics entry, **and** the bundled collection of ~600 **أناشيد**
+(grouped by مقام, with attribution and rhythm tags). Since there is no public
+self-registration, run this at least once to bootstrap the first Admin account —
+everyone else is created afterwards from **إدارة المستخدمين** in the app.
 
-Optionally, seed the bundled collection of ~600 **أناشيد** (grouped by مقام, with
-attribution and rhythm tags):
-
-```bash
-npm run db:seed:anaasheed
-```
-
-This is idempotent — anaasheed already present are skipped, so it is safe to
-re-run. New records are owned by the admin account resolved from `ADMIN_EMAIL`
-(so run `npm run db:seed` first). The parsed data lives in
-`prisma/data/anaasheed.json`; regenerate it from the source text with
-`node prisma/data/parse-anaasheed.mjs`.
+The whole seed is idempotent — the admin is upserted and anaasheed already
+present are skipped — so it is safe to re-run, and it runs automatically on
+deploy when `SEED_ON_START=true` (see the `start` script). To seed only the
+anaasheed against an existing database, use `npm run db:seed:anaasheed`. The
+parsed data lives in `prisma/data/anaasheed.json`; regenerate it from the source
+text with `node prisma/data/parse-anaasheed.mjs`.
 
 ### 5. Run the dev server
 
