@@ -1,6 +1,5 @@
 "use client";
 
-import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useState } from "react";
 
@@ -74,13 +73,6 @@ export function LoginForm() {
           {loading ? "جارٍ الدخول..." : "دخول"}
         </button>
       </form>
-
-      <p className="mt-4 text-sm text-neutral-500">
-        ليس لديك حساب؟{" "}
-        <Link href="/register" className="text-emerald-700 hover:underline">
-          إنشاء حساب جديد
-        </Link>
-      </p>
     </div>
   );
 }

@@ -100,14 +100,9 @@ function NavLinks({
           </button>
         </>
       ) : (
-        <>
-          <Link href="/login" className={linkCls} onClick={onNavigate}>
-            تسجيل الدخول
-          </Link>
-          <Link href="/register" className={linkCls} onClick={onNavigate}>
-            إنشاء حساب
-          </Link>
-        </>
+        <Link href="/login" className={linkCls} onClick={onNavigate}>
+          تسجيل الدخول
+        </Link>
       )}
     </>
   );
