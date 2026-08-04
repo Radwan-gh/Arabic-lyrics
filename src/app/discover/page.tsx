@@ -60,15 +60,15 @@ export default async function DiscoverPage({
   return (
     <div className="flex flex-col gap-6">
       <div>
-        <h1 className="text-2xl font-extrabold">استكشاف القوائم العامة</h1>
-        <p className="mt-1 text-sm text-neutral-500">ابحث في قوائم الأناشيد التي شاركها المستخدمون علناً.</p>
+        <h1 className="text-2xl font-extrabold">الوصلات العامة</h1>
+        <p className="mt-1 text-sm text-neutral-500">ابحث في وصلات الأناشيد التي شاركها المستخدمون علناً.</p>
       </div>
 
       <PlaylistSearchBar defaultValue={query} />
 
       {items.length === 0 ? (
         <p className="rounded-lg border border-dashed border-neutral-300 p-8 text-center text-neutral-500">
-          {query ? "لا توجد قوائم عامة مطابقة لبحثك" : "لا توجد قوائم عامة بعد"}
+          {query ? "لا توجد وصلات عامة مطابقة لبحثك" : "لا توجد وصلات عامة بعد"}
         </p>
       ) : (
         <ul className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">

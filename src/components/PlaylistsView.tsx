@@ -32,7 +32,7 @@ export function PlaylistsView({ initial }: { initial: PlaylistSummary[] }) {
       });
       const data = await res.json();
       if (!res.ok) {
-        setError(data.error ?? "تعذّر إنشاء القائمة");
+        setError(data.error ?? "تعذّر إنشاء الوصلة");
         return;
       }
       setPlaylists((prev) => [
@@ -47,24 +47,24 @@ export function PlaylistsView({ initial }: { initial: PlaylistSummary[] }) {
   }
 
   async function remove(id: string) {
-    if (!confirm("حذف هذه القائمة نهائياً؟")) return;
+    if (!confirm("حذف هذه الوصلة نهائياً؟")) return;
     const res = await fetch(`/api/playlists/${id}`, { method: "DELETE" });
     if (res.ok) setPlaylists((prev) => prev.filter((p) => p.id !== id));
   }
 
   return (
     <div className="flex flex-col gap-6">
-      <h1 className="text-2xl font-extrabold">قوائمي</h1>
+      <h1 className="text-2xl font-extrabold">وصلاتي</h1>
 
       <form
         onSubmit={createPlaylist}
         className="flex flex-col gap-3 rounded-xl border border-neutral-200 bg-white p-4 shadow-sm"
       >
-        <span className="text-sm font-semibold text-neutral-700">إنشاء قائمة جديدة</span>
+        <span className="text-sm font-semibold text-neutral-700">إنشاء وصلة جديدة</span>
         <input
           value={title}
           onChange={(e) => setTitle(e.target.value)}
-          placeholder="اسم القائمة"
+          placeholder="اسم الوصلة"
           maxLength={120}
           required
           className="rounded-md border border-neutral-300 px-3 py-2 text-sm focus:border-emerald-500 focus:outline-none"
@@ -89,7 +89,7 @@ export function PlaylistsView({ initial }: { initial: PlaylistSummary[] }) {
 
       {playlists.length === 0 ? (
         <p className="rounded-lg border border-dashed border-neutral-300 p-8 text-center text-neutral-500">
-          لا توجد قوائم بعد. أنشئ قائمتك الأولى بالأعلى.
+          لا توجد وصلات بعد. أنشئ وصلتك الأولى بالأعلى.
         </p>
       ) : (
         <ul className="flex flex-col gap-3">

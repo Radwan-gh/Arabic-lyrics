@@ -51,7 +51,7 @@ export function AddToPlaylist({ lyricsId }: { lyricsId: string }) {
         onClick={() => setOpen((v) => !v)}
         className="rounded-md border border-neutral-300 px-4 py-2 text-sm font-medium hover:bg-neutral-50"
       >
-        + إضافة إلى قائمة
+        + إضافة إلى وصلة
       </button>
 
       {open && (
@@ -60,9 +60,9 @@ export function AddToPlaylist({ lyricsId }: { lyricsId: string }) {
             <p className="p-2 text-sm text-neutral-400">جارٍ التحميل…</p>
           ) : playlists.length === 0 ? (
             <div className="p-2 text-sm text-neutral-500">
-              لا توجد قوائم بعد.{" "}
+              لا توجد وصلات بعد.{" "}
               <Link href="/playlists" className="text-emerald-700 hover:underline">
-                أنشئ قائمة
+                أنشئ وصلة
               </Link>
             </div>
           ) : (

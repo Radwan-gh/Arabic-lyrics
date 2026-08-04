@@ -17,7 +17,7 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
 
   const { id } = await params;
   if (!(await requireOwner(id, session.userId))) {
-    return NextResponse.json({ error: "القائمة غير موجودة" }, { status: 404 });
+    return NextResponse.json({ error: "الوصلة غير موجودة" }, { status: 404 });
   }
 
   const body = await req.json().catch(() => null);
@@ -54,7 +54,7 @@ export async function DELETE(req: Request, { params }: { params: Promise<{ id: s
 
   const { id } = await params;
   if (!(await requireOwner(id, session.userId))) {
-    return NextResponse.json({ error: "القائمة غير موجودة" }, { status: 404 });
+    return NextResponse.json({ error: "الوصلة غير موجودة" }, { status: 404 });
   }
 
   const body = await req.json().catch(() => null);
@@ -79,7 +79,7 @@ export async function PATCH(req: Request, { params }: { params: Promise<{ id: st
 
   const { id } = await params;
   if (!(await requireOwner(id, session.userId))) {
-    return NextResponse.json({ error: "القائمة غير موجودة" }, { status: 404 });
+    return NextResponse.json({ error: "الوصلة غير موجودة" }, { status: 404 });
   }
 
   const body = await req.json().catch(() => null);

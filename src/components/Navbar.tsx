@@ -68,7 +68,7 @@ function NavLinks({
         الرئيسية
       </Link>
       <Link href="/discover" className={linkCls} onClick={onNavigate}>
-        استكشاف
+        الوصلات العامة
       </Link>
       {user && (user.role === "ADMIN" || user.role === "EDITOR") && (
         <Link href="/lyrics/new" className={linkCls} onClick={onNavigate}>
@@ -77,7 +77,7 @@ function NavLinks({
       )}
       {user && (
         <Link href="/playlists" className={linkCls} onClick={onNavigate}>
-          قوائمي
+          وصلاتي
         </Link>
       )}
       {user?.role === "ADMIN" && (

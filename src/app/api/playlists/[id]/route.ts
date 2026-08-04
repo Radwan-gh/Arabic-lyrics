@@ -24,13 +24,13 @@ export async function GET(_req: Request, { params }: { params: Promise<{ id: str
   });
 
   if (!playlist || playlist.ownerId !== session.userId) {
-    return NextResponse.json({ error: "القائمة غير موجودة" }, { status: 404 });
+    return NextResponse.json({ error: "الوصلة غير موجودة" }, { status: 404 });
   }
   return NextResponse.json({ playlist });
 }
 
 const updateSchema = z.object({
-  title: z.string().trim().min(1, "اسم القائمة مطلوب").max(120).optional(),
+  title: z.string().trim().min(1, "اسم الوصلة مطلوب").max(120).optional(),
   description: z.string().trim().max(500).optional().or(z.literal("")),
   isPublic: z.boolean().optional(),
 });
@@ -41,7 +41,7 @@ export async function PATCH(req: Request, { params }: { params: Promise<{ id: st
 
   const { id } = await params;
   if (!(await ownedPlaylistId(id, session.userId))) {
-    return NextResponse.json({ error: "القائمة غير موجودة" }, { status: 404 });
+    return NextResponse.json({ error: "الوصلة غير موجودة" }, { status: 404 });
   }
 
   const body = await req.json().catch(() => null);
@@ -70,7 +70,7 @@ export async function DELETE(_req: Request, { params }: { params: Promise<{ id: 
 
   const { id } = await params;
   if (!(await ownedPlaylistId(id, session.userId))) {
-    return NextResponse.json({ error: "القائمة غير موجودة" }, { status: 404 });
+    return NextResponse.json({ error: "الوصلة غير موجودة" }, { status: 404 });
   }
 
   await prisma.playlist.delete({ where: { id } }).catch(() => null);

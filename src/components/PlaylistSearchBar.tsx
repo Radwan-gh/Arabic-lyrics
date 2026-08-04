@@ -21,7 +21,7 @@ export function PlaylistSearchBar({ defaultValue }: { defaultValue: string }) {
         type="search"
         value={value}
         onChange={(e) => setValue(e.target.value)}
-        placeholder="ابحث في القوائم العامة بالاسم أو الوصف..."
+        placeholder="ابحث في الوصلات العامة بالاسم أو الوصف..."
         className="w-full rounded-lg border border-neutral-300 px-4 py-2.5 text-base focus:border-emerald-600 focus:outline-none focus:ring-2 focus:ring-emerald-100"
       />
       <button
