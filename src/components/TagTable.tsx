@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { inputSm, focusRing } from "@/lib/ui";
 
 interface TagRow {
   tag: string;
@@ -92,12 +93,13 @@ export function TagTable({ initialTags }: { initialTags: TagRow[] }) {
                   <input
                     autoFocus
                     value={draft}
+                    aria-label={`إعادة تسمية الوسم ${row.tag}`}
                     onChange={(e) => setDraft(e.target.value)}
                     onKeyDown={(e) => {
                       if (e.key === "Enter") submitRename(row.tag);
                       if (e.key === "Escape") setEditingTag(null);
                     }}
-                    className="rounded-md border border-neutral-300 px-2 py-1"
+                    className={`${inputSm} w-40`}
                   />
                 ) : (
                   <span>#{row.tag}</span>
@@ -112,11 +114,11 @@ export function TagTable({ initialTags }: { initialTags: TagRow[] }) {
                         type="button"
                         disabled={busyTag === row.tag}
                         onClick={() => submitRename(row.tag)}
-                        className="text-emerald-700 hover:underline"
+                        className={`rounded-sm font-medium text-emerald-700 hover:underline disabled:opacity-50 ${focusRing}`}
                       >
                         حفظ
                       </button>
-                      <button type="button" onClick={() => setEditingTag(null)} className="text-neutral-500 hover:underline">
+                      <button type="button" onClick={() => setEditingTag(null)} className={`rounded-sm text-neutral-600 hover:underline ${focusRing}`}>
                         إلغاء
                       </button>
                     </>
@@ -125,7 +127,7 @@ export function TagTable({ initialTags }: { initialTags: TagRow[] }) {
                       type="button"
                       disabled={busyTag === row.tag}
                       onClick={() => startRename(row.tag)}
-                      className="text-neutral-600 hover:underline"
+                      className={`rounded-sm text-neutral-600 hover:underline disabled:opacity-50 ${focusRing}`}
                     >
                       إعادة تسمية
                     </button>
@@ -134,7 +136,7 @@ export function TagTable({ initialTags }: { initialTags: TagRow[] }) {
                     type="button"
                     disabled={busyTag === row.tag}
                     onClick={() => deleteTag(row.tag)}
-                    className="text-red-600 hover:underline"
+                    className={`rounded-sm text-red-600 hover:underline disabled:opacity-50 ${focusRing}`}
                   >
                     حذف
                   </button>
