@@ -26,8 +26,16 @@ export default async function RootLayout({ children }: { children: React.ReactNo
   return (
     <html lang="ar" dir="rtl" className={tajawal.variable}>
       <body className="min-h-screen bg-neutral-50 font-sans text-neutral-900 antialiased">
+        <a
+          href="#main"
+          className="sr-only focus:not-sr-only focus:absolute focus:top-2 focus:z-50 focus:rounded-lg focus:bg-emerald-700 focus:px-4 focus:py-2 focus:text-white focus:shadow-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:ring-offset-2"
+        >
+          تخطَّ إلى المحتوى
+        </a>
         <Navbar user={session} />
-        <main className="mx-auto max-w-5xl px-4 py-6">{children}</main>
+        <main id="main" className="mx-auto max-w-5xl px-4 py-6">
+          {children}
+        </main>
       </body>
     </html>
   );

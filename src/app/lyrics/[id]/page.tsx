@@ -7,6 +7,7 @@ import { lyricsProseCls } from "@/lib/lyrics-prose";
 import { formatDate } from "@/lib/format";
 import { DeleteLyricsButton } from "@/components/DeleteLyricsButton";
 import { AddToPlaylist } from "@/components/AddToPlaylist";
+import { btnSecondary, focusRing } from "@/lib/ui";
 
 export default async function LyricsPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
@@ -22,8 +23,8 @@ export default async function LyricsPage({ params }: { params: Promise<{ id: str
       <header className="mb-4 flex flex-col gap-1 border-b border-neutral-100 pb-4">
         <h1 className="text-2xl font-extrabold">{lyrics.title}</h1>
         {lyrics.artist && <p className="text-emerald-700">{lyrics.artist}</p>}
-        {lyrics.album && <p className="text-sm text-neutral-400">{lyrics.album}</p>}
-        <p className="text-xs text-neutral-400">
+        {lyrics.album && <p className="text-sm text-neutral-500">{lyrics.album}</p>}
+        <p className="text-xs text-neutral-500">
           أضافها {lyrics.createdBy?.name ?? "مستخدم محذوف"} · {formatDate(lyrics.createdAt)} · {lyrics.viewCount} مشاهدة
         </p>
       </header>
@@ -36,7 +37,7 @@ export default async function LyricsPage({ params }: { params: Promise<{ id: str
             <Link
               key={tag}
               href={`/?tags=${encodeURIComponent(tag)}`}
-              className="rounded-full bg-neutral-100 px-3 py-1 text-xs text-neutral-600 hover:bg-neutral-200"
+              className={`rounded-full bg-neutral-100 px-3 py-1 text-xs text-neutral-600 hover:bg-neutral-200 ${focusRing}`}
             >
               #{tag}
             </Link>
@@ -48,10 +49,7 @@ export default async function LyricsPage({ params }: { params: Promise<{ id: str
         {session && <AddToPlaylist lyricsId={lyrics.id} />}
         {canModify && (
           <>
-            <Link
-              href={`/lyrics/${lyrics.id}/edit`}
-              className="rounded-md border border-neutral-300 px-4 py-2 text-sm font-medium hover:bg-neutral-50"
-            >
+            <Link href={`/lyrics/${lyrics.id}/edit`} className={`${btnSecondary} px-4 py-2`}>
               تعديل
             </Link>
             <DeleteLyricsButton id={lyrics.id} />

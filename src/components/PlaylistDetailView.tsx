@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useState } from "react";
+import { btnPrimary, btnSecondary, focusRing } from "@/lib/ui";
 
 interface Item {
   lyricsId: string;
@@ -78,8 +79,8 @@ export function PlaylistDetailView({ playlist, shareUrl }: { playlist: PlaylistD
   return (
     <div className="flex flex-col gap-6">
       <div>
-        <Link href="/playlists" className="text-sm text-neutral-500 hover:text-emerald-700">
-          ← العودة إلى وصلاتي
+        <Link href="/playlists" className={`inline-flex items-center gap-1 rounded-sm text-sm text-neutral-600 hover:text-emerald-700 ${focusRing}`}>
+          <span aria-hidden>→</span> العودة إلى وصلاتي
         </Link>
         <h1 className="mt-2 text-2xl font-extrabold">{playlist.title}</h1>
         {playlist.description && <p className="mt-1 text-neutral-500">{playlist.description}</p>}
@@ -97,11 +98,7 @@ export function PlaylistDetailView({ playlist, shareUrl }: { playlist: PlaylistD
             type="button"
             onClick={togglePublic}
             disabled={busy}
-            className={`rounded-md px-4 py-2 text-sm font-medium disabled:opacity-50 ${
-              isPublic
-                ? "border border-neutral-300 hover:bg-neutral-50"
-                : "bg-emerald-700 text-white hover:bg-emerald-800"
-            }`}
+            className={isPublic ? btnSecondary : btnPrimary}
           >
             {isPublic ? "إيقاف المشاركة" : "مشاركة عامة"}
           </button>
@@ -112,21 +109,14 @@ export function PlaylistDetailView({ playlist, shareUrl }: { playlist: PlaylistD
             <input
               readOnly
               value={shareUrl}
+              aria-label="رابط المشاركة"
               onFocus={(e) => e.target.select()}
-              className="min-w-0 flex-1 rounded-md border border-neutral-300 bg-neutral-50 px-3 py-2 text-sm text-neutral-600"
+              className={`min-w-0 flex-1 rounded-lg border border-neutral-300 bg-neutral-50 px-3 py-2 text-sm text-neutral-700 ${focusRing}`}
             />
-            <button
-              type="button"
-              onClick={copyLink}
-              className="rounded-md border border-neutral-300 px-4 py-2 text-sm hover:bg-neutral-50"
-            >
+            <button type="button" onClick={copyLink} className={`${btnSecondary} px-4 py-2`}>
               {copied ? "تم النسخ ✓" : "نسخ الرابط"}
             </button>
-            <Link
-              href={`/p/${shareUrl.split("/p/")[1]}`}
-              target="_blank"
-              className="rounded-md border border-neutral-300 px-4 py-2 text-sm hover:bg-neutral-50"
-            >
+            <Link href={`/p/${shareUrl.split("/p/")[1]}`} target="_blank" className={`${btnSecondary} px-4 py-2`}>
               فتح
             </Link>
           </div>
@@ -147,9 +137,9 @@ export function PlaylistDetailView({ playlist, shareUrl }: { playlist: PlaylistD
                 className="flex items-center justify-between gap-3 rounded-lg border border-neutral-200 bg-white p-3 shadow-sm"
               >
                 <div className="flex min-w-0 items-center gap-3">
-                  <span className="w-6 shrink-0 text-center text-sm text-neutral-400">{index + 1}</span>
+                  <span className="w-6 shrink-0 text-center text-sm text-neutral-500">{index + 1}</span>
                   <div className="min-w-0">
-                    <Link href={`/lyrics/${item.lyricsId}`} className="block truncate font-medium hover:text-emerald-700">
+                    <Link href={`/lyrics/${item.lyricsId}`} className={`block truncate rounded-sm font-medium hover:text-emerald-700 ${focusRing}`}>
                       {item.title}
                     </Link>
                     {item.artist && <p className="truncate text-xs text-emerald-700">{item.artist}</p>}
@@ -161,7 +151,7 @@ export function PlaylistDetailView({ playlist, shareUrl }: { playlist: PlaylistD
                     onClick={() => move(index, -1)}
                     disabled={index === 0}
                     aria-label="تحريك لأعلى"
-                    className="rounded-md border border-neutral-200 px-2 py-1 text-sm hover:bg-neutral-50 disabled:opacity-30"
+                    className={`inline-flex h-9 w-9 items-center justify-center rounded-lg border border-neutral-200 text-sm transition-colors hover:bg-neutral-50 disabled:opacity-30 ${focusRing}`}
                   >
                     ▲
                   </button>
@@ -170,15 +160,15 @@ export function PlaylistDetailView({ playlist, shareUrl }: { playlist: PlaylistD
                     onClick={() => move(index, 1)}
                     disabled={index === items.length - 1}
                     aria-label="تحريك لأسفل"
-                    className="rounded-md border border-neutral-200 px-2 py-1 text-sm hover:bg-neutral-50 disabled:opacity-30"
+                    className={`inline-flex h-9 w-9 items-center justify-center rounded-lg border border-neutral-200 text-sm transition-colors hover:bg-neutral-50 disabled:opacity-30 ${focusRing}`}
                   >
                     ▼
                   </button>
                   <button
                     type="button"
                     onClick={() => removeItem(item.lyricsId)}
-                    aria-label="إزالة"
-                    className="rounded-md border border-red-200 px-2 py-1 text-sm text-red-600 hover:bg-red-50"
+                    aria-label="إزالة من الوصلة"
+                    className={`inline-flex h-9 w-9 items-center justify-center rounded-lg border border-red-200 text-sm text-red-600 transition-colors hover:bg-red-50 ${focusRing}`}
                   >
                     ✕
                   </button>

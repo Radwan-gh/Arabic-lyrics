@@ -1,9 +1,9 @@
-import Link from "next/link";
 import { prisma } from "@/lib/prisma";
 import { renderLyricsHtml } from "@/lib/render-lyrics";
 import { SearchBar } from "@/components/SearchBar";
 import { TagFilterBar } from "@/components/TagFilterBar";
 import { LyricsCard } from "@/components/LyricsCard";
+import { Pagination } from "@/components/Pagination";
 
 const PAGE_SIZE = 12;
 
@@ -87,23 +87,7 @@ export default async function HomePage({
         </ul>
       )}
 
-      {pageCount > 1 && (
-        <div className="flex flex-wrap items-center justify-center gap-2 text-sm">
-          {Array.from({ length: pageCount }, (_, i) => i + 1).map((p) => (
-            <Link
-              key={p}
-              href={`/?${queryString({ page: String(p) })}`}
-              className={`rounded-md px-3 py-1.5 ${
-                p === page
-                  ? "bg-emerald-700 text-white"
-                  : "border border-neutral-200 text-neutral-600 hover:bg-neutral-100"
-              }`}
-            >
-              {p}
-            </Link>
-          ))}
-        </div>
-      )}
+      <Pagination page={page} pageCount={pageCount} hrefFor={(p) => `/?${queryString({ page: String(p) })}`} />
     </div>
   );
 }

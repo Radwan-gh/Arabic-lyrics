@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import { focusRing } from "@/lib/ui";
 
 export function TagPicker({
   value,
@@ -74,7 +75,7 @@ export function TagPicker({
             <button
               type="button"
               onClick={() => removeTag(tag)}
-              className="text-emerald-500 hover:text-emerald-800"
+              className={`rounded-full leading-none text-emerald-600 hover:text-emerald-900 ${focusRing}`}
               aria-label={`إزالة ${tag}`}
             >
               ×
@@ -101,7 +102,7 @@ export function TagPicker({
               <button
                 type="button"
                 onClick={() => addTag(tag)}
-                className="block w-full px-3 py-2 text-start text-sm hover:bg-neutral-50"
+                className={`block w-full px-3 py-2 text-start text-sm hover:bg-neutral-50 ${focusRing}`}
               >
                 #{tag}
               </button>
@@ -112,7 +113,7 @@ export function TagPicker({
               <button
                 type="button"
                 onClick={() => addTag(input.trim())}
-                className="block w-full px-3 py-2 text-start text-sm text-emerald-700 hover:bg-emerald-50"
+                className={`block w-full px-3 py-2 text-start text-sm text-emerald-700 hover:bg-emerald-50 ${focusRing}`}
               >
                 إضافة وسم جديد: &quot;{input.trim()}&quot;
               </button>

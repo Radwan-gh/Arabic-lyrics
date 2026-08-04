@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { inputCls, inputSm, btnPrimary, focusRing } from "@/lib/ui";
 
 type Role = "ADMIN" | "EDITOR" | "VIEWER";
 
@@ -15,9 +16,6 @@ interface UserRow {
 }
 
 const ROLE_LABELS: Record<Role, string> = { ADMIN: "مدير", EDITOR: "محرر", VIEWER: "مشاهد" };
-
-const inputCls =
-  "w-full rounded-lg border border-neutral-300 px-3 py-2.5 text-base focus:border-emerald-600 focus:outline-none focus:ring-2 focus:ring-emerald-100";
 
 export function UserTable({ initialUsers, currentUserId }: { initialUsers: UserRow[]; currentUserId: string }) {
   const [users, setUsers] = useState(initialUsers);
@@ -106,8 +104,9 @@ export function UserTable({ initialUsers, currentUserId }: { initialUsers: UserR
                     <select
                       value={u.role}
                       disabled={busyId === u.id}
+                      aria-label={`دور ${u.name}`}
                       onChange={(e) => updateUser(u.id, { role: e.target.value as Role })}
-                      className="rounded-md border border-neutral-300 px-2 py-1"
+                      className={`${inputSm} w-auto`}
                     >
                       {(Object.keys(ROLE_LABELS) as Role[]).map((r) => (
                         <option key={r} value={r}>
@@ -124,9 +123,10 @@ export function UserTable({ initialUsers, currentUserId }: { initialUsers: UserR
                     <button
                       type="button"
                       disabled={busyId === u.id}
+                      aria-pressed={u.isActive}
                       onClick={() => updateUser(u.id, { isActive: !u.isActive })}
-                      className={`rounded-full px-3 py-1 text-xs font-medium ${
-                        u.isActive ? "bg-emerald-50 text-emerald-700" : "bg-neutral-100 text-neutral-500"
+                      className={`rounded-full px-3 py-1 text-xs font-medium transition-colors ${focusRing} ${
+                        u.isActive ? "bg-emerald-100 text-emerald-800" : "bg-neutral-100 text-neutral-600"
                       }`}
                     >
                       {u.isActive ? "مفعّل" : "معطّل"}
@@ -140,7 +140,7 @@ export function UserTable({ initialUsers, currentUserId }: { initialUsers: UserR
                       type="button"
                       disabled={busyId === u.id}
                       onClick={() => changePassword(u.id)}
-                      className="text-emerald-700 hover:underline"
+                      className={`rounded-sm text-emerald-700 hover:underline disabled:opacity-50 ${focusRing}`}
                     >
                       تغيير كلمة المرور
                     </button>
@@ -149,7 +149,7 @@ export function UserTable({ initialUsers, currentUserId }: { initialUsers: UserR
                         type="button"
                         disabled={busyId === u.id}
                         onClick={() => deleteUser(u.id)}
-                        className="text-red-600 hover:underline"
+                        className={`rounded-sm text-red-600 hover:underline disabled:opacity-50 ${focusRing}`}
                       >
                         حذف
                       </button>
@@ -206,7 +206,11 @@ function CreateUserForm({ onCreated }: { onCreated: (user: UserRow) => void }) {
       className="flex flex-col gap-4 rounded-xl border border-neutral-200 bg-white p-6 shadow-sm"
     >
       <h2 className="text-lg font-semibold">إنشاء حساب جديد</h2>
-      {error && <p className="rounded-md bg-red-50 px-3 py-2 text-sm text-red-700">{error}</p>}
+      {error && (
+        <p role="alert" className="rounded-md bg-red-50 px-3 py-2 text-sm text-red-700">
+          {error}
+        </p>
+      )}
 
       <div className="grid gap-4 sm:grid-cols-2">
         <label className="flex flex-col gap-1.5 text-sm font-medium">
@@ -253,11 +257,7 @@ function CreateUserForm({ onCreated }: { onCreated: (user: UserRow) => void }) {
         </label>
       </div>
 
-      <button
-        type="submit"
-        disabled={loading}
-        className="self-start rounded-lg bg-emerald-700 px-4 py-2.5 font-semibold text-white hover:bg-emerald-800 disabled:opacity-50"
-      >
+      <button type="submit" disabled={loading} className={`${btnPrimary} self-start`}>
         {loading ? "جارٍ الإنشاء..." : "إنشاء الحساب"}
       </button>
     </form>

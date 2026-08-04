@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import type { SessionPayload } from "@/lib/jwt";
+import { focusRing } from "@/lib/ui";
 
 export function Navbar({ user }: { user: SessionPayload | null }) {
   const [open, setOpen] = useState(false);
@@ -19,16 +20,17 @@ export function Navbar({ user }: { user: SessionPayload | null }) {
   return (
     <header className="sticky top-0 z-20 border-b border-neutral-200 bg-white/90 backdrop-blur">
       <div className="mx-auto flex max-w-5xl items-center justify-between px-4 py-3">
-        <Link href="/" className="text-xl font-extrabold text-emerald-700">
+        <Link href="/" className={`rounded-sm text-xl font-extrabold text-emerald-700 ${focusRing}`}>
           كلمات
         </Link>
 
         <button
           type="button"
-          className="rounded-md p-2 text-2xl leading-none text-neutral-600 hover:bg-neutral-100 sm:hidden"
+          className={`rounded-md p-2 text-2xl leading-none text-neutral-600 hover:bg-neutral-100 sm:hidden ${focusRing}`}
           onClick={() => setOpen((v) => !v)}
           aria-label="القائمة"
           aria-expanded={open}
+          aria-controls="mobile-nav"
         >
           ☰
         </button>
@@ -39,7 +41,7 @@ export function Navbar({ user }: { user: SessionPayload | null }) {
       </div>
 
       {open && (
-        <nav className="flex flex-col gap-1 border-t border-neutral-200 bg-white px-4 py-3 sm:hidden">
+        <nav id="mobile-nav" className="flex flex-col gap-1 border-t border-neutral-200 bg-white px-4 py-3 sm:hidden">
           <NavLinks user={user} onLogout={handleLogout} mobile onNavigate={() => setOpen(false)} />
         </nav>
       )}
@@ -59,8 +61,8 @@ function NavLinks({
   onNavigate?: () => void;
 }) {
   const linkCls = mobile
-    ? "rounded-md px-3 py-2 hover:bg-neutral-100"
-    : "text-sm font-medium text-neutral-700 hover:text-emerald-700";
+    ? `rounded-md px-3 py-2 hover:bg-neutral-100 ${focusRing}`
+    : `rounded-sm text-sm font-medium text-neutral-700 hover:text-emerald-700 ${focusRing}`;
 
   return (
     <>
