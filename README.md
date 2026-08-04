@@ -16,14 +16,17 @@ user accounts and role-based permissions.
 
 | Role   | Can do |
 |--------|--------|
-| Viewer | Browse and read lyrics (default role for new sign-ups) |
+| Viewer | Browse and read lyrics (default role for new accounts) |
 | Editor | Everything a Viewer can, plus create lyrics and edit/delete their own |
-| Admin  | Everything, plus edit/delete any lyrics and manage users (roles, active/inactive, delete) |
+| Admin  | Everything, plus edit/delete any lyrics and manage users — create accounts, set/change passwords, change roles, activate/deactivate, and delete |
 
-The **first account ever registered automatically becomes Admin** — no manual
-database editing needed to bootstrap the first admin. Every account after
-that starts as a Viewer; promote people from **إدارة المستخدمين** (Admin →
-Users).
+There is **no public self-registration**. Only an Admin can create new
+accounts, and they do so from **إدارة المستخدمين** (Admin → Users), where
+they set the new user's name, email, password, and role. Admins can also
+change any user's password from the same screen.
+
+The first Admin is bootstrapped with the seed script (see below) — there is
+no self-service sign-up to create it through the UI.
 
 ## Local setup
 
@@ -64,8 +67,9 @@ npm run db:seed
 ```
 
 This creates (or updates) the admin account from `ADMIN_EMAIL`/`ADMIN_PASSWORD`
-and one sample lyrics entry. You can skip this and just register through the
-UI instead — the first registered user becomes Admin automatically.
+and one sample lyrics entry. Since there is no public self-registration, run
+this at least once to bootstrap the first Admin account — everyone else is
+created afterwards from **إدارة المستخدمين** in the app.
 
 ### 5. Run the dev server
 
@@ -109,16 +113,15 @@ the build/deploy config, `npm run start` runs `prisma migrate deploy` before
      `openssl rand -base64 48` and paste it in (Railway variables are secret
      by default)
    - `NODE_ENV` → `production`
-   - Optional, only needed if you plan to run the seed script:
-     `ADMIN_EMAIL`, `ADMIN_PASSWORD`
+   - `ADMIN_EMAIL`, `ADMIN_PASSWORD` → used by the seed script to bootstrap
+     the first Admin account (required, since there is no public sign-up)
 4. **Deploy.** Railway builds with Nixpacks (`npm install` → `postinstall`
    runs `prisma generate` → `npm run build`) and starts the service with
    `npm run start`, which runs `prisma migrate deploy` against the Postgres
    plugin before booting Next.js — so the schema is applied automatically on
    every deploy, first one included.
-5. **Bootstrap an admin.** Either just register through the deployed app (the
-   first account becomes Admin automatically), or run the seed script once
-   against the deployed database using the [Railway CLI](https://docs.railway.com/guides/cli):
+5. **Bootstrap an admin.** There is no public sign-up, so run the seed script
+   once against the deployed database using the [Railway CLI](https://docs.railway.com/guides/cli):
    ```bash
    railway link      # select this project
    railway run npm run db:seed
