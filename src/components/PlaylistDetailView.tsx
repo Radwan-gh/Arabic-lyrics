@@ -79,7 +79,7 @@ export function PlaylistDetailView({ playlist, shareUrl }: { playlist: PlaylistD
     <div className="flex flex-col gap-6">
       <div>
         <Link href="/playlists" className="text-sm text-neutral-500 hover:text-emerald-700">
-          ← العودة إلى قوائمي
+          ← العودة إلى وصلاتي
         </Link>
         <h1 className="mt-2 text-2xl font-extrabold">{playlist.title}</h1>
         {playlist.description && <p className="mt-1 text-neutral-500">{playlist.description}</p>}
@@ -90,7 +90,7 @@ export function PlaylistDetailView({ playlist, shareUrl }: { playlist: PlaylistD
           <div>
             <p className="text-sm font-semibold text-neutral-700">المشاركة</p>
             <p className="text-xs text-neutral-500">
-              {isPublic ? "أي شخص يملك الرابط يمكنه عرض هذه القائمة." : "القائمة خاصة بك حالياً."}
+              {isPublic ? "أي شخص يملك الرابط يمكنه عرض هذه الوصلة." : "الوصلة خاصة بك حالياً."}
             </p>
           </div>
           <button
@@ -137,7 +137,7 @@ export function PlaylistDetailView({ playlist, shareUrl }: { playlist: PlaylistD
         <h2 className="text-lg font-bold">الأناشيد ({items.length})</h2>
         {items.length === 0 ? (
           <p className="rounded-lg border border-dashed border-neutral-300 p-6 text-center text-neutral-500">
-            القائمة فارغة. أضف أناشيد من صفحة أي نشيد عبر زر «إضافة إلى قائمة».
+            الوصلة فارغة. أضف أناشيد من صفحة أي نشيد عبر زر «إضافة إلى وصلة».
           </p>
         ) : (
           <ul className="flex flex-col gap-2">

@@ -10,9 +10,9 @@ export const dynamic = "force-dynamic";
 export async function generateMetadata({ params }: { params: Promise<{ token: string }> }): Promise<Metadata> {
   const { token } = await params;
   const playlist = await getPublicPlaylistByToken(token);
-  if (!playlist) return { title: "قائمة غير متاحة" };
+  if (!playlist) return { title: "وصلة غير متاحة" };
   return {
-    title: `${playlist.title} · قائمة أناشيد`,
+    title: `${playlist.title} · وصلة أناشيد`,
     description: playlist.description ?? undefined,
   };
 }
@@ -25,7 +25,7 @@ export default async function SharedPlaylistPage({ params }: { params: Promise<{
   return (
     <div className="flex flex-col gap-6">
       <header className="border-b border-neutral-200 pb-4">
-        <p className="text-xs font-medium uppercase tracking-wide text-emerald-700">قائمة أناشيد مشتركة</p>
+        <p className="text-xs font-medium uppercase tracking-wide text-emerald-700">وصلة أناشيد مشتركة</p>
         <h1 className="mt-1 text-3xl font-extrabold">{playlist.title}</h1>
         {playlist.description && <p className="mt-1 text-neutral-500">{playlist.description}</p>}
         <p className="mt-2 text-sm text-neutral-400">
@@ -35,7 +35,7 @@ export default async function SharedPlaylistPage({ params }: { params: Promise<{
 
       {playlist.items.length === 0 ? (
         <p className="rounded-lg border border-dashed border-neutral-300 p-8 text-center text-neutral-500">
-          هذه القائمة فارغة.
+          هذه الوصلة فارغة.
         </p>
       ) : (
         <ol className="flex flex-col gap-4">

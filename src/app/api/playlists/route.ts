@@ -27,7 +27,7 @@ export async function GET() {
 }
 
 const createSchema = z.object({
-  title: z.string().trim().min(1, "اسم القائمة مطلوب").max(120),
+  title: z.string().trim().min(1, "اسم الوصلة مطلوب").max(120),
   description: z.string().trim().max(500).optional().or(z.literal("")),
 });
 
