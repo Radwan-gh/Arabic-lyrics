@@ -71,6 +71,19 @@ and one sample lyrics entry. Since there is no public self-registration, run
 this at least once to bootstrap the first Admin account — everyone else is
 created afterwards from **إدارة المستخدمين** in the app.
 
+Optionally, seed the bundled collection of ~600 **أناشيد** (grouped by مقام, with
+attribution and rhythm tags):
+
+```bash
+npm run db:seed:anaasheed
+```
+
+This is idempotent — anaasheed already present are skipped, so it is safe to
+re-run. New records are owned by the admin account resolved from `ADMIN_EMAIL`
+(so run `npm run db:seed` first). The parsed data lives in
+`prisma/data/anaasheed.json`; regenerate it from the source text with
+`node prisma/data/parse-anaasheed.mjs`.
+
 ### 5. Run the dev server
 
 ```bash
@@ -138,6 +151,8 @@ please flag anything that doesn't match Railway's current UI/CLI.
 ```
 prisma/schema.prisma       Database schema (User, Lyrics)
 prisma/seed.ts             Seed script (admin bootstrap + sample lyrics)
+prisma/seed-anaasheed.ts   Idempotent seeder for the أناشيد collection
+prisma/data/               أناشيد source text, parsed JSON, and the parser
 src/lib/                   Prisma client, JWT/session helpers, password hashing
 src/middleware.ts          Route protection for /admin and lyrics create/edit
 src/app/                   Pages (App Router) and API routes
