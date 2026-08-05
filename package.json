@@ -18,7 +18,8 @@
     "db:migrate": "prisma migrate dev",
     "db:deploy": "prisma migrate deploy",
     "db:seed": "prisma db seed",
-    "db:seed:anaasheed": "tsx prisma/seed-anaasheed.ts"
+    "db:seed:anaasheed": "tsx prisma/seed-anaasheed.ts",
+    "db:backfill:title-normalized": "tsx prisma/backfill-title-normalized.ts"
   },
   "dependencies": {
     "@prisma/client": "^6.2.0",

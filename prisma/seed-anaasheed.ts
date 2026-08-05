@@ -1,6 +1,7 @@
 import { readFileSync } from "node:fs";
 import path from "node:path";
 import { PrismaClient, type Prisma } from "@prisma/client";
+import { normalizeArabicTitle } from "../src/lib/arabic";
 
 type NasheedRecord = {
   title: string;
@@ -45,6 +46,7 @@ export async function seedAnaasheed(prisma: PrismaClient): Promise<void> {
     seen.add(key); // guard against exact duplicates within the data file itself
     toCreate.push({
       title: n.title,
+      titleNormalized: normalizeArabicTitle(n.title),
       artist: n.artist,
       album: n.album,
       content: n.content,
