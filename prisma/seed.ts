@@ -1,6 +1,7 @@
 import { PrismaClient } from "@prisma/client";
 import bcrypt from "bcryptjs";
 import { seedAnaasheed } from "./seed-anaasheed";
+import { buildSearchText } from "../src/lib/arabic-search";
 
 const prisma = new PrismaClient();
 
@@ -21,13 +22,18 @@ async function main() {
 
   const existingLyrics = await prisma.lyrics.count();
   if (existingLyrics === 0) {
+    const demo = {
+      title: "أغنية تجريبية",
+      artist: "فنان تجريبي",
+      album: null,
+      content:
+        "هذا نص تجريبي لكلمات أغنية\nيمكنك تعديله أو حذفه لاحقاً\nمرحباً بك في منصة كلمات الأغاني العربية",
+    };
     await prisma.lyrics.create({
       data: {
-        title: "أغنية تجريبية",
-        artist: "فنان تجريبي",
-        content:
-          "هذا نص تجريبي لكلمات أغنية\nيمكنك تعديله أو حذفه لاحقاً\nمرحباً بك في منصة كلمات الأغاني العربية",
+        ...demo,
         tags: ["تجريبي"],
+        searchText: buildSearchText(demo),
         createdById: admin.id,
       },
     });
