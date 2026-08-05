@@ -22,8 +22,8 @@ export function SearchBar({ defaultValue, tags }: { defaultValue: string; tags?:
         type="search"
         value={value}
         onChange={(e) => setValue(e.target.value)}
-        placeholder="ابحث عن أغنية أو فنان..."
-        aria-label="ابحث عن أغنية أو فنان"
+        placeholder="ابحث في العنوان أو الفنان أو كلمات النشيد..."
+        aria-label="ابحث في العنوان أو الفنان أو كلمات النشيد"
         className={inputCls}
       />
       <button type="submit" className={`${btnPrimary} shrink-0`}>

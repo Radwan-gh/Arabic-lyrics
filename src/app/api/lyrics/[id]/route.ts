@@ -4,6 +4,7 @@ import { prisma } from "@/lib/prisma";
 import { getCurrentUser } from "@/lib/session";
 import { getLyricsAndIncrementViews } from "@/lib/lyrics";
 import { sanitizeLyricsHtml } from "@/lib/sanitize-lyrics";
+import { buildSearchText } from "@/lib/arabic-search";
 
 export async function GET(_req: Request, { params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
@@ -57,7 +58,14 @@ export async function PUT(req: Request, { params }: { params: Promise<{ id: stri
   const lyrics = await prisma.lyrics
     .update({
       where: { id },
-      data: { title, artist: artist || null, album: album || null, content: cleanedContent, tags: tags ?? [] },
+      data: {
+        title,
+        artist: artist || null,
+        album: album || null,
+        content: cleanedContent,
+        tags: tags ?? [],
+        searchText: buildSearchText({ title, artist, album, content: cleanedContent }),
+      },
     })
     .catch(() => null);
 

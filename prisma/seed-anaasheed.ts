@@ -1,6 +1,7 @@
 import { readFileSync } from "node:fs";
 import path from "node:path";
 import { PrismaClient, type Prisma } from "@prisma/client";
+import { buildSearchText } from "../src/lib/arabic-search";
 
 type NasheedRecord = {
   title: string;
@@ -49,6 +50,7 @@ export async function seedAnaasheed(prisma: PrismaClient): Promise<void> {
       album: n.album,
       content: n.content,
       tags: n.tags,
+      searchText: buildSearchText(n),
       createdById,
     });
   }

@@ -3,6 +3,8 @@ import { z } from "zod";
 import { prisma } from "@/lib/prisma";
 import { getCurrentUser } from "@/lib/session";
 import { sanitizeLyricsHtml } from "@/lib/sanitize-lyrics";
+import { buildLyricsWhere } from "@/lib/lyrics-search";
+import { buildSearchText } from "@/lib/arabic-search";
 
 const PAGE_SIZE = 12;
 
@@ -12,17 +14,7 @@ export async function GET(req: Request) {
   const tags = (searchParams.get("tags")?.split(",") ?? []).map((t) => t.trim()).filter(Boolean);
   const page = Math.max(1, Number(searchParams.get("page")) || 1);
 
-  const where = {
-    ...(q
-      ? {
-          OR: [
-            { title: { contains: q, mode: "insensitive" as const } },
-            { artist: { contains: q, mode: "insensitive" as const } },
-          ],
-        }
-      : {}),
-    ...(tags.length ? { tags: { hasSome: tags } } : {}),
-  };
+  const where = buildLyricsWhere(q, tags);
 
   const [items, total] = await Promise.all([
     prisma.lyrics.findMany({
@@ -86,6 +78,7 @@ export async function POST(req: Request) {
       album: album || null,
       content: cleanedContent,
       tags: tags ?? [],
+      searchText: buildSearchText({ title, artist, album, content: cleanedContent }),
       createdById: session.userId,
     },
   });
