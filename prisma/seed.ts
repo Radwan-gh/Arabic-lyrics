@@ -1,7 +1,7 @@
 import { PrismaClient } from "@prisma/client";
 import bcrypt from "bcryptjs";
 import { seedAnaasheed } from "./seed-anaasheed";
-import { buildSearchText } from "../src/lib/arabic-search";
+import { buildSearchText, normalizeArabic } from "../src/lib/arabic-search";
 
 const prisma = new PrismaClient();
 
@@ -33,6 +33,7 @@ async function main() {
       data: {
         ...demo,
         tags: ["تجريبي"],
+        titleNormalized: normalizeArabic(demo.title),
         searchText: buildSearchText(demo),
         createdById: admin.id,
       },

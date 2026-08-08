@@ -4,7 +4,8 @@ import { prisma } from "@/lib/prisma";
 import { getCurrentUser } from "@/lib/session";
 import { sanitizeLyricsHtml } from "@/lib/sanitize-lyrics";
 import { buildLyricsWhere } from "@/lib/lyrics-search";
-import { buildSearchText } from "@/lib/arabic-search";
+import { buildSearchText, normalizeArabic } from "@/lib/arabic-search";
+import { findDuplicateLyrics } from "@/lib/lyrics";
 
 const PAGE_SIZE = 12;
 
@@ -50,6 +51,8 @@ const lyricsSchema = z.object({
   album: z.string().trim().max(200).optional().or(z.literal("")),
   content: z.string().min(1, "نص الكلمات مطلوب").max(20000),
   tags: z.array(z.string().trim().max(30)).max(10).optional(),
+  // عند true يتجاوز المستخدم تحذير التكرار ويُضيف عمداً.
+  allowDuplicate: z.boolean().optional(),
 });
 
 export async function POST(req: Request) {
@@ -64,16 +67,29 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: parsed.error.issues[0]?.message ?? "بيانات غير صالحة" }, { status: 400 });
   }
 
-  const { title, artist, album, content, tags } = parsed.data;
+  const { title, artist, album, content, tags, allowDuplicate } = parsed.data;
 
   const cleanedContent = sanitizeLyricsHtml(content);
   if (!cleanedContent.replace(/<[^>]*>/g, "").trim()) {
     return NextResponse.json({ error: "نص الكلمات مطلوب" }, { status: 400 });
   }
 
+  // كشف التكرار حسب العنوان المُطبَّع. يُرجع 409 مع الأناشيد المطابقة ما لم
+  // يؤكّد المستخدم الإضافة عمداً (allowDuplicate).
+  if (!allowDuplicate) {
+    const duplicates = await findDuplicateLyrics(title);
+    if (duplicates.length > 0) {
+      return NextResponse.json(
+        { error: "يوجد نشيد بنفس العنوان مسبقاً", duplicates },
+        { status: 409 },
+      );
+    }
+  }
+
   const lyrics = await prisma.lyrics.create({
     data: {
       title,
+      titleNormalized: normalizeArabic(title),
       artist: artist || null,
       album: album || null,
       content: cleanedContent,

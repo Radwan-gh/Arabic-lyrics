@@ -30,6 +30,8 @@ model User {
 model Lyrics {
   id        String   @id @default(cuid())
   title     String
+  // مفتاح مطابقة موحّد للعنوان (normalizeArabic) — يُستخدم لكشف التكرار.
+  titleNormalized String @default("")
   artist    String?
   album     String?
   content   String   @db.Text
@@ -49,6 +51,7 @@ model Lyrics {
   updatedAt DateTime @updatedAt
 
   @@index([title])
+  @@index([titleNormalized])
   @@index([artist])
 }
 

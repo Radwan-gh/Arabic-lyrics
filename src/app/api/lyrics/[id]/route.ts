@@ -2,9 +2,9 @@ import { NextResponse } from "next/server";
 import { z } from "zod";
 import { prisma } from "@/lib/prisma";
 import { getCurrentUser } from "@/lib/session";
-import { getLyricsAndIncrementViews } from "@/lib/lyrics";
+import { getLyricsAndIncrementViews, findDuplicateLyrics } from "@/lib/lyrics";
 import { sanitizeLyricsHtml } from "@/lib/sanitize-lyrics";
-import { buildSearchText } from "@/lib/arabic-search";
+import { buildSearchText, normalizeArabic } from "@/lib/arabic-search";
 
 export async function GET(_req: Request, { params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
@@ -22,6 +22,8 @@ const updateSchema = z.object({
   album: z.string().trim().max(200).optional().or(z.literal("")),
   content: z.string().min(1, "نص الكلمات مطلوب").max(20000),
   tags: z.array(z.string().trim().max(30)).max(10).optional(),
+  // عند true يتجاوز المستخدم تحذير التكرار ويحفظ عمداً.
+  allowDuplicate: z.boolean().optional(),
 });
 
 async function canModify(id: string) {
@@ -48,11 +50,22 @@ export async function PUT(req: Request, { params }: { params: Promise<{ id: stri
     return NextResponse.json({ error: parsed.error.issues[0]?.message ?? "بيانات غير صالحة" }, { status: 400 });
   }
 
-  const { title, artist, album, content, tags } = parsed.data;
+  const { title, artist, album, content, tags, allowDuplicate } = parsed.data;
 
   const cleanedContent = sanitizeLyricsHtml(content);
   if (!cleanedContent.replace(/<[^>]*>/g, "").trim()) {
     return NextResponse.json({ error: "نص الكلمات مطلوب" }, { status: 400 });
+  }
+
+  // كشف التكرار حسب العنوان المُطبَّع، مع استثناء السجل الحالي نفسه.
+  if (!allowDuplicate) {
+    const duplicates = await findDuplicateLyrics(title, id);
+    if (duplicates.length > 0) {
+      return NextResponse.json(
+        { error: "يوجد نشيد بنفس العنوان مسبقاً", duplicates },
+        { status: 409 },
+      );
+    }
   }
 
   const lyrics = await prisma.lyrics
@@ -60,6 +73,7 @@ export async function PUT(req: Request, { params }: { params: Promise<{ id: stri
       where: { id },
       data: {
         title,
+        titleNormalized: normalizeArabic(title),
         artist: artist || null,
         album: album || null,
         content: cleanedContent,
