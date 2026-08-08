@@ -18,6 +18,24 @@ export async function getOwnedPlaylist(id: string, ownerId: string) {
   return playlist;
 }
 
+/** Owner's playlist including each nasheed's full content, for the reading view. */
+export async function getOwnedPlaylistWithContent(id: string, ownerId: string) {
+  const playlist = await prisma.playlist.findUnique({
+    where: { id },
+    include: {
+      items: {
+        orderBy: { position: "asc" },
+        include: {
+          lyrics: { select: { id: true, title: true, artist: true, album: true, content: true } },
+        },
+      },
+    },
+  });
+
+  if (!playlist || playlist.ownerId !== ownerId) return null;
+  return playlist;
+}
+
 /** Public playlist looked up by its share token; only returned when marked public. */
 export async function getPublicPlaylistByToken(token: string) {
   const playlist = await prisma.playlist.findUnique({

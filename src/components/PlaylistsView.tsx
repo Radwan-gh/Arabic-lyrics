@@ -116,6 +116,9 @@ export function PlaylistsView({ initial }: { initial: PlaylistSummary[] }) {
                 </p>
               </div>
               <div className="flex shrink-0 gap-2">
+                <Link href={`/playlists/${p.id}/view`} className={`${btnPrimary} px-3 py-1.5`}>
+                  عرض
+                </Link>
                 <Link href={`/playlists/${p.id}`} className={`${btnSecondary} px-3 py-1.5`}>
                   إدارة
                 </Link>
