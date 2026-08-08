@@ -142,6 +142,9 @@ export function PlaylistDetailView({ playlist, shareUrl }: { playlist: PlaylistD
         </Link>
         <h1 className="mt-2 text-2xl font-extrabold">{playlist.title}</h1>
         {playlist.description && <p className="mt-1 text-neutral-500">{playlist.description}</p>}
+        <Link href={`/playlists/${playlist.id}/view`} className={`mt-2 inline-block ${btnSecondary} px-3 py-1.5`}>
+          عرض الوصلة
+        </Link>
       </div>
 
       <section className="flex flex-col gap-3 rounded-xl border border-neutral-200 bg-white p-4 shadow-sm">
