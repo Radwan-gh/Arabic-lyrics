@@ -237,7 +237,7 @@ export function LyricsForm({
         />
       </Field>
 
-      <Field label="الكلمات">
+      <Field label="الأنشودة">
         <RichTextEditor
           content={initialContentHtml}
           onChange={(html) => setValues((v) => ({ ...v, content: html }))}
@@ -266,7 +266,7 @@ export function LyricsForm({
         </div>
       ) : (
         <button type="submit" disabled={loading} className={`${btnPrimary} mt-2`}>
-          {loading ? "جارٍ الحفظ..." : mode === "create" ? "نشر الكلمات" : "حفظ التعديلات"}
+          {loading ? "جارٍ الحفظ..." : mode === "create" ? "نشر الأنشودة" : "حفظ التعديلات"}
         </button>
       )}
     </form>

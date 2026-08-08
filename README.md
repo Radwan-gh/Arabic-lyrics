@@ -1,4 +1,4 @@
-# كلمات — Arabic Lyrics Manager
+# أناشيد — Arabic Lyrics Manager
 
 A mobile-friendly, right-to-left web app for managing Arabic song lyrics, with
 user accounts and role-based permissions.

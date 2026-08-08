@@ -9,7 +9,7 @@ export function DeleteLyricsButton({ id }: { id: string }) {
   const router = useRouter();
 
   async function handleDelete() {
-    if (!confirm("هل أنت متأكد من حذف هذه الكلمات؟")) return;
+    if (!confirm("هل أنت متأكد من حذف هذه الأنشودة؟")) return;
 
     setLoading(true);
     const res = await fetch(`/api/lyrics/${id}`, { method: "DELETE" });

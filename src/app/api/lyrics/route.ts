@@ -49,7 +49,7 @@ const lyricsSchema = z.object({
   title: z.string().trim().min(1, "العنوان مطلوب").max(200),
   artist: z.string().trim().max(200).optional().or(z.literal("")),
   album: z.string().trim().max(200).optional().or(z.literal("")),
-  content: z.string().min(1, "نص الكلمات مطلوب").max(20000),
+  content: z.string().min(1, "نص الأنشودة مطلوب").max(20000),
   tags: z.array(z.string().trim().max(30)).max(10).optional(),
   // عند true يتجاوز المستخدم تحذير التكرار ويُضيف عمداً.
   allowDuplicate: z.boolean().optional(),
@@ -58,7 +58,7 @@ const lyricsSchema = z.object({
 export async function POST(req: Request) {
   const session = await getCurrentUser();
   if (!session || (session.role !== "ADMIN" && session.role !== "EDITOR")) {
-    return NextResponse.json({ error: "غير مصرح لك بإضافة كلمات" }, { status: 403 });
+    return NextResponse.json({ error: "غير مصرح لك بإضافة أناشيد" }, { status: 403 });
   }
 
   const body = await req.json().catch(() => null);
@@ -71,7 +71,7 @@ export async function POST(req: Request) {
 
   const cleanedContent = sanitizeLyricsHtml(content);
   if (!cleanedContent.replace(/<[^>]*>/g, "").trim()) {
-    return NextResponse.json({ error: "نص الكلمات مطلوب" }, { status: 400 });
+    return NextResponse.json({ error: "نص الأنشودة مطلوب" }, { status: 400 });
   }
 
   // كشف التكرار حسب العنوان المُطبَّع. يُرجع 409 مع الأناشيد المطابقة ما لم

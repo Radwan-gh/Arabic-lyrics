@@ -28,7 +28,7 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
 
   const lyrics = await prisma.lyrics.findUnique({ where: { id: parsed.data.lyricsId }, select: { id: true } });
   if (!lyrics) {
-    return NextResponse.json({ error: "الكلمات غير موجودة" }, { status: 404 });
+    return NextResponse.json({ error: "الأنشودة غير موجودة" }, { status: 404 });
   }
 
   const last = await prisma.playlistItem.findFirst({

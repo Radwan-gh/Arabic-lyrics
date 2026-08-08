@@ -21,7 +21,7 @@ export function Navbar({ user }: { user: SessionPayload | null }) {
     <header className="sticky top-0 z-20 border-b border-neutral-200 bg-white/90 backdrop-blur">
       <div className="mx-auto flex max-w-5xl items-center justify-between px-4 py-3">
         <Link href="/" className={`rounded-sm text-xl font-extrabold text-emerald-700 ${focusRing}`}>
-          كلمات
+          أناشيد
         </Link>
 
         <button
@@ -74,7 +74,7 @@ function NavLinks({
       </Link>
       {user && (user.role === "ADMIN" || user.role === "EDITOR") && (
         <Link href="/lyrics/new" className={linkCls} onClick={onNavigate}>
-          إضافة كلمات
+          إضافة أنشودة
         </Link>
       )}
       {user && (
