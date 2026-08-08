@@ -59,7 +59,7 @@ export default async function HomePage({
 
       {items.length === 0 ? (
         <p className="rounded-lg border border-dashed border-neutral-300 p-8 text-center text-neutral-500">
-          {q || tags.length ? "لا توجد نتائج مطابقة لبحثك" : "لا توجد كلمات أغاني بعد"}
+          {q || tags.length ? "لا توجد نتائج مطابقة لبحثك" : "لا توجد أناشيد بعد"}
         </p>
       ) : (
         <ul className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">

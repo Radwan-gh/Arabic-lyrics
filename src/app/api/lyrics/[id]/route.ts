@@ -11,7 +11,7 @@ export async function GET(_req: Request, { params }: { params: Promise<{ id: str
   const lyrics = await getLyricsAndIncrementViews(id);
 
   if (!lyrics) {
-    return NextResponse.json({ error: "الكلمات غير موجودة" }, { status: 404 });
+    return NextResponse.json({ error: "الأنشودة غير موجودة" }, { status: 404 });
   }
   return NextResponse.json(lyrics);
 }
@@ -20,7 +20,7 @@ const updateSchema = z.object({
   title: z.string().trim().min(1, "العنوان مطلوب").max(200),
   artist: z.string().trim().max(200).optional().or(z.literal("")),
   album: z.string().trim().max(200).optional().or(z.literal("")),
-  content: z.string().min(1, "نص الكلمات مطلوب").max(20000),
+  content: z.string().min(1, "نص الأنشودة مطلوب").max(20000),
   tags: z.array(z.string().trim().max(30)).max(10).optional(),
   // عند true يتجاوز المستخدم تحذير التكرار ويحفظ عمداً.
   allowDuplicate: z.boolean().optional(),
@@ -41,7 +41,7 @@ export async function PUT(req: Request, { params }: { params: Promise<{ id: stri
   const { id } = await params;
   const { allowed } = await canModify(id);
   if (!allowed) {
-    return NextResponse.json({ error: "غير مصرح لك بتعديل هذه الكلمات" }, { status: 403 });
+    return NextResponse.json({ error: "غير مصرح لك بتعديل هذه الأنشودة" }, { status: 403 });
   }
 
   const body = await req.json().catch(() => null);
@@ -54,7 +54,7 @@ export async function PUT(req: Request, { params }: { params: Promise<{ id: stri
 
   const cleanedContent = sanitizeLyricsHtml(content);
   if (!cleanedContent.replace(/<[^>]*>/g, "").trim()) {
-    return NextResponse.json({ error: "نص الكلمات مطلوب" }, { status: 400 });
+    return NextResponse.json({ error: "نص الأنشودة مطلوب" }, { status: 400 });
   }
 
   // كشف التكرار حسب العنوان المُطبَّع، مع استثناء السجل الحالي نفسه.
@@ -84,7 +84,7 @@ export async function PUT(req: Request, { params }: { params: Promise<{ id: stri
     .catch(() => null);
 
   if (!lyrics) {
-    return NextResponse.json({ error: "الكلمات غير موجودة" }, { status: 404 });
+    return NextResponse.json({ error: "الأنشودة غير موجودة" }, { status: 404 });
   }
   return NextResponse.json(lyrics);
 }
@@ -93,7 +93,7 @@ export async function DELETE(_req: Request, { params }: { params: Promise<{ id: 
   const { id } = await params;
   const { allowed } = await canModify(id);
   if (!allowed) {
-    return NextResponse.json({ error: "غير مصرح لك بحذف هذه الكلمات" }, { status: 403 });
+    return NextResponse.json({ error: "غير مصرح لك بحذف هذه الأنشودة" }, { status: 403 });
   }
 
   await prisma.lyrics.delete({ where: { id } }).catch(() => null);

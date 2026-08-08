@@ -15,7 +15,7 @@ export default async function EditLyricsPage({ params }: { params: Promise<{ id:
 
   return (
     <div className="mx-auto max-w-2xl">
-      <h1 className="mb-4 text-xl font-bold">تعديل الكلمات</h1>
+      <h1 className="mb-4 text-xl font-bold">تعديل الأنشودة</h1>
       <LyricsForm
         mode="edit"
         lyricsId={lyrics.id}

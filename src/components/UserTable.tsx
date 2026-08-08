@@ -59,7 +59,7 @@ export function UserTable({ initialUsers, currentUserId }: { initialUsers: UserR
   }
 
   async function deleteUser(id: string) {
-    if (!confirm("هل أنت متأكد من حذف هذا المستخدم؟ سيتم الاحتفاظ بالكلمات التي أضافها دون نسبها إليه.")) return;
+    if (!confirm("هل أنت متأكد من حذف هذا المستخدم؟ سيتم الاحتفاظ بالأناشيد التي أضافها دون نسبها إليه.")) return;
 
     setBusyId(id);
     const res = await fetch(`/api/admin/users/${id}`, { method: "DELETE" });
@@ -88,7 +88,7 @@ export function UserTable({ initialUsers, currentUserId }: { initialUsers: UserR
               <th className="px-4 py-3 text-start font-medium">البريد الإلكتروني</th>
               <th className="px-4 py-3 text-start font-medium">الدور</th>
               <th className="px-4 py-3 text-start font-medium">الحالة</th>
-              <th className="px-4 py-3 text-start font-medium">الكلمات</th>
+              <th className="px-4 py-3 text-start font-medium">الأناشيد</th>
               <th className="px-4 py-3 text-start font-medium">إجراءات</th>
             </tr>
           </thead>

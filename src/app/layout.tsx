@@ -11,8 +11,8 @@ const tajawal = Tajawal({
 });
 
 export const metadata: Metadata = {
-  title: "كلمات - إدارة الأغاني العربية",
-  description: "منصة لإدارة وحفظ كلمات الأغاني العربية",
+  title: "أناشيد - إدارة الأناشيد العربية",
+  description: "منصة لإدارة وحفظ الأناشيد العربية",
 };
 
 export const viewport: Viewport = {

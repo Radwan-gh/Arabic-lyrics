@@ -53,7 +53,7 @@ export function TagTable({ initialTags }: { initialTags: TagRow[] }) {
   }
 
   async function deleteTag(tag: string) {
-    if (!confirm(`هل أنت متأكد من حذف الوسم "${tag}" من جميع الكلمات؟`)) return;
+    if (!confirm(`هل أنت متأكد من حذف الوسم "${tag}" من جميع الأناشيد؟`)) return;
 
     setBusyTag(tag);
     const res = await fetch(`/api/admin/tags?tag=${encodeURIComponent(tag)}`, { method: "DELETE" });
@@ -81,7 +81,7 @@ export function TagTable({ initialTags }: { initialTags: TagRow[] }) {
         <thead className="bg-neutral-50 text-neutral-500">
           <tr>
             <th className="px-4 py-3 text-start font-medium">الوسم</th>
-            <th className="px-4 py-3 text-start font-medium">عدد الكلمات</th>
+            <th className="px-4 py-3 text-start font-medium">عدد الأناشيد</th>
             <th className="px-4 py-3 text-start font-medium">إجراءات</th>
           </tr>
         </thead>

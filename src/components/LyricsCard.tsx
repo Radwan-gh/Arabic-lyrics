@@ -49,7 +49,7 @@ export function LyricsCard({ id, title, artist, album, tags, createdAt, contentH
         aria-expanded={expanded}
         className={`mt-2 rounded-sm text-xs font-medium text-emerald-700 hover:underline ${focusRing}`}
       >
-        {expanded ? "إخفاء الكلمات ▲" : "عرض الكلمات كاملة ▼"}
+        {expanded ? "إخفاء الأنشودة ▲" : "عرض الأنشودة كاملة ▼"}
       </button>
 
       {expanded && (
