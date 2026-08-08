@@ -49,14 +49,17 @@ export function LyricsForm({
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [duplicates, setDuplicates] = useState<DuplicateMatch[]>([]);
+  const [suggestions, setSuggestions] = useState<DuplicateMatch[]>([]);
+  const [showSuggestions, setShowSuggestions] = useState(false);
   const [checking, setChecking] = useState(false);
 
-  // فحص فوري (debounced) للتكرار أثناء كتابة العنوان — يعرض الأناشيد الموجودة
-  // مسبقاً بنفس العنوان قبل الحفظ.
+  // فحص فوري (debounced) أثناء كتابة العنوان: يجلب المطابقات التامة (لمنع التكرار)
+  // والاقتراحات (أناشيد موجودة يحتوي نصّها الكامل على الكلمة المكتوبة) معاً.
   useEffect(() => {
     const title = values.title.trim();
     if (!title) {
       setDuplicates([]);
+      setSuggestions([]);
       setChecking(false);
       return;
     }
@@ -71,6 +74,7 @@ export function LyricsForm({
         if (!res.ok) return;
         const data = await res.json();
         setDuplicates(Array.isArray(data.matches) ? data.matches : []);
+        setSuggestions(Array.isArray(data.suggestions) ? data.suggestions : []);
       } catch {
         // تجاهل أخطاء الإلغاء/الشبكة — الفحص النهائي على الخادم عند الحفظ.
       } finally {
@@ -133,16 +137,57 @@ export function LyricsForm({
         </p>
       )}
 
-      <Field label="عنوان الأغنية">
-        <input
-          required
-          value={values.title}
-          onChange={(e) => setValues({ ...values, title: e.target.value })}
-          className={inputCls}
-          aria-describedby={duplicates.length ? "duplicate-warning" : undefined}
-        />
+      <div className="flex flex-col gap-1.5 text-sm font-medium text-neutral-700">
+        <label htmlFor="lyrics-title">عنوان الأغنية</label>
+        <div className="relative">
+          <input
+            id="lyrics-title"
+            required
+            autoComplete="off"
+            value={values.title}
+            onChange={(e) => {
+              setValues({ ...values, title: e.target.value });
+              setShowSuggestions(true);
+            }}
+            onFocus={() => setShowSuggestions(true)}
+            onBlur={() => setTimeout(() => setShowSuggestions(false), 150)}
+            onKeyDown={(e) => {
+              if (e.key === "Escape") setShowSuggestions(false);
+            }}
+            className={inputCls}
+            role="combobox"
+            aria-expanded={showSuggestions && suggestions.length > 0}
+            aria-controls="title-suggestions"
+            aria-describedby={duplicates.length ? "duplicate-warning" : undefined}
+          />
+          {showSuggestions && suggestions.length > 0 && (
+            <ul
+              id="title-suggestions"
+              role="listbox"
+              className="absolute inset-x-0 top-full z-20 mt-1 max-h-72 overflow-auto rounded-lg border border-neutral-200 bg-white py-1 shadow-lg"
+            >
+              <li className="px-3 py-1 text-xs font-normal text-neutral-400">أناشيد موجودة قد تطابق بحثك</li>
+              {suggestions.map((s) => (
+                <li key={s.id} role="option" aria-selected={false}>
+                  <Link
+                    href={`/lyrics/${s.id}`}
+                    target="_blank"
+                    className="flex flex-col gap-0.5 px-3 py-2 transition-colors hover:bg-emerald-50 focus-visible:bg-emerald-50 focus-visible:outline-none"
+                  >
+                    <span className="font-medium text-neutral-900">{s.title}</span>
+                    {(s.artist || s.album) && (
+                      <span className="text-xs font-normal text-neutral-500">
+                        {[s.artist, s.album].filter(Boolean).join(" · ")}
+                      </span>
+                    )}
+                  </Link>
+                </li>
+              ))}
+            </ul>
+          )}
+        </div>
         {checking && <span className="text-xs font-normal text-neutral-400">جارٍ التحقق من التكرار…</span>}
-      </Field>
+      </div>
 
       {duplicates.length > 0 && (
         <div
