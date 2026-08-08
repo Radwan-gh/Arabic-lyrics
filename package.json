@@ -11,7 +11,7 @@
   "scripts": {
     "dev": "next dev",
     "build": "next build",
-    "start": "prisma db push --accept-data-loss --skip-generate && sh -c 'if [ \"$SEED_ON_START\" = \"true\" ]; then npm run db:seed || true; fi' && next start -p ${PORT:-3000}",
+    "start": "prisma db push --accept-data-loss --skip-generate && sh -c 'if [ \"$SEED_ON_START\" = \"true\" ]; then npm run db:seed || true; fi' && (npm run db:backfill-search || true) && next start -p ${PORT:-3000}",
     "lint": "next lint",
     "postinstall": "prisma generate",
     "db:generate": "prisma generate",
@@ -19,7 +19,7 @@
     "db:deploy": "prisma migrate deploy",
     "db:seed": "prisma db seed",
     "db:seed:anaasheed": "tsx prisma/seed-anaasheed.ts",
-    "db:backfill:title-normalized": "tsx prisma/backfill-title-normalized.ts"
+    "db:backfill-search": "tsx prisma/backfill-search-text.ts"
   },
   "dependencies": {
     "@prisma/client": "^6.2.0",

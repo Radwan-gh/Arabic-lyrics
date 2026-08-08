@@ -1,5 +1,6 @@
 import { prisma } from "@/lib/prisma";
 import { renderLyricsHtml } from "@/lib/render-lyrics";
+import { buildLyricsWhere } from "@/lib/lyrics-search";
 import { SearchBar } from "@/components/SearchBar";
 import { TagFilterBar } from "@/components/TagFilterBar";
 import { LyricsCard } from "@/components/LyricsCard";
@@ -19,17 +20,7 @@ export default async function HomePage({
     .filter(Boolean);
   const page = Math.max(1, Number(pageParam) || 1);
 
-  const where = {
-    ...(q
-      ? {
-          OR: [
-            { title: { contains: q, mode: "insensitive" as const } },
-            { artist: { contains: q, mode: "insensitive" as const } },
-          ],
-        }
-      : {}),
-    ...(tags.length ? { tags: { hasSome: tags } } : {}),
-  };
+  const where = buildLyricsWhere(q, tags);
 
   const [items, total] = await Promise.all([
     prisma.lyrics.findMany({

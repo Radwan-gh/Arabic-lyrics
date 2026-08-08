@@ -30,13 +30,17 @@ model User {
 model Lyrics {
   id        String   @id @default(cuid())
   title     String
-  // مفتاح مطابقة موحّد للعنوان (normalizeArabicTitle) — يُستخدم لكشف التكرار.
+  // مفتاح مطابقة موحّد للعنوان (normalizeArabic) — يُستخدم لكشف التكرار.
   titleNormalized String @default("")
   artist    String?
   album     String?
   content   String   @db.Text
   tags      String[] @default([])
   viewCount Int      @default(0)
+
+  // نسخة مُطبَّعة مسبقًا من (العنوان + الفنان + المقام + كلمات النشيد) للبحث النصّي
+  // المتجاهل للتشكيل والموحِّد لصور الأحرف. تُبنى عبر buildSearchText في src/lib/arabic-search.ts.
+  searchText String @default("") @db.Text
 
   createdBy   User?   @relation(fields: [createdById], references: [id], onDelete: SetNull)
   createdById String?

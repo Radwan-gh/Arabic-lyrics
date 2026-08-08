@@ -1,8 +1,7 @@
 import { PrismaClient } from "@prisma/client";
 import bcrypt from "bcryptjs";
 import { seedAnaasheed } from "./seed-anaasheed";
-import { backfillTitleNormalized } from "./backfill-title-normalized";
-import { normalizeArabicTitle } from "../src/lib/arabic";
+import { buildSearchText, normalizeArabic } from "../src/lib/arabic-search";
 
 const prisma = new PrismaClient();
 
@@ -23,14 +22,19 @@ async function main() {
 
   const existingLyrics = await prisma.lyrics.count();
   if (existingLyrics === 0) {
+    const demo = {
+      title: "أغنية تجريبية",
+      artist: "فنان تجريبي",
+      album: null,
+      content:
+        "هذا نص تجريبي لكلمات أغنية\nيمكنك تعديله أو حذفه لاحقاً\nمرحباً بك في منصة كلمات الأغاني العربية",
+    };
     await prisma.lyrics.create({
       data: {
-        title: "أغنية تجريبية",
-        titleNormalized: normalizeArabicTitle("أغنية تجريبية"),
-        artist: "فنان تجريبي",
-        content:
-          "هذا نص تجريبي لكلمات أغنية\nيمكنك تعديله أو حذفه لاحقاً\nمرحباً بك في منصة كلمات الأغاني العربية",
+        ...demo,
         tags: ["تجريبي"],
+        titleNormalized: normalizeArabic(demo.title),
+        searchText: buildSearchText(demo),
         createdById: admin.id,
       },
     });
@@ -38,9 +42,6 @@ async function main() {
 
   // Seed the bundled أناشيد collection (idempotent — safe to re-run on every deploy).
   await seedAnaasheed(prisma);
-
-  // تعبئة titleNormalized لأي سجلات قديمة أُضيفت قبل وجود العمود.
-  await backfillTitleNormalized(prisma);
 
   console.log(`تم تجهيز قاعدة البيانات. حساب المدير: ${adminEmail}`);
 }

@@ -4,7 +4,7 @@ import { prisma } from "@/lib/prisma";
 import { getCurrentUser } from "@/lib/session";
 import { getLyricsAndIncrementViews, findDuplicateLyrics } from "@/lib/lyrics";
 import { sanitizeLyricsHtml } from "@/lib/sanitize-lyrics";
-import { normalizeArabicTitle } from "@/lib/arabic";
+import { buildSearchText, normalizeArabic } from "@/lib/arabic-search";
 
 export async function GET(_req: Request, { params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
@@ -73,11 +73,12 @@ export async function PUT(req: Request, { params }: { params: Promise<{ id: stri
       where: { id },
       data: {
         title,
-        titleNormalized: normalizeArabicTitle(title),
+        titleNormalized: normalizeArabic(title),
         artist: artist || null,
         album: album || null,
         content: cleanedContent,
         tags: tags ?? [],
+        searchText: buildSearchText({ title, artist, album, content: cleanedContent }),
       },
     })
     .catch(() => null);

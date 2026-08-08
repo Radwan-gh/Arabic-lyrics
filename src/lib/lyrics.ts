@@ -1,5 +1,5 @@
 import { prisma } from "./prisma";
-import { normalizeArabicTitle } from "./arabic";
+import { normalizeArabic } from "./arabic-search";
 
 export type DuplicateMatch = {
   id: string;
@@ -17,7 +17,7 @@ export async function findDuplicateLyrics(
   title: string,
   excludeId?: string,
 ): Promise<DuplicateMatch[]> {
-  const titleNormalized = normalizeArabicTitle(title);
+  const titleNormalized = normalizeArabic(title);
   if (!titleNormalized) return [];
 
   return prisma.lyrics.findMany({
