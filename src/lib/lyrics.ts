@@ -1,5 +1,6 @@
 import { prisma } from "./prisma";
 import { normalizeArabic } from "./arabic-search";
+import { buildLyricsWhere } from "./lyrics-search";
 
 export type DuplicateMatch = {
   id: string;
@@ -27,6 +28,29 @@ export async function findDuplicateLyrics(
     },
     orderBy: { createdAt: "desc" },
     take: 10,
+    select: { id: true, title: true, artist: true, album: true },
+  });
+}
+
+/**
+ * يقترح أناشيد موجودة يحتوي نصّها الكامل (العنوان/المنشد/المقام/الكلمات) على
+ * الكلمة المكتوبة — لعرض قائمة اقتراحات حيّة (autocomplete) أثناء الكتابة.
+ * يعيد الاستخدام لمنطق البحث الموحّد `buildLyricsWhere`. يتطلّب حرفين على الأقل
+ * بعد التطبيع لتقليل الضجيج، ويستثني معرّفات مُعطاة (مثل المطابقات التامة).
+ */
+export async function findLyricsSuggestions(
+  q: string,
+  excludeIds: string[] = [],
+): Promise<DuplicateMatch[]> {
+  if (normalizeArabic(q).length < 2) return [];
+
+  return prisma.lyrics.findMany({
+    where: {
+      ...buildLyricsWhere(q, []),
+      ...(excludeIds.length ? { id: { notIn: excludeIds } } : {}),
+    },
+    orderBy: { createdAt: "desc" },
+    take: 8,
     select: { id: true, title: true, artist: true, album: true },
   });
 }

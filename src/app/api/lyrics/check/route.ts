@@ -1,10 +1,12 @@
 import { NextResponse } from "next/server";
 import { getCurrentUser } from "@/lib/session";
-import { findDuplicateLyrics } from "@/lib/lyrics";
+import { findDuplicateLyrics, findLyricsSuggestions } from "@/lib/lyrics";
 
 // GET /api/lyrics/check?title=...&excludeId=...
-// يرجّع الأناشيد الموجودة مسبقاً بنفس العنوان (بعد التطبيع) لكشف التكرار
-// أثناء الكتابة وعرض الموجود فعلاً.
+// يرجّع:
+//   matches: الأناشيد المطابقة تماماً للعنوان (بعد التطبيع) — لمنع التكرار.
+//   suggestions: أناشيد موجودة يحتوي نصّها الكامل على الكلمة المكتوبة — لعرض
+//     قائمة اقتراحات حيّة أسفل حقل العنوان (باستثناء المطابقات التامة).
 export async function GET(req: Request) {
   const session = await getCurrentUser();
   if (!session || (session.role !== "ADMIN" && session.role !== "EDITOR")) {
@@ -15,6 +17,13 @@ export async function GET(req: Request) {
   const title = searchParams.get("title")?.trim() || "";
   const excludeId = searchParams.get("excludeId")?.trim() || undefined;
 
-  const matches = title ? await findDuplicateLyrics(title, excludeId) : [];
-  return NextResponse.json({ matches });
+  if (!title) {
+    return NextResponse.json({ matches: [], suggestions: [] });
+  }
+
+  const matches = await findDuplicateLyrics(title, excludeId);
+  const excludeIds = [...matches.map((m) => m.id), ...(excludeId ? [excludeId] : [])];
+  const suggestions = await findLyricsSuggestions(title, excludeIds);
+
+  return NextResponse.json({ matches, suggestions });
 }
