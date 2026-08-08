@@ -1,11 +1,18 @@
 "use client";
 
 import Link from "next/link";
-import { useState } from "react";
-import { btnPrimary, btnSecondary, focusRing } from "@/lib/ui";
+import { useEffect, useState } from "react";
+import { btnPrimary, btnSecondary, inputSm, focusRing } from "@/lib/ui";
 
 interface Item {
   lyricsId: string;
+  title: string;
+  artist: string | null;
+  album: string | null;
+}
+
+interface SearchResult {
+  id: string;
   title: string;
   artist: string | null;
   album: string | null;
@@ -24,6 +31,57 @@ export function PlaylistDetailView({ playlist, shareUrl }: { playlist: PlaylistD
   const [isPublic, setIsPublic] = useState(playlist.isPublic);
   const [copied, setCopied] = useState(false);
   const [busy, setBusy] = useState(false);
+
+  const [query, setQuery] = useState("");
+  const [results, setResults] = useState<SearchResult[] | null>(null);
+  const [searching, setSearching] = useState(false);
+  const [addingId, setAddingId] = useState<string | null>(null);
+
+  useEffect(() => {
+    const term = query.trim();
+    if (!term) {
+      setResults(null);
+      setSearching(false);
+      return;
+    }
+    setSearching(true);
+    const controller = new AbortController();
+    const timer = setTimeout(() => {
+      fetch(`/api/lyrics?q=${encodeURIComponent(term)}`, { signal: controller.signal })
+        .then((r) => (r.ok ? r.json() : Promise.reject()))
+        .then((data) => setResults(data.items ?? []))
+        .catch(() => {
+          if (!controller.signal.aborted) setResults([]);
+        })
+        .finally(() => {
+          if (!controller.signal.aborted) setSearching(false);
+        });
+    }, 300);
+    return () => {
+      controller.abort();
+      clearTimeout(timer);
+    };
+  }, [query]);
+
+  async function addItem(result: SearchResult) {
+    setAddingId(result.id);
+    try {
+      const res = await fetch(`/api/playlists/${playlist.id}/items`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ lyricsId: result.id }),
+      });
+      if (res.ok) {
+        setItems((prev) =>
+          prev.some((i) => i.lyricsId === result.id)
+            ? prev
+            : [...prev, { lyricsId: result.id, title: result.title, artist: result.artist, album: result.album }],
+        );
+      }
+    } finally {
+      setAddingId(null);
+    }
+  }
 
   async function togglePublic() {
     setBusy(true);
@@ -123,11 +181,63 @@ export function PlaylistDetailView({ playlist, shareUrl }: { playlist: PlaylistD
         )}
       </section>
 
+      <section className="flex flex-col gap-3 rounded-xl border border-neutral-200 bg-white p-4 shadow-sm">
+        <p className="text-sm font-semibold text-neutral-700">إضافة نشيد إلى الوصلة</p>
+        <input
+          type="search"
+          value={query}
+          onChange={(e) => setQuery(e.target.value)}
+          placeholder="ابحث عن نشيد بالعنوان أو المنشد لإضافته..."
+          aria-label="ابحث عن نشيد لإضافته إلى الوصلة"
+          className={inputSm}
+        />
+
+        {query.trim() && (
+          <div className="max-h-72 overflow-auto rounded-lg border border-neutral-100">
+            {searching && results === null ? (
+              <p className="p-3 text-sm text-neutral-500">جارٍ البحث…</p>
+            ) : (
+              (() => {
+                const inPlaylist = new Set(items.map((i) => i.lyricsId));
+                const visible = (results ?? []).filter((r) => !inPlaylist.has(r.id));
+                if (visible.length === 0) {
+                  return (
+                    <p className="p-3 text-sm text-neutral-500">
+                      {(results ?? []).length === 0 ? "لا توجد أناشيد مطابقة" : "كل النتائج مضافة إلى الوصلة"}
+                    </p>
+                  );
+                }
+                return (
+                  <ul className="flex flex-col divide-y divide-neutral-100">
+                    {visible.map((r) => (
+                      <li key={r.id} className="flex items-center justify-between gap-3 p-2.5">
+                        <div className="min-w-0">
+                          <p className="truncate text-sm font-medium">{r.title}</p>
+                          {r.artist && <p className="truncate text-xs text-emerald-700">{r.artist}</p>}
+                        </div>
+                        <button
+                          type="button"
+                          onClick={() => addItem(r)}
+                          disabled={addingId === r.id}
+                          className={`${btnPrimary} shrink-0 px-3 py-1.5`}
+                        >
+                          {addingId === r.id ? "…" : "إضافة"}
+                        </button>
+                      </li>
+                    ))}
+                  </ul>
+                );
+              })()
+            )}
+          </div>
+        )}
+      </section>
+
       <section className="flex flex-col gap-2">
         <h2 className="text-lg font-bold">الأناشيد ({items.length})</h2>
         {items.length === 0 ? (
           <p className="rounded-lg border border-dashed border-neutral-300 p-6 text-center text-neutral-500">
-            الوصلة فارغة. أضف أناشيد من صفحة أي نشيد عبر زر «إضافة إلى وصلة».
+            الوصلة فارغة. ابحث عن نشيد بالأعلى لإضافته، أو استخدم زر «إضافة إلى وصلة» من صفحة أي نشيد.
           </p>
         ) : (
           <ul className="flex flex-col gap-2">
