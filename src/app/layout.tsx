@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from "next";
 import { Tajawal } from "next/font/google";
 import "./globals.css";
 import { Navbar } from "@/components/Navbar";
+import { ServiceWorkerRegister } from "@/components/ServiceWorkerRegister";
 import { getCurrentUser } from "@/lib/session";
 
 const tajawal = Tajawal({
@@ -13,11 +14,18 @@ const tajawal = Tajawal({
 export const metadata: Metadata = {
   title: "أناشيد - إدارة الأناشيد العربية",
   description: "منصة لإدارة وحفظ الأناشيد العربية",
+  applicationName: "أناشيد",
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: "default",
+    title: "أناشيد",
+  },
 };
 
 export const viewport: Viewport = {
   width: "device-width",
   initialScale: 1,
+  themeColor: "#047857",
 };
 
 export default async function RootLayout({ children }: { children: React.ReactNode }) {
@@ -36,6 +44,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
         <main id="main" className="mx-auto max-w-5xl px-4 py-6">
           {children}
         </main>
+        <ServiceWorkerRegister />
       </body>
     </html>
   );
