@@ -22,12 +22,17 @@ export function RichTextEditor({
     const quill = new Quill(containerRef.current, {
       theme: "snow",
       modules: {
-        toolbar: [["bold", "italic", "underline"]],
+        // No toolbar: the editor is plain multi-line text only.
+        toolbar: false,
       },
-      formats: ["bold", "italic", "underline"],
+      // Empty whitelist => Quill strips every inline format (bold/italic/
+      // underline/etc.) on input and paste, so text can never become bold.
+      formats: [],
     });
 
     quill.root.setAttribute("dir", "rtl");
+    // Also strips any legacy <strong>/<em>/<u> baked into previously saved
+    // lyrics, so opening an old entry shows clean plain text.
     quill.clipboard.dangerouslyPasteHTML(content);
 
     quill.on("text-change", () => {
