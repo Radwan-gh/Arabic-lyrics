@@ -7,45 +7,17 @@ body {
   height: 100%;
 }
 
-/* Blend Quill's Snow theme with the app's rounded/neutral-bordered inputs */
-.ql-toolbar.ql-snow {
-  border-color: rgb(212 212 212);
-  border-top-left-radius: 0.5rem;
-  border-top-right-radius: 0.5rem;
-  background: white;
+/* Placeholder for the lightweight lyrics editor (contentEditable). Shown only
+   while the editor is empty; overlaid so it doesn't push the caret down. */
+.lyrics-editor {
+  position: relative;
 }
 
-.ql-container.ql-snow {
-  border-color: rgb(212 212 212);
-  border-bottom-left-radius: 0.5rem;
-  border-bottom-right-radius: 0.5rem;
-  font-family: inherit;
-  font-size: 1rem;
-}
-
-.ql-editor {
-  min-height: 12rem;
-  line-height: 2;
-  /* Quill's own stylesheet is loaded after this one (dynamic import),
-     so !important guards against it winning an equal-specificity tie */
-  direction: rtl !important;
-  text-align: right !important;
-}
-
-.ql-editor.ql-blank::before {
-  font-style: normal;
+.lyrics-editor[data-empty="true"]::before {
+  content: attr(data-placeholder);
+  position: absolute;
+  inset-inline-start: 0.75rem;
+  top: 0.625rem;
   color: rgb(163 163 163);
-  right: 15px !important;
-  left: auto !important;
-  text-align: right !important;
-}
-
-.ql-toolbar.ql-snow {
-  direction: rtl !important;
-  text-align: right !important;
-}
-
-.ql-toolbar.ql-snow .ql-formats {
-  margin-right: 0 !important;
-  margin-left: 15px !important;
+  pointer-events: none;
 }

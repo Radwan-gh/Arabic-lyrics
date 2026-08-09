@@ -34,7 +34,6 @@
     "next": "^15.1.0",
     "postcss": "^8.4.49",
     "prisma": "^6.2.0",
-    "quill": "^2.0.2",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
     "sanitize-html": "^2.13.1",
