@@ -62,18 +62,11 @@ export function RichTextEditor({
     onChangeRef.current(editorRef.current?.innerHTML ?? "");
   }
 
-  function syncActive() {
-    setActive({
-      bold: document.queryCommandState("bold"),
-      italic: document.queryCommandState("italic"),
-      underline: document.queryCommandState("underline"),
-    });
-  }
-
   function exec(cmd: Command) {
-    editorRef.current?.focus();
+    // Keep focus without scrolling the button/editor into view.
+    editorRef.current?.focus({ preventScroll: true });
     document.execCommand(cmd);
-    syncActive();
+    setActive((prev) => ({ ...prev, [cmd]: !prev[cmd] }));
     emitChange();
   }
 
@@ -113,9 +106,6 @@ export function RichTextEditor({
         aria-label="نص الأنشودة"
         suppressContentEditableWarning
         onInput={emitChange}
-        onKeyUp={syncActive}
-        onMouseUp={syncActive}
-        onFocus={syncActive}
         data-placeholder={placeholder}
         className="lyrics-editor min-h-[12rem] px-3 py-2.5 text-base leading-loose text-neutral-900 focus:outline-none [&_em]:italic [&_p]:mb-4 [&_p:last-child]:mb-0 [&_strong]:font-bold [&_u]:underline"
       />
