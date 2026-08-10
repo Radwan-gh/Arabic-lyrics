@@ -2,6 +2,7 @@
 
 import { useRouter } from "next/navigation";
 import { useState } from "react";
+import { Trash2 } from "lucide-react";
 import { btnDanger } from "@/lib/ui";
 
 export function DeleteLyricsButton({ id }: { id: string }) {
@@ -25,6 +26,7 @@ export function DeleteLyricsButton({ id }: { id: string }) {
 
   return (
     <button type="button" onClick={handleDelete} disabled={loading} className={`${btnDanger} px-4 py-2`}>
+      <Trash2 className="h-4 w-4" aria-hidden="true" />
       {loading ? "جارٍ الحذف..." : "حذف"}
     </button>
   );

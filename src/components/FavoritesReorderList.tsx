@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useState } from "react";
+import { ChevronUp, ChevronDown } from "lucide-react";
 import { FavoriteButton } from "@/components/FavoriteButton";
 import { focusRing } from "@/lib/ui";
 
@@ -72,18 +73,18 @@ export function FavoritesReorderList({
                   onClick={() => move(index, -1)}
                   disabled={index === 0}
                   aria-label="تحريك لأعلى"
-                  className={`inline-flex h-9 w-9 items-center justify-center rounded-lg border border-neutral-200 text-sm transition-colors hover:bg-neutral-50 disabled:opacity-30 ${focusRing}`}
+                  className={`inline-flex h-9 w-9 items-center justify-center rounded-lg border border-neutral-200 transition-colors hover:bg-neutral-50 disabled:opacity-30 ${focusRing}`}
                 >
-                  ▲
+                  <ChevronUp className="h-4 w-4" aria-hidden="true" />
                 </button>
                 <button
                   type="button"
                   onClick={() => move(index, 1)}
                   disabled={index === items.length - 1}
                   aria-label="تحريك لأسفل"
-                  className={`inline-flex h-9 w-9 items-center justify-center rounded-lg border border-neutral-200 text-sm transition-colors hover:bg-neutral-50 disabled:opacity-30 ${focusRing}`}
+                  className={`inline-flex h-9 w-9 items-center justify-center rounded-lg border border-neutral-200 transition-colors hover:bg-neutral-50 disabled:opacity-30 ${focusRing}`}
                 >
-                  ▼
+                  <ChevronDown className="h-4 w-4" aria-hidden="true" />
                 </button>
               </>
             )}

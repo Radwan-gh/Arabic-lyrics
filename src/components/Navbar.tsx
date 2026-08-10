@@ -3,6 +3,22 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
+import {
+  Home,
+  Compass,
+  PlusCircle,
+  Heart,
+  ListMusic,
+  Users,
+  Tags,
+  LogIn,
+  LogOut,
+  Menu,
+  X,
+  Music,
+  User,
+  type LucideIcon,
+} from "lucide-react";
 import type { SessionPayload } from "@/lib/jwt";
 import { focusRing } from "@/lib/ui";
 
@@ -56,21 +72,22 @@ export function Navbar({ user }: { user: SessionPayload | null }) {
       <div className="mx-auto flex max-w-5xl items-center justify-between px-4 py-3">
         <Link
           href="/"
-          className={`rounded-sm text-xl font-extrabold text-emerald-700 ${focusRing}`}
+          className={`flex items-center gap-1.5 rounded-sm text-xl font-extrabold text-emerald-700 ${focusRing}`}
           onClick={() => setOpen(false)}
         >
+          <Music className="h-5 w-5" aria-hidden="true" />
           أناشيد
         </Link>
 
         <button
           type="button"
-          className={`inline-flex h-11 w-11 items-center justify-center rounded-md text-2xl leading-none text-neutral-600 transition-colors hover:bg-neutral-100 sm:hidden ${focusRing}`}
+          className={`inline-flex h-11 w-11 items-center justify-center rounded-md text-neutral-600 transition-colors hover:bg-neutral-100 sm:hidden ${focusRing}`}
           onClick={() => setOpen((v) => !v)}
           aria-label={open ? "إغلاق القائمة" : "فتح القائمة"}
           aria-expanded={open}
           aria-controls="mobile-nav"
         >
-          {open ? "✕" : "☰"}
+          {open ? <X className="h-6 w-6" aria-hidden="true" /> : <Menu className="h-6 w-6" aria-hidden="true" />}
         </button>
 
         <nav className="hidden items-center gap-4 sm:flex">
@@ -102,56 +119,49 @@ function NavLinks({
   onNavigate?: () => void;
 }) {
   const linkCls = mobile
-    ? `rounded-md px-3 py-2.5 hover:bg-neutral-100 ${focusRing}`
-    : `rounded-sm text-sm font-medium text-neutral-700 hover:text-emerald-700 ${focusRing}`;
+    ? `flex items-center gap-2.5 rounded-md px-3 py-2.5 hover:bg-neutral-100 ${focusRing}`
+    : `flex items-center gap-1.5 rounded-sm text-sm font-medium text-neutral-700 hover:text-emerald-700 ${focusRing}`;
+
+  const iconCls = mobile ? "h-5 w-5 text-neutral-500" : "h-4 w-4";
+
+  const NavItem = ({ href, icon: Icon, label }: { href: string; icon: LucideIcon; label: string }) => (
+    <Link href={href} className={linkCls} onClick={onNavigate}>
+      <Icon className={iconCls} aria-hidden="true" />
+      {label}
+    </Link>
+  );
 
   return (
     <>
-      <Link href="/" className={linkCls} onClick={onNavigate}>
-        الرئيسية
-      </Link>
-      <Link href="/discover" className={linkCls} onClick={onNavigate}>
-        الوصلات العامة
-      </Link>
+      <NavItem href="/" icon={Home} label="الرئيسية" />
+      <NavItem href="/discover" icon={Compass} label="الوصلات العامة" />
       {user && (user.role === "ADMIN" || user.role === "EDITOR") && (
-        <Link href="/lyrics/new" className={linkCls} onClick={onNavigate}>
-          إضافة أنشودة
-        </Link>
+        <NavItem href="/lyrics/new" icon={PlusCircle} label="إضافة أنشودة" />
       )}
-      {user && (
-        <Link href="/favorites" className={linkCls} onClick={onNavigate}>
-          المفضلة
-        </Link>
-      )}
-      {user && (
-        <Link href="/playlists" className={linkCls} onClick={onNavigate}>
-          وصلاتي
-        </Link>
-      )}
-      {user?.role === "ADMIN" && (
-        <Link href="/admin/users" className={linkCls} onClick={onNavigate}>
-          إدارة المستخدمين
-        </Link>
-      )}
-      {user?.role === "ADMIN" && (
-        <Link href="/admin/tags" className={linkCls} onClick={onNavigate}>
-          إدارة الوسوم
-        </Link>
-      )}
+      {user && <NavItem href="/favorites" icon={Heart} label="المفضلة" />}
+      {user && <NavItem href="/playlists" icon={ListMusic} label="وصلاتي" />}
+      {user?.role === "ADMIN" && <NavItem href="/admin/users" icon={Users} label="إدارة المستخدمين" />}
+      {user?.role === "ADMIN" && <NavItem href="/admin/tags" icon={Tags} label="إدارة الوسوم" />}
       {user ? (
         <>
           {mobile && <span className="my-1 border-t border-neutral-200" aria-hidden="true" />}
-          <span className={mobile ? "px-3 py-1 text-sm text-neutral-500" : "text-sm text-neutral-500"}>
+          <span
+            className={
+              mobile
+                ? "flex items-center gap-2 px-3 py-1 text-sm text-neutral-500"
+                : "flex items-center gap-1.5 text-sm text-neutral-500"
+            }
+          >
+            <User className="h-4 w-4" aria-hidden="true" />
             {user.name}
           </span>
           <button type="button" onClick={onLogout} className={`text-start ${linkCls}`}>
+            <LogOut className={iconCls} aria-hidden="true" />
             تسجيل الخروج
           </button>
         </>
       ) : (
-        <Link href="/login" className={linkCls} onClick={onNavigate}>
-          تسجيل الدخول
-        </Link>
+        <NavItem href="/login" icon={LogIn} label="تسجيل الدخول" />
       )}
     </>
   );

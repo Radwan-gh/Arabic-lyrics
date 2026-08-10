@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import { Pencil } from "lucide-react";
 import { getCurrentUser } from "@/lib/session";
 import { getLyricsAndIncrementViews } from "@/lib/lyrics";
 import { isFavorited } from "@/lib/favorites";
@@ -40,6 +41,7 @@ export default async function LyricsPage({ params }: { params: Promise<{ id: str
             {canModify && (
               <>
                 <Link href={`/lyrics/${lyrics.id}/edit`} className={`${btnSecondary} px-4 py-2`}>
+                  <Pencil className="h-4 w-4" aria-hidden="true" />
                   تعديل
                 </Link>
                 <DeleteLyricsButton id={lyrics.id} />

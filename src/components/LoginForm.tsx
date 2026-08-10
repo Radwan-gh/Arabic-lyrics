@@ -2,6 +2,7 @@
 
 import { useRouter, useSearchParams } from "next/navigation";
 import { useState } from "react";
+import { LogIn } from "lucide-react";
 import { inputCls, btnPrimary } from "@/lib/ui";
 
 export function LoginForm() {
@@ -68,6 +69,7 @@ export function LoginForm() {
         </label>
 
         <button type="submit" disabled={loading} className={btnPrimary}>
+          <LogIn className="h-4 w-4" aria-hidden="true" />
           {loading ? "جارٍ الدخول..." : "دخول"}
         </button>
       </form>

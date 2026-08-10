@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { Check, X, Pencil, Trash2 } from "lucide-react";
 import { inputSm, focusRing } from "@/lib/ui";
 
 interface TagRow {
@@ -114,11 +115,13 @@ export function TagTable({ initialTags }: { initialTags: TagRow[] }) {
                         type="button"
                         disabled={busyTag === row.tag}
                         onClick={() => submitRename(row.tag)}
-                        className={`rounded-sm font-medium text-emerald-700 hover:underline disabled:opacity-50 ${focusRing}`}
+                        className={`inline-flex items-center gap-1 rounded-sm font-medium text-emerald-700 hover:underline disabled:opacity-50 ${focusRing}`}
                       >
+                        <Check className="h-4 w-4" aria-hidden="true" />
                         حفظ
                       </button>
-                      <button type="button" onClick={() => setEditingTag(null)} className={`rounded-sm text-neutral-600 hover:underline ${focusRing}`}>
+                      <button type="button" onClick={() => setEditingTag(null)} className={`inline-flex items-center gap-1 rounded-sm text-neutral-600 hover:underline ${focusRing}`}>
+                        <X className="h-4 w-4" aria-hidden="true" />
                         إلغاء
                       </button>
                     </>
@@ -127,8 +130,9 @@ export function TagTable({ initialTags }: { initialTags: TagRow[] }) {
                       type="button"
                       disabled={busyTag === row.tag}
                       onClick={() => startRename(row.tag)}
-                      className={`rounded-sm text-neutral-600 hover:underline disabled:opacity-50 ${focusRing}`}
+                      className={`inline-flex items-center gap-1 rounded-sm text-neutral-600 hover:underline disabled:opacity-50 ${focusRing}`}
                     >
+                      <Pencil className="h-4 w-4" aria-hidden="true" />
                       إعادة تسمية
                     </button>
                   )}
@@ -136,8 +140,9 @@ export function TagTable({ initialTags }: { initialTags: TagRow[] }) {
                     type="button"
                     disabled={busyTag === row.tag}
                     onClick={() => deleteTag(row.tag)}
-                    className={`rounded-sm text-red-600 hover:underline disabled:opacity-50 ${focusRing}`}
+                    className={`inline-flex items-center gap-1 rounded-sm text-red-600 hover:underline disabled:opacity-50 ${focusRing}`}
                   >
+                    <Trash2 className="h-4 w-4" aria-hidden="true" />
                     حذف
                   </button>
                 </div>

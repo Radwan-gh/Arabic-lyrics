@@ -1,10 +1,11 @@
 import Link from "next/link";
+import { ChevronRight, ChevronLeft } from "lucide-react";
 import { focusRing } from "@/lib/ui";
 
 /**
  * Accessible, windowed pagination. Shows first/last, a window around the
  * current page, ellipses, and prev/next controls. RTL-aware: "previous" points
- * right (→), "next" points left (←).
+ * right (chevron-right), "next" points left (chevron-left).
  */
 export function Pagination({
   page,
@@ -25,10 +26,12 @@ export function Pagination({
     <nav aria-label="ترقيم الصفحات" className="flex flex-wrap items-center justify-center gap-1.5">
       {page > 1 ? (
         <Link href={hrefFor(page - 1)} rel="prev" aria-label="الصفحة السابقة" className={`${cell} border border-neutral-200 text-neutral-600 hover:bg-neutral-100`}>
-          <span aria-hidden>→</span>
+          <ChevronRight className="h-4 w-4" aria-hidden="true" />
         </Link>
       ) : (
-        <span aria-hidden className={`${cell} border border-neutral-100 text-neutral-300`}>→</span>
+        <span aria-hidden className={`${cell} border border-neutral-100 text-neutral-300`}>
+          <ChevronRight className="h-4 w-4" />
+        </span>
       )}
 
       {pages.map((p, i) =>
@@ -55,10 +58,12 @@ export function Pagination({
 
       {page < pageCount ? (
         <Link href={hrefFor(page + 1)} rel="next" aria-label="الصفحة التالية" className={`${cell} border border-neutral-200 text-neutral-600 hover:bg-neutral-100`}>
-          <span aria-hidden>←</span>
+          <ChevronLeft className="h-4 w-4" aria-hidden="true" />
         </Link>
       ) : (
-        <span aria-hidden className={`${cell} border border-neutral-100 text-neutral-300`}>←</span>
+        <span aria-hidden className={`${cell} border border-neutral-100 text-neutral-300`}>
+          <ChevronLeft className="h-4 w-4" />
+        </span>
       )}
     </nav>
   );
