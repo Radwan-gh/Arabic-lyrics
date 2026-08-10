@@ -78,6 +78,11 @@ function NavLinks({
         </Link>
       )}
       {user && (
+        <Link href="/favorites" className={linkCls} onClick={onNavigate}>
+          المفضلة
+        </Link>
+      )}
+      {user && (
         <Link href="/playlists" className={linkCls} onClick={onNavigate}>
           وصلاتي
         </Link>
