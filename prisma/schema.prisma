@@ -94,6 +94,9 @@ model PlaylistItem {
 model Favorite {
   id String @id @default(cuid())
 
+  // ترتيب المستخدم اليدوي للمفضلة (يُستخدم عند اختيار «ترتيبي الخاص»).
+  position Int @default(0)
+
   user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
   userId String
 

@@ -4,7 +4,7 @@ import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { inputCls, btnPrimary } from "@/lib/ui";
 
-export function FavoritesSearchBar({ defaultValue }: { defaultValue: string }) {
+export function FavoritesSearchBar({ defaultValue, sort }: { defaultValue: string; sort?: string }) {
   const [value, setValue] = useState(defaultValue);
   const router = useRouter();
 
@@ -12,6 +12,7 @@ export function FavoritesSearchBar({ defaultValue }: { defaultValue: string }) {
     e.preventDefault();
     const params = new URLSearchParams();
     if (value.trim()) params.set("q", value.trim());
+    if (sort && sort !== "recent") params.set("sort", sort);
     const qs = params.toString();
     router.push(qs ? `/favorites?${qs}` : "/favorites");
   }
