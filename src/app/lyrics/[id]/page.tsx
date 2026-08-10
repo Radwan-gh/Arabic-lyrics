@@ -20,13 +20,28 @@ export default async function LyricsPage({ params }: { params: Promise<{ id: str
 
   return (
     <article className="rounded-xl border border-neutral-200 bg-white p-6 shadow-sm">
-      <header className="mb-4 flex flex-col gap-1 border-b border-neutral-100 pb-4">
-        <h1 className="text-2xl font-extrabold">{lyrics.title}</h1>
-        {lyrics.artist && <p className="text-emerald-700">{lyrics.artist}</p>}
-        {lyrics.album && <p className="text-sm text-neutral-500">{lyrics.album}</p>}
-        <p className="text-xs text-neutral-500">
-          أضافها {lyrics.createdBy?.name ?? "مستخدم محذوف"} · {formatDate(lyrics.createdAt)} · {lyrics.viewCount} مشاهدة
-        </p>
+      <header className="mb-4 flex flex-col gap-4 border-b border-neutral-100 pb-4 sm:flex-row sm:items-start sm:justify-between">
+        <div className="flex flex-col gap-1">
+          <h1 className="text-2xl font-extrabold">{lyrics.title}</h1>
+          {lyrics.artist && <p className="text-emerald-700">{lyrics.artist}</p>}
+          {lyrics.album && <p className="text-sm text-neutral-500">{lyrics.album}</p>}
+          <p className="text-xs text-neutral-500">
+            أضافها {lyrics.createdBy?.name ?? "مستخدم محذوف"} · {formatDate(lyrics.createdAt)} · {lyrics.viewCount} مشاهدة
+          </p>
+        </div>
+        {(session || canModify) && (
+          <div className="flex flex-shrink-0 flex-wrap gap-3">
+            {session && <AddToPlaylist lyricsId={lyrics.id} />}
+            {canModify && (
+              <>
+                <Link href={`/lyrics/${lyrics.id}/edit`} className={`${btnSecondary} px-4 py-2`}>
+                  تعديل
+                </Link>
+                <DeleteLyricsButton id={lyrics.id} />
+              </>
+            )}
+          </div>
+        )}
       </header>
 
       <div dir="rtl" className={lyricsProseCls} dangerouslySetInnerHTML={{ __html: renderLyricsHtml(lyrics.content) }} />
@@ -44,18 +59,6 @@ export default async function LyricsPage({ params }: { params: Promise<{ id: str
           ))}
         </div>
       )}
-
-      <div className="mt-6 flex flex-wrap gap-3 border-t border-neutral-100 pt-4">
-        {session && <AddToPlaylist lyricsId={lyrics.id} />}
-        {canModify && (
-          <>
-            <Link href={`/lyrics/${lyrics.id}/edit`} className={`${btnSecondary} px-4 py-2`}>
-              تعديل
-            </Link>
-            <DeleteLyricsButton id={lyrics.id} />
-          </>
-        )}
-      </div>
     </article>
   );
 }
