@@ -24,8 +24,9 @@ export default async function HomePage({
   const page = Math.max(1, Number(pageParam) || 1);
 
   const where = buildLyricsWhere(q, tags);
+  const isFiltered = Boolean(q) || tags.length > 0;
 
-  const [items, total, session] = await Promise.all([
+  const [items, total, grandTotal, session] = await Promise.all([
     prisma.lyrics.findMany({
       where,
       orderBy: { createdAt: "desc" },
@@ -34,12 +35,15 @@ export default async function HomePage({
       select: { id: true, title: true, artist: true, album: true, tags: true, createdAt: true, content: true },
     }),
     prisma.lyrics.count({ where }),
+    prisma.lyrics.count(),
     getCurrentUser(),
   ]);
 
   const favoritedIds = session
     ? await getFavoritedLyricsIds(session.userId, items.map((i) => i.id))
     : new Set<string>();
+
+  const formatCount = (n: number) => n.toLocaleString("en-US");
 
   const cards = items.map((item) => ({ ...item, contentHtml: renderLyricsHtml(item.content) }));
 
@@ -64,6 +68,13 @@ export default async function HomePage({
         <span className="text-sm font-medium text-neutral-700">تصفية حسب الوسوم</span>
         <TagFilterBar selected={tags} q={q} />
       </div>
+
+      <p className="text-sm text-neutral-600" aria-live="polite">
+        <span className="font-medium text-neutral-800">الكل : {formatCount(grandTotal)}</span>
+        {isFiltered && (
+          <span> ، نتائج البحث : {formatCount(total)}</span>
+        )}
+      </p>
 
       {items.length === 0 ? (
         <p className="rounded-lg border border-dashed border-neutral-300 p-8 text-center text-neutral-500">
