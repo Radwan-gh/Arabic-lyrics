@@ -1,9 +1,12 @@
 import { prisma } from "@/lib/prisma";
 import { renderLyricsHtml } from "@/lib/render-lyrics";
 import { buildLyricsWhere } from "@/lib/lyrics-search";
+import { getCurrentUser } from "@/lib/session";
+import { getFavoritedLyricsIds } from "@/lib/favorites";
 import { SearchBar } from "@/components/SearchBar";
 import { TagFilterBar } from "@/components/TagFilterBar";
 import { LyricsCard } from "@/components/LyricsCard";
+import { FavoriteButton } from "@/components/FavoriteButton";
 import { Pagination } from "@/components/Pagination";
 
 const PAGE_SIZE = 12;
@@ -22,7 +25,7 @@ export default async function HomePage({
 
   const where = buildLyricsWhere(q, tags);
 
-  const [items, total] = await Promise.all([
+  const [items, total, session] = await Promise.all([
     prisma.lyrics.findMany({
       where,
       orderBy: { createdAt: "desc" },
@@ -31,7 +34,12 @@ export default async function HomePage({
       select: { id: true, title: true, artist: true, album: true, tags: true, createdAt: true, content: true },
     }),
     prisma.lyrics.count({ where }),
+    getCurrentUser(),
   ]);
+
+  const favoritedIds = session
+    ? await getFavoritedLyricsIds(session.userId, items.map((i) => i.id))
+    : new Set<string>();
 
   const cards = items.map((item) => ({ ...item, contentHtml: renderLyricsHtml(item.content) }));
 
@@ -73,6 +81,11 @@ export default async function HomePage({
               tags={item.tags}
               createdAt={item.createdAt}
               contentHtml={item.contentHtml}
+              action={
+                session ? (
+                  <FavoriteButton lyricsId={item.id} initialFavorited={favoritedIds.has(item.id)} variant="icon" />
+                ) : undefined
+              }
             />
           ))}
         </ul>

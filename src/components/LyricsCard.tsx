@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useState } from "react";
+import { useState, type ReactNode } from "react";
 import { lyricsProseCls } from "@/lib/lyrics-prose";
 import { formatDate } from "@/lib/format";
 import { focusRing } from "@/lib/ui";
@@ -14,18 +14,23 @@ interface LyricsCardProps {
   tags: string[];
   createdAt: Date;
   contentHtml: string;
+  /** Optional action rendered at the card's inline-end (e.g. a favorite toggle). */
+  action?: ReactNode;
 }
 
-export function LyricsCard({ id, title, artist, album, tags, createdAt, contentHtml }: LyricsCardProps) {
+export function LyricsCard({ id, title, artist, album, tags, createdAt, contentHtml, action }: LyricsCardProps) {
   const [expanded, setExpanded] = useState(false);
 
   return (
     <li className="rounded-xl border border-neutral-200 bg-white p-4 shadow-sm transition hover:-translate-y-0.5 hover:shadow-md motion-reduce:transition-none motion-reduce:hover:translate-y-0">
-      <Link href={`/lyrics/${id}`} className={`block rounded-sm ${focusRing}`}>
-        <h2 className="truncate text-lg font-bold text-neutral-900">{title}</h2>
-        {artist && <p className="truncate text-sm text-emerald-700">{artist}</p>}
-        {album && <p className="truncate text-xs text-neutral-500">{album}</p>}
-      </Link>
+      <div className="flex items-start justify-between gap-2">
+        <Link href={`/lyrics/${id}`} className={`block min-w-0 flex-1 rounded-sm ${focusRing}`}>
+          <h2 className="truncate text-lg font-bold text-neutral-900">{title}</h2>
+          {artist && <p className="truncate text-sm text-emerald-700">{artist}</p>}
+          {album && <p className="truncate text-xs text-neutral-500">{album}</p>}
+        </Link>
+        {action}
+      </div>
 
       <p className="mt-1 text-xs text-neutral-500">{formatDate(createdAt)}</p>
 

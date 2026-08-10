@@ -2,11 +2,13 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { getCurrentUser } from "@/lib/session";
 import { getLyricsAndIncrementViews } from "@/lib/lyrics";
+import { isFavorited } from "@/lib/favorites";
 import { renderLyricsHtml } from "@/lib/render-lyrics";
 import { lyricsProseCls } from "@/lib/lyrics-prose";
 import { formatDate } from "@/lib/format";
 import { DeleteLyricsButton } from "@/components/DeleteLyricsButton";
 import { AddToPlaylist } from "@/components/AddToPlaylist";
+import { FavoriteButton } from "@/components/FavoriteButton";
 import { btnSecondary, focusRing } from "@/lib/ui";
 
 export default async function LyricsPage({ params }: { params: Promise<{ id: string }> }) {
@@ -14,6 +16,8 @@ export default async function LyricsPage({ params }: { params: Promise<{ id: str
   const [lyrics, session] = await Promise.all([getLyricsAndIncrementViews(id), getCurrentUser()]);
 
   if (!lyrics) notFound();
+
+  const favorited = session ? await isFavorited(session.userId, lyrics.id) : false;
 
   const canModify =
     !!session && (session.role === "ADMIN" || (session.role === "EDITOR" && session.userId === lyrics.createdById));
@@ -31,6 +35,7 @@ export default async function LyricsPage({ params }: { params: Promise<{ id: str
         </div>
         {(session || canModify) && (
           <div className="flex flex-shrink-0 flex-wrap gap-3">
+            {session && <FavoriteButton lyricsId={lyrics.id} initialFavorited={favorited} />}
             {session && <AddToPlaylist lyricsId={lyrics.id} />}
             {canModify && (
               <>

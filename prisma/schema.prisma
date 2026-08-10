@@ -25,6 +25,7 @@ model User {
 
   lyrics    Lyrics[]
   playlists Playlist[]
+  favorites Favorite[]
 }
 
 model Lyrics {
@@ -46,6 +47,7 @@ model Lyrics {
   createdById String?
 
   playlistItems PlaylistItem[]
+  favorites     Favorite[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -87,4 +89,19 @@ model PlaylistItem {
 
   @@unique([playlistId, lyricsId])
   @@index([playlistId])
+}
+
+model Favorite {
+  id String @id @default(cuid())
+
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId String
+
+  lyrics   Lyrics @relation(fields: [lyricsId], references: [id], onDelete: Cascade)
+  lyricsId String
+
+  createdAt DateTime @default(now())
+
+  @@unique([userId, lyricsId])
+  @@index([userId])
 }
