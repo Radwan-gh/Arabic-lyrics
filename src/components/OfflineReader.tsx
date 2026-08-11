@@ -2,8 +2,9 @@
 
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { LyricsCard } from "@/components/LyricsCard";
+import { PlaylistCollapsibleBody } from "@/components/PlaylistCollapsibleBody";
 import { buildSearchText, normalizeArabic } from "@/lib/arabic-search";
-import { focusRing } from "@/lib/ui";
+import { btnPrimary, focusRing } from "@/lib/ui";
 import {
   OFFLINE_LYRICS_URL,
   OFFLINE_ME_URL,
@@ -100,6 +101,18 @@ export function OfflineReader() {
     [openPlaylist, lyricsById]
   );
 
+  // نفس شكل عرض الوصلة أونلاين: ملخّص قابل للطي ثم كل نشيد بمحتواه.
+  const playlistBodyItems = useMemo(
+    () =>
+      playlistLyrics.map((l) => ({
+        lyricsId: l.id,
+        title: l.title,
+        artist: l.artist,
+        contentHtml: l.contentHtml,
+      })),
+    [playlistLyrics]
+  );
+
   const collectionCount = collection?.lyrics.length ?? 0;
 
   return (
@@ -118,7 +131,7 @@ export function OfflineReader() {
           </span>
         </div>
         <p className="text-sm text-neutral-500">
-          تصفّح واقرأ الأناشيد ومفضّلتك وقوائمك دون إنترنت. تُحدَّث النسخة المحفوظة تلقائياً كلما فتحت
+          تصفّح واقرأ الأناشيد ومفضّلتك ووصلاتك دون إنترنت. تُحدَّث النسخة المحفوظة تلقائياً كلما فتحت
           التطبيق وأنت متصل.
         </p>
         <div className="flex flex-wrap items-center gap-3 text-xs text-neutral-500">
@@ -153,12 +166,12 @@ export function OfflineReader() {
             setOpenPlaylistId(null);
           }}
         >
-          قوائمي
+          وصلاتي
         </TabButton>
       </div>
 
-      {/* شريط البحث (للمجموعة والمفضّلة وعناصر قائمة مفتوحة) */}
-      {(tab !== "playlists" || openPlaylist) && (
+      {/* شريط البحث (للمجموعة والمفضّلة فقط — عرض الوصلة يطابق شكل الأونلاين بلا بحث) */}
+      {tab !== "playlists" && (
         <input
           type="search"
           value={query}
@@ -193,49 +206,58 @@ export function OfflineReader() {
           </EmptyBox>
         )
       ) : /* tab === "playlists" */ openPlaylist ? (
-        <div className="flex flex-col gap-4">
-          <button
-            type="button"
-            onClick={() => setOpenPlaylistId(null)}
-            className={`self-start rounded-sm text-sm font-medium text-emerald-700 hover:underline ${focusRing}`}
-          >
-            ▸ كل القوائم
-          </button>
-          <div>
-            <h2 className="text-xl font-bold">{openPlaylist.title}</h2>
-            {openPlaylist.description && (
-              <p className="mt-0.5 text-sm text-neutral-500">{openPlaylist.description}</p>
-            )}
+        // عرض الوصلة — نفس شكل صفحة العرض أونلاين (PlaylistReadView).
+        <div className="flex flex-col gap-6">
+          <div className="flex flex-col gap-2 border-b border-neutral-200 pb-4">
+            <button
+              type="button"
+              onClick={() => setOpenPlaylistId(null)}
+              className={`inline-flex items-center gap-1 self-start rounded-sm text-sm text-neutral-600 hover:text-emerald-700 ${focusRing}`}
+            >
+              <span aria-hidden>→</span> كل الوصلات
+            </button>
+            <h1 className="text-3xl font-extrabold">{openPlaylist.title}</h1>
+            {openPlaylist.description && <p className="text-neutral-600">{openPlaylist.description}</p>}
+            <p className="text-sm text-neutral-500">{playlistBodyItems.length} نشيد</p>
           </div>
-          <LyricsGrid
-            items={filterLyrics(playlistLyrics)}
-            emptyText={query ? "لا توجد نتائج مطابقة لبحثك" : "هذه القائمة فارغة."}
-          />
+
+          <PlaylistCollapsibleBody items={playlistBodyItems} />
         </div>
       ) : me ? (
         me.playlists.length === 0 ? (
-          <EmptyBox>لا توجد لديك قوائم بعد.</EmptyBox>
+          <EmptyBox>لا توجد لديك وصلات بعد.</EmptyBox>
         ) : (
-          <ul className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
+          // قائمة الوصلات — نفس شكل صفحة «وصلاتي» أونلاين (PlaylistsView).
+          <ul className="flex flex-col gap-3">
             {me.playlists.map((p) => (
-              <li key={p.id}>
+              <li
+                key={p.id}
+                className="flex items-start justify-between gap-3 rounded-xl border border-neutral-200 bg-white p-4 shadow-sm"
+              >
+                <div className="min-w-0">
+                  <button
+                    type="button"
+                    onClick={() => setOpenPlaylistId(p.id)}
+                    className={`rounded-sm text-start text-lg font-bold hover:text-emerald-700 ${focusRing}`}
+                  >
+                    {p.title}
+                  </button>
+                  {p.description && <p className="mt-0.5 text-sm text-neutral-500">{p.description}</p>}
+                  <p className="mt-1 text-xs text-neutral-500">{p.itemIds.length} نشيد</p>
+                </div>
                 <button
                   type="button"
                   onClick={() => setOpenPlaylistId(p.id)}
-                  className={`w-full rounded-xl border border-neutral-200 bg-white p-4 text-start shadow-sm transition hover:-translate-y-0.5 hover:shadow-md motion-reduce:transition-none motion-reduce:hover:translate-y-0 ${focusRing}`}
+                  className={`${btnPrimary} shrink-0 px-3 py-1.5`}
                 >
-                  <h2 className="truncate text-lg font-bold text-neutral-900">{p.title}</h2>
-                  {p.description && (
-                    <p className="mt-0.5 line-clamp-2 text-sm text-neutral-500">{p.description}</p>
-                  )}
-                  <p className="mt-2 text-xs text-neutral-500">{p.itemIds.length} نشيد</p>
+                  عرض
                 </button>
               </li>
             ))}
           </ul>
         )
       ) : (
-        <EmptyBox>سجّل الدخول وأنت متصل بالإنترنت لحفظ قوائمك للقراءة دون اتصال.</EmptyBox>
+        <EmptyBox>سجّل الدخول وأنت متصل بالإنترنت لحفظ وصلاتك للقراءة دون اتصال.</EmptyBox>
       )}
     </div>
   );

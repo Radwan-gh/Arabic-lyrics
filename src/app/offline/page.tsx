@@ -3,7 +3,7 @@ import { OfflineReader } from "@/components/OfflineReader";
 
 export const metadata: Metadata = {
   title: "القراءة دون اتصال — أناشيد",
-  description: "تصفّح واقرأ الأناشيد ومفضّلتك وقوائمك دون اتصال بالإنترنت.",
+  description: "تصفّح واقرأ الأناشيد ومفضّلتك ووصلاتك دون اتصال بالإنترنت.",
 };
 
 // صفحة القارئ دون اتصال: هيكل خفيف يُصيَّر على الخادم، والقراءة الفعلية تتم في
