@@ -22,6 +22,7 @@ export function OfflineReader() {
   const [tab, setTab] = useState<Tab>("collection");
   const [query, setQuery] = useState("");
   const [openPlaylistId, setOpenPlaylistId] = useState<string | null>(null);
+  const [cacheBytes, setCacheBytes] = useState<number | null>(null);
 
   // حمّل اللقطات عبر fetch العادي؛ يتولّى الـ SW إرجاعها من الكاش عند انقطاع الشبكة.
   const load = useCallback(async () => {
@@ -40,6 +41,8 @@ export function OfflineReader() {
       // مستخدم غير مسجّل أو لا بيانات مخزَّنة.
     }
     setLoading(false);
+    // قِس الحجم بعد أن يخزّن الـ SW اللقطات (تحديث الخلفية قد يتأخّر قليلًا).
+    setCacheBytes(await measureCachedBytes());
   }, []);
 
   useEffect(() => {
@@ -120,6 +123,7 @@ export function OfflineReader() {
         </p>
         <div className="flex flex-wrap items-center gap-3 text-xs text-neutral-500">
           <span>محفوظ للقراءة دون اتصال: {collectionCount.toLocaleString("en-US")} نشيد</span>
+          {cacheBytes !== null && <span>· الحجم: {formatMB(cacheBytes)}</span>}
           {collection?.updatedAt && (
             <span>· آخر تحديث: {new Date(collection.updatedAt).toLocaleString("ar")}</span>
           )}
@@ -287,4 +291,37 @@ function EmptyBox({ children }: { children: React.ReactNode }) {
       {children}
     </p>
   );
+}
+
+// يجمع الحجم الفعلي (بالبايت) لما خزّنه الـ service worker في كاشات التطبيق
+// (anaasheed-*): هيكل التطبيق ولقطتا البيانات. يُرجِع null إن تعذّر القياس.
+async function measureCachedBytes(): Promise<number | null> {
+  if (typeof caches === "undefined") return null;
+  try {
+    const names = (await caches.keys()).filter((name) => name.startsWith("anaasheed-"));
+    let total = 0;
+    for (const name of names) {
+      const cache = await caches.open(name);
+      const requests = await cache.keys();
+      for (const request of requests) {
+        const response = await cache.match(request);
+        if (!response) continue;
+        // استخدم Content-Length إن توفّر، وإلا اقرأ الجسم لحساب حجمه الحقيقي.
+        const length = Number(response.headers.get("content-length"));
+        total += Number.isFinite(length) && length > 0
+          ? length
+          : (await response.clone().arrayBuffer()).byteLength;
+      }
+    }
+    return total;
+  } catch {
+    return null;
+  }
+}
+
+// يصوغ البايتات كنص بالميغابايت (بدقّة أعلى للأحجام الصغيرة).
+function formatMB(bytes: number): string {
+  const mb = bytes / (1024 * 1024);
+  const value = mb < 10 ? mb.toFixed(2) : mb.toFixed(1);
+  return `${value} ميغابايت`;
 }
