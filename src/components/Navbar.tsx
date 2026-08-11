@@ -23,6 +23,7 @@ import {
 import type { SessionPayload } from "@/lib/jwt";
 import { focusRing } from "@/lib/ui";
 import { CLEAR_PRIVATE_MESSAGE } from "@/lib/offline";
+import { PWAInstallButton } from "@/components/PWAInstallButton";
 
 export function Navbar({ user }: { user: SessionPayload | null }) {
   const [open, setOpen] = useState(false);
@@ -88,20 +89,24 @@ export function Navbar({ user }: { user: SessionPayload | null }) {
           أناشيد
         </Link>
 
-        <button
-          type="button"
-          className={`inline-flex h-11 w-11 items-center justify-center rounded-md text-neutral-600 transition-colors hover:bg-neutral-100 sm:hidden ${focusRing}`}
-          onClick={() => setOpen((v) => !v)}
-          aria-label={open ? "إغلاق القائمة" : "فتح القائمة"}
-          aria-expanded={open}
-          aria-controls="mobile-nav"
-        >
-          {open ? <X className="h-6 w-6" aria-hidden="true" /> : <Menu className="h-6 w-6" aria-hidden="true" />}
-        </button>
+        <div className="flex items-center gap-2 sm:gap-4">
+          <PWAInstallButton />
 
-        <nav className="hidden items-center gap-4 sm:flex">
-          <NavLinks user={user} onLogout={handleLogout} />
-        </nav>
+          <button
+            type="button"
+            className={`inline-flex h-11 w-11 items-center justify-center rounded-md text-neutral-600 transition-colors hover:bg-neutral-100 sm:hidden ${focusRing}`}
+            onClick={() => setOpen((v) => !v)}
+            aria-label={open ? "إغلاق القائمة" : "فتح القائمة"}
+            aria-expanded={open}
+            aria-controls="mobile-nav"
+          >
+            {open ? <X className="h-6 w-6" aria-hidden="true" /> : <Menu className="h-6 w-6" aria-hidden="true" />}
+          </button>
+
+          <nav className="hidden items-center gap-4 sm:flex">
+            <NavLinks user={user} onLogout={handleLogout} />
+          </nav>
+        </div>
       </div>
 
       {open && (
