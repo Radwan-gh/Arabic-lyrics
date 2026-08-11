@@ -17,10 +17,12 @@ import {
   X,
   Music,
   User,
+  WifiOff,
   type LucideIcon,
 } from "lucide-react";
 import type { SessionPayload } from "@/lib/jwt";
 import { focusRing } from "@/lib/ui";
+import { CLEAR_PRIVATE_MESSAGE } from "@/lib/offline";
 
 export function Navbar({ user }: { user: SessionPayload | null }) {
   const [open, setOpen] = useState(false);
@@ -59,6 +61,13 @@ export function Navbar({ user }: { user: SessionPayload | null }) {
 
   async function handleLogout() {
     await fetch("/api/auth/logout", { method: "POST" });
+    // امسح البيانات الخاصة المخزَّنة للقراءة دون اتصال (المفضّلة/القوائم) حتى لا
+    // تتسرّب إلى المستخدم التالي على جهاز مشترك.
+    if ("serviceWorker" in navigator) {
+      navigator.serviceWorker.ready
+        .then((reg) => reg.active?.postMessage({ type: CLEAR_PRIVATE_MESSAGE }))
+        .catch(() => {});
+    }
     setOpen(false);
     router.push("/");
     router.refresh();
@@ -135,6 +144,7 @@ function NavLinks({
     <>
       <NavItem href="/" icon={Home} label="الرئيسية" />
       <NavItem href="/discover" icon={Compass} label="الوصلات العامة" />
+      <NavItem href="/offline" icon={WifiOff} label="دون اتصال" />
       {user && (user.role === "ADMIN" || user.role === "EDITOR") && (
         <NavItem href="/lyrics/new" icon={PlusCircle} label="إضافة أنشودة" />
       )}

@@ -44,7 +44,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
         <main id="main" className="mx-auto max-w-5xl px-4 py-6">
           {children}
         </main>
-        <ServiceWorkerRegister />
+        <ServiceWorkerRegister authenticated={!!session} />
       </body>
     </html>
   );
