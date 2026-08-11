@@ -2,6 +2,19 @@
 
 import Link from "next/link";
 import { useEffect, useState } from "react";
+import {
+  ChevronRight,
+  Eye,
+  Globe,
+  Lock,
+  Copy,
+  Check,
+  ExternalLink,
+  Plus,
+  ChevronUp,
+  ChevronDown,
+  X,
+} from "lucide-react";
 import { btnPrimary, btnSecondary, inputSm, focusRing } from "@/lib/ui";
 
 interface Item {
@@ -138,11 +151,12 @@ export function PlaylistDetailView({ playlist, shareUrl }: { playlist: PlaylistD
     <div className="flex flex-col gap-6">
       <div>
         <Link href="/playlists" className={`inline-flex items-center gap-1 rounded-sm text-sm text-neutral-600 hover:text-emerald-700 ${focusRing}`}>
-          <span aria-hidden>→</span> العودة إلى وصلاتي
+          <ChevronRight className="h-4 w-4" aria-hidden="true" /> العودة إلى وصلاتي
         </Link>
         <h1 className="mt-2 text-2xl font-extrabold">{playlist.title}</h1>
         {playlist.description && <p className="mt-1 text-neutral-500">{playlist.description}</p>}
-        <Link href={`/playlists/${playlist.id}/view`} className={`mt-2 inline-block ${btnSecondary} px-3 py-1.5`}>
+        <Link href={`/playlists/${playlist.id}/view`} className={`mt-2 inline-flex ${btnSecondary} px-3 py-1.5`}>
+          <Eye className="h-4 w-4" aria-hidden="true" />
           عرض الوصلة
         </Link>
       </div>
@@ -161,6 +175,11 @@ export function PlaylistDetailView({ playlist, shareUrl }: { playlist: PlaylistD
             disabled={busy}
             className={isPublic ? btnSecondary : btnPrimary}
           >
+            {isPublic ? (
+              <Lock className="h-4 w-4" aria-hidden="true" />
+            ) : (
+              <Globe className="h-4 w-4" aria-hidden="true" />
+            )}
             {isPublic ? "إيقاف المشاركة" : "مشاركة عامة"}
           </button>
         </div>
@@ -175,9 +194,15 @@ export function PlaylistDetailView({ playlist, shareUrl }: { playlist: PlaylistD
               className={`min-w-0 flex-1 rounded-lg border border-neutral-300 bg-neutral-50 px-3 py-2 text-sm text-neutral-700 ${focusRing}`}
             />
             <button type="button" onClick={copyLink} className={`${btnSecondary} px-4 py-2`}>
-              {copied ? "تم النسخ ✓" : "نسخ الرابط"}
+              {copied ? (
+                <Check className="h-4 w-4 text-emerald-700" aria-hidden="true" />
+              ) : (
+                <Copy className="h-4 w-4" aria-hidden="true" />
+              )}
+              {copied ? "تم النسخ" : "نسخ الرابط"}
             </button>
             <Link href={`/p/${shareUrl.split("/p/")[1]}`} target="_blank" className={`${btnSecondary} px-4 py-2`}>
+              <ExternalLink className="h-4 w-4" aria-hidden="true" />
               فتح
             </Link>
           </div>
@@ -224,7 +249,14 @@ export function PlaylistDetailView({ playlist, shareUrl }: { playlist: PlaylistD
                           disabled={addingId === r.id}
                           className={`${btnPrimary} shrink-0 px-3 py-1.5`}
                         >
-                          {addingId === r.id ? "…" : "إضافة"}
+                          {addingId === r.id ? (
+                            "…"
+                          ) : (
+                            <>
+                              <Plus className="h-4 w-4" aria-hidden="true" />
+                              إضافة
+                            </>
+                          )}
                         </button>
                       </li>
                     ))}
@@ -264,26 +296,26 @@ export function PlaylistDetailView({ playlist, shareUrl }: { playlist: PlaylistD
                     onClick={() => move(index, -1)}
                     disabled={index === 0}
                     aria-label="تحريك لأعلى"
-                    className={`inline-flex h-9 w-9 items-center justify-center rounded-lg border border-neutral-200 text-sm transition-colors hover:bg-neutral-50 disabled:opacity-30 ${focusRing}`}
+                    className={`inline-flex h-9 w-9 items-center justify-center rounded-lg border border-neutral-200 transition-colors hover:bg-neutral-50 disabled:opacity-30 ${focusRing}`}
                   >
-                    ▲
+                    <ChevronUp className="h-4 w-4" aria-hidden="true" />
                   </button>
                   <button
                     type="button"
                     onClick={() => move(index, 1)}
                     disabled={index === items.length - 1}
                     aria-label="تحريك لأسفل"
-                    className={`inline-flex h-9 w-9 items-center justify-center rounded-lg border border-neutral-200 text-sm transition-colors hover:bg-neutral-50 disabled:opacity-30 ${focusRing}`}
+                    className={`inline-flex h-9 w-9 items-center justify-center rounded-lg border border-neutral-200 transition-colors hover:bg-neutral-50 disabled:opacity-30 ${focusRing}`}
                   >
-                    ▼
+                    <ChevronDown className="h-4 w-4" aria-hidden="true" />
                   </button>
                   <button
                     type="button"
                     onClick={() => removeItem(item.lyricsId)}
                     aria-label="إزالة من الوصلة"
-                    className={`inline-flex h-9 w-9 items-center justify-center rounded-lg border border-red-200 text-sm text-red-600 transition-colors hover:bg-red-50 ${focusRing}`}
+                    className={`inline-flex h-9 w-9 items-center justify-center rounded-lg border border-red-200 text-red-600 transition-colors hover:bg-red-50 ${focusRing}`}
                   >
-                    ✕
+                    <X className="h-4 w-4" aria-hidden="true" />
                   </button>
                 </div>
               </li>

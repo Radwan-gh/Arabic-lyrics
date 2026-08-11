@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import dynamic from "next/dynamic";
+import { Save } from "lucide-react";
 import { TagPicker } from "./TagPicker";
 import { toEditableHtml } from "@/lib/lyrics-content";
 import { inputCls, btnPrimary } from "@/lib/ui";
@@ -266,6 +267,7 @@ export function LyricsForm({
         </div>
       ) : (
         <button type="submit" disabled={loading} className={`${btnPrimary} mt-2`}>
+          <Save className="h-4 w-4" aria-hidden="true" />
           {loading ? "جارٍ الحفظ..." : mode === "create" ? "نشر الأنشودة" : "حفظ التعديلات"}
         </button>
       )}

@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
+import { ListPlus, Check, X } from "lucide-react";
 import { btnSecondary, focusRing } from "@/lib/ui";
 
 interface PlaylistOption {
@@ -54,7 +55,8 @@ export function AddToPlaylist({ lyricsId }: { lyricsId: string }) {
         aria-expanded={open}
         className={`${btnSecondary} px-4 py-2`}
       >
-        + إضافة إلى وصلة
+        <ListPlus className="h-4 w-4" aria-hidden="true" />
+        إضافة إلى وصلة
       </button>
 
       {open && (
@@ -83,11 +85,11 @@ export function AddToPlaylist({ lyricsId }: { lyricsId: string }) {
                     >
                       <span className="truncate">{p.title}</span>
                       {st === "added" ? (
-                        <span className="shrink-0 text-emerald-700">✓</span>
+                        <Check className="h-4 w-4 shrink-0 text-emerald-700" aria-hidden="true" />
                       ) : st === "adding" ? (
                         <span className="shrink-0 text-neutral-400">…</span>
                       ) : st === "error" ? (
-                        <span className="shrink-0 text-red-500">✕</span>
+                        <X className="h-4 w-4 shrink-0 text-red-500" aria-hidden="true" />
                       ) : null}
                     </button>
                   </li>

@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import { X } from "lucide-react";
 import { focusRing } from "@/lib/ui";
 
 export function TagPicker({
@@ -75,10 +76,10 @@ export function TagPicker({
             <button
               type="button"
               onClick={() => removeTag(tag)}
-              className={`rounded-full leading-none text-emerald-600 hover:text-emerald-900 ${focusRing}`}
+              className={`inline-flex rounded-full leading-none text-emerald-600 hover:text-emerald-900 ${focusRing}`}
               aria-label={`إزالة ${tag}`}
             >
-              ×
+              <X className="h-3.5 w-3.5" aria-hidden="true" />
             </button>
           </span>
         ))}

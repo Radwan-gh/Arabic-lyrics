@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { ChevronLeft } from "lucide-react";
 import { focusRing } from "@/lib/ui";
 import { PlaylistCollapsibleBody, type PlaylistBodyItem } from "@/components/PlaylistCollapsibleBody";
 
@@ -27,7 +28,7 @@ export function PublicPlaylistView({ title, description, ownerName, items }: Pro
 
       <footer className="pt-2 text-center text-sm text-neutral-500">
         <Link href="/" className={`inline-flex items-center gap-1 rounded-sm hover:text-emerald-700 ${focusRing}`}>
-          تصفّح المزيد من الأناشيد <span aria-hidden>←</span>
+          تصفّح المزيد من الأناشيد <ChevronLeft className="h-4 w-4" aria-hidden="true" />
         </Link>
       </footer>
     </div>

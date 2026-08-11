@@ -2,6 +2,7 @@
 
 import { useRouter } from "next/navigation";
 import { useState } from "react";
+import { Search } from "lucide-react";
 import { inputCls, btnPrimary } from "@/lib/ui";
 
 export function FavoritesSearchBar({ defaultValue, sort }: { defaultValue: string; sort?: string }) {
@@ -19,14 +20,20 @@ export function FavoritesSearchBar({ defaultValue, sort }: { defaultValue: strin
 
   return (
     <form onSubmit={handleSubmit} className="flex gap-2">
-      <input
-        type="search"
-        value={value}
-        onChange={(e) => setValue(e.target.value)}
-        placeholder="ابحث في مفضّلتك بالعنوان أو الفنان أو الأنشودة..."
-        aria-label="ابحث في مفضّلتك"
-        className={inputCls}
-      />
+      <div className="relative flex-1">
+        <Search
+          className="pointer-events-none absolute inset-y-0 start-3 my-auto h-5 w-5 text-neutral-400"
+          aria-hidden="true"
+        />
+        <input
+          type="search"
+          value={value}
+          onChange={(e) => setValue(e.target.value)}
+          placeholder="ابحث في مفضّلتك بالعنوان أو الفنان أو الأنشودة..."
+          aria-label="ابحث في مفضّلتك"
+          className={`${inputCls} ps-10`}
+        />
+      </div>
       <button type="submit" className={`${btnPrimary} shrink-0`}>
         بحث
       </button>
