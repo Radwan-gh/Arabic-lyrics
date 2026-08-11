@@ -1,81 +1,165 @@
-// Service worker بسيط لتطبيق «أناشيد».
-// الغرض الأساسي: تحقيق شرط قابلية التثبيت (PWA) في المتصفحات عبر وجود fetch handler،
-// مع استراتيجية network-first آمنة لا تخزّن استجابات المصادقة أو مسارات الـ API إطلاقًا،
-// حتى لا يُكسَر تسجيل الدخول ولا تُعرض بيانات قديمة.
+// Service worker لتطبيق «أناشيد» — يدعم التثبيت (PWA) والقراءة دون اتصال.
+//
+// المبادئ:
+// - لا يُخزَّن إطلاقًا: الطلبات غير-GET، وعبر-الأصل، ومعظم مسارات /api/*
+//   (المصادقة والطفرات والقراءات الديناميكية) — حتى لا يُكسَر تسجيل الدخول ولا
+//   تُعرَض بيانات قديمة.
+// - يُخزَّن للقراءة دون اتصال: هيكل التطبيق وأصوله الثابتة، ولقطة المجموعة العامة
+//   (/api/public/lyrics)، وبيانات المستخدم الخفيفة (/api/offline/me — تُمسح عند
+//   تسجيل الخروج عبر رسالة CLEAR_PRIVATE).
 
-const CACHE_NAME = "anaasheed-static-v1";
+const VERSION = "v2";
+const STATIC_CACHE = `anaasheed-static-${VERSION}`; // أصول ثابتة + تنقّلات
+const DATA_CACHE = `anaasheed-data-${VERSION}`; // لقطات JSON للقراءة دون اتصال
+const KNOWN_CACHES = [STATIC_CACHE, DATA_CACHE];
 
-self.addEventListener("install", () => {
-  // فعّل النسخة الجديدة فورًا دون انتظار إغلاق كل التبويبات.
-  self.skipWaiting();
+const OFFLINE_URL = "/offline";
+const PUBLIC_LYRICS_PATH = "/api/public/lyrics";
+const OFFLINE_ME_PATH = "/api/offline/me";
+
+self.addEventListener("install", (event) => {
+  event.waitUntil(
+    (async () => {
+      // خزّن صفحة القارئ دون اتصال مسبقًا لتكون ملاذًا متاحًا دائمًا.
+      try {
+        const cache = await caches.open(STATIC_CACHE);
+        await cache.add(new Request(OFFLINE_URL, { cache: "reload" }));
+      } catch {
+        // لا بأس إن فشل التخزين المسبق — سيُخزَّن عند أول زيارة أونلاين.
+      }
+      await self.skipWaiting();
+    })()
+  );
 });
 
 self.addEventListener("activate", (event) => {
   event.waitUntil(
     (async () => {
-      // احذف أي كاش قديم من نسخة سابقة.
       const keys = await caches.keys();
       await Promise.all(
-        keys.filter((key) => key !== CACHE_NAME).map((key) => caches.delete(key))
+        keys.filter((key) => !KNOWN_CACHES.includes(key)).map((key) => caches.delete(key))
       );
       await self.clients.claim();
     })()
   );
 });
 
+// السماح للعميل بمسح البيانات الخاصة (المفضّلة/القوائم) عند تسجيل الخروج،
+// حتى لا تتسرّب بيانات مستخدم إلى آخر على جهاز مشترك.
+self.addEventListener("message", (event) => {
+  const data = event.data;
+  if (data && data.type === "CLEAR_PRIVATE") {
+    event.waitUntil(
+      (async () => {
+        const cache = await caches.open(DATA_CACHE);
+        await cache.delete(OFFLINE_ME_PATH, { ignoreSearch: true });
+      })()
+    );
+  }
+});
+
 self.addEventListener("fetch", (event) => {
   const { request } = event;
   const url = new URL(request.url);
-
-  // مرّر مباشرةً للشبكة (بدون تدخل ولا تخزين):
-  // - أي طلب ليس GET (POST/PUT/DELETE ...).
-  // - الطلبات خارج نطاق الموقع نفسه.
-  // - مسارات الـ API ومسارات المصادقة.
   const isSameOrigin = url.origin === self.location.origin;
-  const isApi = url.pathname.startsWith("/api/");
-  if (request.method !== "GET" || !isSameOrigin || isApi) {
-    return; // دع المتصفح يتولى الطلب افتراضيًا.
+
+  // مرّر دائمًا دون تدخّل: الطلبات غير-GET أو عبر-الأصل.
+  if (request.method !== "GET" || !isSameOrigin) {
+    return;
   }
 
-  // استراتيجية network-first: جرّب الشبكة أولًا، وخزّن الأصول الثابتة فقط،
-  // واستعمل الكاش كنسخة احتياطية عند انقطاع الشبكة.
-  event.respondWith(
-    (async () => {
-      try {
-        const networkResponse = await fetch(request);
-        // خزّن فقط الأصول الثابتة الناجحة (نفس الأصل) في الكاش.
-        if (
-          networkResponse &&
-          networkResponse.ok &&
-          networkResponse.type === "basic"
-        ) {
-          const cache = await caches.open(CACHE_NAME);
-          cache.put(request, networkResponse.clone());
-        }
-        return networkResponse;
-      } catch (error) {
-        // لا شبكة: حاول الكاش.
-        const cached = await caches.match(request);
-        if (cached) {
-          return cached;
-        }
-        // كملاذ أخير للتنقلات، أعِد رسالة offline بسيطة.
-        if (request.mode === "navigate") {
-          return new Response(
-            "<!doctype html><html lang=\"ar\" dir=\"rtl\"><meta charset=\"utf-8\">" +
-              "<meta name=\"viewport\" content=\"width=device-width, initial-scale=1\">" +
-              "<title>غير متصل</title>" +
-              "<body style=\"font-family:sans-serif;display:flex;min-height:100vh;" +
-              "align-items:center;justify-content:center;margin:0;background:#fafafa;" +
-              "color:#171717;text-align:center;padding:24px\">" +
-              "<div><h1 style=\"color:#047857\">لا يوجد اتصال بالإنترنت</h1>" +
-              "<p>يحتاج تطبيق «أناشيد» إلى اتصال بالشبكة. أعد المحاولة بعد عودة الاتصال.</p>" +
-              "</div></body></html>",
-            { headers: { "Content-Type": "text/html; charset=utf-8" }, status: 503 }
-          );
-        }
-        throw error;
-      }
-    })()
-  );
+  // لقطة المجموعة العامة: stale-while-revalidate (تعمل دون اتصال).
+  if (url.pathname === PUBLIC_LYRICS_PATH) {
+    event.respondWith(staleWhileRevalidate(request));
+    return;
+  }
+
+  // بيانات المستخدم الخاصة: الشبكة أولًا، وتُخزَّن فقط عند النجاح.
+  if (url.pathname === OFFLINE_ME_PATH) {
+    event.respondWith(networkFirstData(request));
+    return;
+  }
+
+  // بقية مسارات /api/*: تمرير دون تخزين (مصادقة/طفرات/قراءات ديناميكية).
+  if (url.pathname.startsWith("/api/")) {
+    return;
+  }
+
+  // التنقّلات بين الصفحات: الشبكة أولًا، ثم الكاش، ثم صفحة القارئ دون اتصال.
+  if (request.mode === "navigate") {
+    event.respondWith(navigationHandler(request));
+    return;
+  }
+
+  // الأصول الثابتة (JS/CSS/خطوط/أيقونات): الكاش أولًا.
+  event.respondWith(cacheFirst(request));
 });
+
+// يُرجِع النسخة المخزَّنة فورًا (إن وُجدت) ويحدّثها من الشبكة في الخلفية.
+async function staleWhileRevalidate(request) {
+  const cache = await caches.open(DATA_CACHE);
+  const cached = await cache.match(request, { ignoreSearch: true });
+  const network = fetch(request)
+    .then((response) => {
+      if (response && response.ok) {
+        cache.put(request, response.clone());
+      }
+      return response;
+    })
+    .catch(() => undefined);
+  return cached || (await network) || Response.error();
+}
+
+// الشبكة أولًا مع رجوع للكاش عند انقطاعها — للبيانات الخاصة.
+async function networkFirstData(request) {
+  const cache = await caches.open(DATA_CACHE);
+  try {
+    const response = await fetch(request);
+    if (response && response.ok) {
+      cache.put(request, response.clone());
+    }
+    return response;
+  } catch (error) {
+    const cached = await cache.match(request, { ignoreSearch: true });
+    if (cached) return cached;
+    throw error;
+  }
+}
+
+// الكاش أولًا للأصول الثابتة، مع تخزين الاستجابات الناجحة (نفس الأصل).
+async function cacheFirst(request) {
+  const cache = await caches.open(STATIC_CACHE);
+  const cached = await cache.match(request);
+  if (cached) return cached;
+  try {
+    const response = await fetch(request);
+    if (response && response.ok && response.type === "basic") {
+      cache.put(request, response.clone());
+    }
+    return response;
+  } catch (error) {
+    if (cached) return cached;
+    throw error;
+  }
+}
+
+// التنقّلات: جرّب الشبكة، ثم الصفحة المخزَّنة، ثم صفحة القارئ دون اتصال.
+async function navigationHandler(request) {
+  const cache = await caches.open(STATIC_CACHE);
+  try {
+    const response = await fetch(request);
+    if (response && response.ok) {
+      cache.put(request, response.clone());
+    }
+    return response;
+  } catch (error) {
+    const cached = await cache.match(request);
+    if (cached) return cached;
+    const offline = await cache.match(OFFLINE_URL);
+    if (offline) return offline;
+    return new Response(
+      "لا يوجد اتصال بالإنترنت، ولم يُخزَّن هذا المحتوى بعد.",
+      { status: 503, headers: { "Content-Type": "text/plain; charset=utf-8" } }
+    );
+  }
+}

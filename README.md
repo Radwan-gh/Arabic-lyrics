@@ -141,6 +141,31 @@ Note: this app was built and pushed from a sandboxed environment with no
 network access to Railway, so the steps above have not been run end-to-end —
 please flag anything that doesn't match Railway's current UI/CLI.
 
+## Offline reading (PWA)
+
+The app is an installable PWA that supports **reading offline**. After you open
+it once while online, the whole public **أناشيد** collection — and, if you are
+signed in, your **favorites** and **playlists** — are cached on the device and
+readable with no internet from the **«دون اتصال»** page (`/offline`).
+
+How it works (all read-only; creating/editing and sign-in still need a
+connection):
+
+- `GET /api/public/lyrics` returns the full collection as JSON (used as the
+  offline snapshot), and `GET /api/offline/me` returns the signed-in user's
+  favorites/playlists as lightweight ID references.
+- `public/sw.js` (service worker) caches the app shell, the collection
+  snapshot (stale-while-revalidate), and the private user snapshot
+  (network-first). It never caches auth or other `/api/*` mutations.
+- `src/components/OfflineReader.tsx` renders the cached data with client-side
+  Arabic search (reusing `src/lib/arabic-search.ts`).
+- On sign-out the private snapshot is purged from the cache so favorites and
+  playlists don't leak to the next user on a shared device.
+
+Note: open the app (and ideally the `/offline` page) once while connected so the
+assets and data are cached — that first online visit is what enables offline
+use.
+
 ## Project structure
 
 ```
