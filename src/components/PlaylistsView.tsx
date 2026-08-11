@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useState } from "react";
+import { Plus, Eye, Settings2, Trash2 } from "lucide-react";
 import { formatDate } from "@/lib/format";
 import { inputSm, btnPrimary, btnSecondary, btnDanger, focusRing } from "@/lib/ui";
 
@@ -86,6 +87,7 @@ export function PlaylistsView({ initial }: { initial: PlaylistSummary[] }) {
           </p>
         )}
         <button type="submit" disabled={busy || !title.trim()} className={`${btnPrimary} self-start`}>
+          <Plus className="h-4 w-4" aria-hidden="true" />
           {busy ? "جارٍ الإنشاء…" : "إنشاء"}
         </button>
       </form>
@@ -99,7 +101,7 @@ export function PlaylistsView({ initial }: { initial: PlaylistSummary[] }) {
           {playlists.map((p) => (
             <li
               key={p.id}
-              className="flex items-start justify-between gap-3 rounded-xl border border-neutral-200 bg-white p-4 shadow-sm"
+              className="flex flex-col gap-3 rounded-xl border border-neutral-200 bg-white p-4 shadow-sm sm:flex-row sm:items-start sm:justify-between"
             >
               <div className="min-w-0">
                 <Link href={`/playlists/${p.id}`} className={`rounded-sm text-lg font-bold hover:text-emerald-700 ${focusRing}`}>
@@ -115,14 +117,17 @@ export function PlaylistsView({ initial }: { initial: PlaylistSummary[] }) {
                   )}
                 </p>
               </div>
-              <div className="flex shrink-0 gap-2">
+              <div className="flex shrink-0 flex-wrap gap-2">
                 <Link href={`/playlists/${p.id}/view`} className={`${btnPrimary} px-3 py-1.5`}>
+                  <Eye className="h-4 w-4" aria-hidden="true" />
                   عرض
                 </Link>
                 <Link href={`/playlists/${p.id}`} className={`${btnSecondary} px-3 py-1.5`}>
+                  <Settings2 className="h-4 w-4" aria-hidden="true" />
                   إدارة
                 </Link>
                 <button type="button" onClick={() => remove(p.id)} className={`${btnDanger} px-3 py-1.5`}>
+                  <Trash2 className="h-4 w-4" aria-hidden="true" />
                   حذف
                 </button>
               </div>

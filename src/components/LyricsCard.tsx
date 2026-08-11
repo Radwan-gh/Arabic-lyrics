@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useState, type ReactNode } from "react";
+import { ChevronUp, ChevronDown } from "lucide-react";
 import { lyricsProseCls } from "@/lib/lyrics-prose";
 import { formatDate } from "@/lib/format";
 import { focusRing } from "@/lib/ui";
@@ -52,9 +53,14 @@ export function LyricsCard({ id, title, artist, album, tags, createdAt, contentH
         type="button"
         onClick={() => setExpanded((v) => !v)}
         aria-expanded={expanded}
-        className={`mt-2 rounded-sm text-xs font-medium text-emerald-700 hover:underline ${focusRing}`}
+        className={`mt-2 inline-flex items-center gap-1 rounded-sm text-xs font-medium text-emerald-700 hover:underline ${focusRing}`}
       >
-        {expanded ? "إخفاء الأنشودة ▲" : "عرض الأنشودة كاملة ▼"}
+        {expanded ? "إخفاء الأنشودة" : "عرض الأنشودة كاملة"}
+        {expanded ? (
+          <ChevronUp className="h-3.5 w-3.5" aria-hidden="true" />
+        ) : (
+          <ChevronDown className="h-3.5 w-3.5" aria-hidden="true" />
+        )}
       </button>
 
       {expanded && (

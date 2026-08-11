@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { ChevronUp, ChevronDown } from "lucide-react";
 import { lyricsProseCls } from "@/lib/lyrics-prose";
 import { focusRing } from "@/lib/ui";
 
@@ -51,7 +52,7 @@ export function PlaylistCollapsibleBody({ items }: { items: PlaylistBodyItem[] }
         >
           <span className="text-sm font-semibold text-neutral-700">ملخّص الوصلة ({items.length})</span>
           <span aria-hidden className="text-neutral-400">
-            {summaryOpen ? "▲" : "▼"}
+            {summaryOpen ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
           </span>
         </button>
         {summaryOpen && (
@@ -97,7 +98,7 @@ export function PlaylistCollapsibleBody({ items }: { items: PlaylistBodyItem[] }
                   </span>
                 </span>
                 <span aria-hidden className="shrink-0 text-neutral-400">
-                  {isCollapsed ? "▼" : "▲"}
+                  {isCollapsed ? <ChevronDown className="h-4 w-4" /> : <ChevronUp className="h-4 w-4" />}
                 </span>
               </button>
 

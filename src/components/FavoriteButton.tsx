@@ -2,6 +2,7 @@
 
 import { useRouter } from "next/navigation";
 import { useState } from "react";
+import { Heart } from "lucide-react";
 import { btnSecondary, focusRing } from "@/lib/ui";
 
 interface FavoriteButtonProps {
@@ -58,11 +59,11 @@ export function FavoriteButton({
         aria-pressed={favorited}
         aria-label={label}
         title={label}
-        className={`inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-lg text-lg leading-none transition-colors disabled:opacity-50 ${
+        className={`inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-lg leading-none transition-colors disabled:opacity-50 ${
           favorited ? "text-emerald-700 hover:bg-emerald-50" : "text-neutral-400 hover:bg-neutral-100 hover:text-neutral-600"
         } ${focusRing}`}
       >
-        <span aria-hidden>{favorited ? "♥" : "♡"}</span>
+        <Heart className={`h-5 w-5 ${favorited ? "fill-current" : ""}`} aria-hidden="true" />
       </button>
     );
   }
@@ -75,7 +76,7 @@ export function FavoriteButton({
       aria-pressed={favorited}
       className={`${btnSecondary} px-4 py-2 ${favorited ? "border-emerald-300 text-emerald-700 hover:bg-emerald-50" : ""}`}
     >
-      <span aria-hidden>{favorited ? "♥" : "♡"}</span>
+      <Heart className={`h-4 w-4 ${favorited ? "fill-current" : ""}`} aria-hidden="true" />
       {label}
     </button>
   );

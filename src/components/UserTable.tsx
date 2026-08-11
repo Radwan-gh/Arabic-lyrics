@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { KeyRound, Trash2, UserPlus } from "lucide-react";
 import { inputCls, inputSm, btnPrimary, focusRing } from "@/lib/ui";
 
 type Role = "ADMIN" | "EDITOR" | "VIEWER";
@@ -140,8 +141,9 @@ export function UserTable({ initialUsers, currentUserId }: { initialUsers: UserR
                       type="button"
                       disabled={busyId === u.id}
                       onClick={() => changePassword(u.id)}
-                      className={`rounded-sm text-emerald-700 hover:underline disabled:opacity-50 ${focusRing}`}
+                      className={`inline-flex items-center gap-1 rounded-sm text-emerald-700 hover:underline disabled:opacity-50 ${focusRing}`}
                     >
+                      <KeyRound className="h-4 w-4" aria-hidden="true" />
                       تغيير كلمة المرور
                     </button>
                     {u.id !== currentUserId && (
@@ -149,8 +151,9 @@ export function UserTable({ initialUsers, currentUserId }: { initialUsers: UserR
                         type="button"
                         disabled={busyId === u.id}
                         onClick={() => deleteUser(u.id)}
-                        className={`rounded-sm text-red-600 hover:underline disabled:opacity-50 ${focusRing}`}
+                        className={`inline-flex items-center gap-1 rounded-sm text-red-600 hover:underline disabled:opacity-50 ${focusRing}`}
                       >
+                        <Trash2 className="h-4 w-4" aria-hidden="true" />
                         حذف
                       </button>
                     )}
@@ -258,6 +261,7 @@ function CreateUserForm({ onCreated }: { onCreated: (user: UserRow) => void }) {
       </div>
 
       <button type="submit" disabled={loading} className={`${btnPrimary} self-start`}>
+        <UserPlus className="h-4 w-4" aria-hidden="true" />
         {loading ? "جارٍ الإنشاء..." : "إنشاء الحساب"}
       </button>
     </form>
