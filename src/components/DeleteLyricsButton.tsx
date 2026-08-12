@@ -25,9 +25,15 @@ export function DeleteLyricsButton({ id }: { id: string }) {
   }
 
   return (
-    <button type="button" onClick={handleDelete} disabled={loading} className={`${btnDanger} px-4 py-2`}>
-      <Trash2 className="h-4 w-4" aria-hidden="true" />
-      {loading ? "جارٍ الحذف..." : "حذف"}
+    <button
+      type="button"
+      onClick={handleDelete}
+      disabled={loading}
+      aria-label="حذف"
+      title="حذف"
+      className={`${btnDanger} h-10 w-10 p-0`}
+    >
+      <Trash2 className="h-5 w-5" aria-hidden="true" />
     </button>
   );
 }

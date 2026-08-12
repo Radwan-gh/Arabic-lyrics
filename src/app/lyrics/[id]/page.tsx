@@ -41,9 +41,13 @@ export default async function LyricsPage({ params }: { params: Promise<{ id: str
             {session && <AddToPlaylist lyricsId={lyrics.id} />}
             {canModify && (
               <>
-                <Link href={`/lyrics/${lyrics.id}/edit`} className={`${btnSecondary} px-4 py-2`}>
-                  <Pencil className="h-4 w-4" aria-hidden="true" />
-                  تعديل
+                <Link
+                  href={`/lyrics/${lyrics.id}/edit`}
+                  className={`${btnSecondary} h-10 w-10 p-0`}
+                  aria-label="تعديل"
+                  title="تعديل"
+                >
+                  <Pencil className="h-5 w-5" aria-hidden="true" />
                 </Link>
                 <DeleteLyricsButton id={lyrics.id} />
               </>
