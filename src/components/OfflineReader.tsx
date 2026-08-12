@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { LyricsCard } from "@/components/LyricsCard";
+import { LyricsFontControls } from "@/components/LyricsFontControls";
 import { buildSearchText, normalizeArabic } from "@/lib/arabic-search";
 import { formatDate } from "@/lib/format";
 import { lyricsProseCls } from "@/lib/lyrics-prose";
@@ -313,6 +314,10 @@ function DetailMirror({ lyric }: { lyric: OfflineLyric | null }) {
         {lyric.album && <p className="text-sm text-neutral-500">{lyric.album}</p>}
         <p className="text-xs text-neutral-500">{formatDate(new Date(lyric.createdAt))}</p>
       </header>
+
+      <div className="mb-4 flex justify-end">
+        <LyricsFontControls />
+      </div>
 
       <div dir="rtl" className={lyricsProseCls} dangerouslySetInnerHTML={{ __html: lyric.contentHtml }} />
 

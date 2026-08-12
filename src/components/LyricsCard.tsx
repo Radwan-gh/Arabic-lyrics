@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useState, type ReactNode } from "react";
 import { ChevronUp, ChevronDown } from "lucide-react";
-import { lyricsProseCls } from "@/lib/lyrics-prose";
+import { lyricsProseFormatCls } from "@/lib/lyrics-prose";
 import { formatDate } from "@/lib/format";
 import { focusRing } from "@/lib/ui";
 
@@ -66,7 +66,7 @@ export function LyricsCard({ id, title, artist, album, tags, createdAt, contentH
       {expanded && (
         <div
           dir="rtl"
-          className={`mt-2 border-t border-neutral-100 pt-2 text-sm ${lyricsProseCls}`}
+          className={`mt-2 border-t border-neutral-100 pt-2 text-sm leading-loose ${lyricsProseFormatCls}`}
           dangerouslySetInnerHTML={{ __html: contentHtml }}
         />
       )}
