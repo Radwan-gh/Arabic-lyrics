@@ -53,10 +53,11 @@ export function AddToPlaylist({ lyricsId }: { lyricsId: string }) {
         onClick={() => setOpen((v) => !v)}
         aria-haspopup="menu"
         aria-expanded={open}
-        className={`${btnSecondary} px-4 py-2`}
+        aria-label="إضافة إلى وصلة"
+        title="إضافة إلى وصلة"
+        className={`${btnSecondary} h-10 w-10 p-0`}
       >
-        <ListPlus className="h-4 w-4" aria-hidden="true" />
-        إضافة إلى وصلة
+        <ListPlus className="h-5 w-5" aria-hidden="true" />
       </button>
 
       {open && (
