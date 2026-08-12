@@ -10,6 +10,7 @@ import { formatDate } from "@/lib/format";
 import { DeleteLyricsButton } from "@/components/DeleteLyricsButton";
 import { AddToPlaylist } from "@/components/AddToPlaylist";
 import { FavoriteButton } from "@/components/FavoriteButton";
+import { LyricsFontControls } from "@/components/LyricsFontControls";
 import { btnSecondary, focusRing } from "@/lib/ui";
 
 export default async function LyricsPage({ params }: { params: Promise<{ id: string }> }) {
@@ -50,6 +51,10 @@ export default async function LyricsPage({ params }: { params: Promise<{ id: str
           </div>
         )}
       </header>
+
+      <div className="mb-4 flex justify-end">
+        <LyricsFontControls />
+      </div>
 
       <div dir="rtl" className={lyricsProseCls} dangerouslySetInnerHTML={{ __html: renderLyricsHtml(lyrics.content) }} />
 
