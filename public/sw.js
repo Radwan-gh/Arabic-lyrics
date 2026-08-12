@@ -8,7 +8,7 @@
 //   (/api/public/lyrics)، وبيانات المستخدم الخفيفة (/api/offline/me — تُمسح عند
 //   تسجيل الخروج عبر رسالة CLEAR_PRIVATE).
 
-const VERSION = "v2";
+const VERSION = "v3";
 const STATIC_CACHE = `anaasheed-static-${VERSION}`; // أصول ثابتة + تنقّلات
 const DATA_CACHE = `anaasheed-data-${VERSION}`; // لقطات JSON للقراءة دون اتصال
 const KNOWN_CACHES = [STATIC_CACHE, DATA_CACHE];

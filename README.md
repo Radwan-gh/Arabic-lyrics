@@ -146,7 +146,14 @@ please flag anything that doesn't match Railway's current UI/CLI.
 The app is an installable PWA that supports **reading offline**. After you open
 it once while online, the whole public **أناشيد** collection — and, if you are
 signed in, your **favorites** and **playlists** — are cached on the device and
-readable with no internet from the **«دون اتصال»** page (`/offline`).
+readable with no internet.
+
+When there is no connection, **the same interfaces keep working**: navigating to
+the home page (`/`), a single lyric (`/lyrics/[id]`), your favorites
+(`/favorites`), or your playlists (`/playlists`/`/playlists/[id]`) renders that
+very screen from the cached snapshot, with a banner noting it is a saved copy.
+The dedicated **«دون اتصال»** page (`/offline`) remains available as a full
+reader (collection / favorites / playlists tabs with search and cache status).
 
 How it works (all read-only; creating/editing and sign-in still need a
 connection):
@@ -156,9 +163,15 @@ connection):
   favorites/playlists as lightweight ID references.
 - `public/sw.js` (service worker) caches the app shell, the collection
   snapshot (stale-while-revalidate), and the private user snapshot
-  (network-first). It never caches auth or other `/api/*` mutations.
-- `src/components/OfflineReader.tsx` renders the cached data with client-side
-  Arabic search (reusing `src/lib/arabic-search.ts`).
+  (network-first). It never caches auth or other `/api/*` mutations. For page
+  navigations it tries the network first, then the exact cached page, then the
+  `/offline` shell — so an offline visit to any route above still loads the app.
+- `src/components/OfflineReader.tsx` powers both modes: when served for `/offline`
+  it shows the full reader; when the service worker serves it in place of another
+  route, it reads `location.pathname` and mirrors that page (home / detail /
+  favorites / playlists) from the cache — reusing the same `LyricsCard` and
+  client-side Arabic search (`src/lib/arabic-search.ts`). Card and tag links stay
+  functional offline because each click loads the shell again for the new route.
 - On sign-out the private snapshot is purged from the cache so favorites and
   playlists don't leak to the next user on a shared device.
 
