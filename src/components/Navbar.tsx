@@ -18,6 +18,7 @@ import {
   Music,
   User,
   WifiOff,
+  ChevronDown,
   type LucideIcon,
 } from "lucide-react";
 import type { SessionPayload } from "@/lib/jwt";
@@ -103,9 +104,33 @@ export function Navbar({ user }: { user: SessionPayload | null }) {
             {open ? <X className="h-6 w-6" aria-hidden="true" /> : <Menu className="h-6 w-6" aria-hidden="true" />}
           </button>
 
-          <nav className="hidden items-center gap-4 sm:flex">
-            <NavLinks user={user} onLogout={handleLogout} />
-          </nav>
+          {/* على الويب وسطح المكتب تُجمَّع الروابط في قائمة منسدلة أنيقة بدل تكدّسها. */}
+          <div className="relative hidden sm:block">
+            <button
+              type="button"
+              className={`inline-flex h-11 items-center gap-2 rounded-lg border border-neutral-200 bg-white px-3 text-sm font-medium text-neutral-700 transition-colors hover:bg-neutral-50 hover:text-emerald-700 ${focusRing}`}
+              onClick={() => setOpen((v) => !v)}
+              aria-label={open ? "إغلاق القائمة" : "فتح القائمة"}
+              aria-expanded={open}
+              aria-controls="desktop-nav"
+            >
+              <Menu className="h-4 w-4" aria-hidden="true" />
+              القائمة
+              <ChevronDown
+                className={`h-4 w-4 text-neutral-400 transition-transform duration-200 ${open ? "-rotate-180" : ""}`}
+                aria-hidden="true"
+              />
+            </button>
+
+            {open && (
+              <nav
+                id="desktop-nav"
+                className="absolute end-0 top-full z-30 mt-2 flex w-60 origin-top animate-nav-drop flex-col gap-1 rounded-lg border border-neutral-200 bg-white p-2 shadow-lg"
+              >
+                <NavLinks user={user} onLogout={handleLogout} mobile onNavigate={() => setOpen(false)} />
+              </nav>
+            )}
+          </div>
         </div>
       </div>
 
