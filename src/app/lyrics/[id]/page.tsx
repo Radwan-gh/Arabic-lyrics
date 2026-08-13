@@ -43,11 +43,11 @@ export default async function LyricsPage({ params }: { params: Promise<{ id: str
               <>
                 <Link
                   href={`/lyrics/${lyrics.id}/edit`}
-                  className={`${btnSecondary} h-10 w-10 p-0`}
+                  className={`${btnSecondary} h-11 w-11 p-0`}
                   aria-label="تعديل"
                   title="تعديل"
                 >
-                  <Pencil className="h-5 w-5" aria-hidden="true" />
+                  <Pencil className="h-6 w-6" aria-hidden="true" />
                 </Link>
                 <DeleteLyricsButton id={lyrics.id} />
               </>

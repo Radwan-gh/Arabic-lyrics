@@ -31,9 +31,9 @@ export function DeleteLyricsButton({ id }: { id: string }) {
       disabled={loading}
       aria-label="حذف"
       title="حذف"
-      className={`${btnDanger} h-10 w-10 p-0`}
+      className={`${btnDanger} h-11 w-11 p-0`}
     >
-      <Trash2 className="h-5 w-5" aria-hidden="true" />
+      <Trash2 className="h-6 w-6" aria-hidden="true" />
     </button>
   );
 }
