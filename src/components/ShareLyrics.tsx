@@ -1,0 +1,83 @@
+"use client";
+
+import { useState } from "react";
+import { Share2, Copy, Check } from "lucide-react";
+import { btnSecondary } from "@/lib/ui";
+
+interface ShareLyricsProps {
+  /** Absolute URL to this nasheed's page. */
+  shareUrl: string;
+  /** Nasheed title — used as the share sheet title. */
+  title: string;
+  /** Pre-formatted WhatsApp-friendly text (title + lyrics + tags). */
+  shareText: string;
+}
+
+export function ShareLyrics({ shareUrl, title, shareText }: ShareLyricsProps) {
+  const [shared, setShared] = useState(false);
+  const [copied, setCopied] = useState(false);
+
+  async function shareLink() {
+    // Prefer the native share sheet (mobile) so users land straight in WhatsApp;
+    // fall back to copying the link on desktop / unsupported browsers.
+    if (typeof navigator !== "undefined" && navigator.share) {
+      try {
+        await navigator.share({ title, url: shareUrl });
+        return;
+      } catch {
+        // User dismissed the sheet, or share failed — fall through to copy.
+      }
+    }
+    try {
+      await navigator.clipboard.writeText(shareUrl);
+      setShared(true);
+      setTimeout(() => setShared(false), 2000);
+    } catch {
+      /* clipboard unavailable */
+    }
+  }
+
+  async function copyLyrics() {
+    try {
+      await navigator.clipboard.writeText(shareText);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    } catch {
+      /* clipboard unavailable */
+    }
+  }
+
+  return (
+    <>
+      <button
+        type="button"
+        onClick={shareLink}
+        aria-label="مشاركة رابط الأنشودة"
+        title="مشاركة رابط الأنشودة"
+        className={`${btnSecondary} h-11 px-4`}
+      >
+        {shared ? (
+          <Check className="h-5 w-5 text-emerald-700" aria-hidden="true" />
+        ) : (
+          <Share2 className="h-5 w-5" aria-hidden="true" />
+        )}
+        <span>{shared ? "تم نسخ الرابط" : "مشاركة"}</span>
+      </button>
+
+      <button
+        type="button"
+        onClick={copyLyrics}
+        aria-label="نسخ الأنشودة"
+        title="نسخ الأنشودة (منسّقة لواتساب)"
+        className={`${btnSecondary} h-11 px-4 ${copied ? "border-emerald-300 text-emerald-700" : ""}`}
+      >
+        {copied ? (
+          <Check className="h-5 w-5 text-emerald-700" aria-hidden="true" />
+        ) : (
+          <Copy className="h-5 w-5" aria-hidden="true" />
+        )}
+        <span>{copied ? "تم النسخ" : "نسخ الأنشودة"}</span>
+      </button>
+    </>
+  );
+}

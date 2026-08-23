@@ -1,15 +1,18 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import { headers } from "next/headers";
 import { Pencil } from "lucide-react";
 import { getCurrentUser } from "@/lib/session";
 import { getLyricsAndIncrementViews } from "@/lib/lyrics";
 import { isFavorited } from "@/lib/favorites";
 import { renderLyricsHtml } from "@/lib/render-lyrics";
+import { buildWhatsAppLyrics } from "@/lib/whatsapp-lyrics";
 import { lyricsProseCls } from "@/lib/lyrics-prose";
 import { formatDate } from "@/lib/format";
 import { DeleteLyricsButton } from "@/components/DeleteLyricsButton";
 import { AddToPlaylist } from "@/components/AddToPlaylist";
 import { FavoriteButton } from "@/components/FavoriteButton";
+import { ShareLyrics } from "@/components/ShareLyrics";
 import { LyricsFontControls } from "@/components/LyricsFontControls";
 import { btnSecondary, focusRing } from "@/lib/ui";
 
@@ -24,6 +27,17 @@ export default async function LyricsPage({ params }: { params: Promise<{ id: str
   const canModify =
     !!session && (session.role === "ADMIN" || (session.role === "EDITOR" && session.userId === lyrics.createdById));
 
+  const hdrs = await headers();
+  const host = hdrs.get("x-forwarded-host") ?? hdrs.get("host") ?? "";
+  const proto = hdrs.get("x-forwarded-proto") ?? "https";
+  const shareUrl = host ? `${proto}://${host}/lyrics/${lyrics.id}` : `/lyrics/${lyrics.id}`;
+  const shareText = buildWhatsAppLyrics({
+    title: lyrics.title,
+    artist: lyrics.artist,
+    content: lyrics.content,
+    tags: lyrics.tags,
+  });
+
   return (
     <article className="rounded-xl border border-neutral-200 bg-white p-6 shadow-sm">
       <header className="mb-4 flex flex-col gap-4 border-b border-neutral-100 pb-4 sm:flex-row sm:items-start sm:justify-between">
@@ -35,25 +49,24 @@ export default async function LyricsPage({ params }: { params: Promise<{ id: str
             أضافها {lyrics.createdBy?.name ?? "مستخدم محذوف"} · {formatDate(lyrics.createdAt)} · {lyrics.viewCount} مشاهدة
           </p>
         </div>
-        {(session || canModify) && (
-          <div className="flex flex-shrink-0 flex-wrap gap-3">
-            {session && <FavoriteButton lyricsId={lyrics.id} initialFavorited={favorited} />}
-            {session && <AddToPlaylist lyricsId={lyrics.id} />}
-            {canModify && (
-              <>
-                <Link
-                  href={`/lyrics/${lyrics.id}/edit`}
-                  className={`${btnSecondary} h-11 w-11 p-0`}
-                  aria-label="تعديل"
-                  title="تعديل"
-                >
-                  <Pencil className="h-6 w-6" aria-hidden="true" />
-                </Link>
-                <DeleteLyricsButton id={lyrics.id} />
-              </>
-            )}
-          </div>
-        )}
+        <div className="flex flex-shrink-0 flex-wrap gap-3">
+          <ShareLyrics shareUrl={shareUrl} title={lyrics.title} shareText={shareText} />
+          {session && <FavoriteButton lyricsId={lyrics.id} initialFavorited={favorited} />}
+          {session && <AddToPlaylist lyricsId={lyrics.id} />}
+          {canModify && (
+            <>
+              <Link
+                href={`/lyrics/${lyrics.id}/edit`}
+                className={`${btnSecondary} h-11 w-11 p-0`}
+                aria-label="تعديل"
+                title="تعديل"
+              >
+                <Pencil className="h-6 w-6" aria-hidden="true" />
+              </Link>
+              <DeleteLyricsButton id={lyrics.id} />
+            </>
+          )}
+        </div>
       </header>
 
       <div className="mb-4 flex justify-end">
