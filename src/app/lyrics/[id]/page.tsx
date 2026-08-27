@@ -57,7 +57,7 @@ export default async function LyricsPage({ params }: { params: Promise<{ id: str
             <>
               <Link
                 href={`/lyrics/${lyrics.id}/edit`}
-                className={`${btnSecondary} h-11 w-11 p-0`}
+                className={`${btnSecondary} h-11 w-11 !p-0`}
                 aria-label="تعديل"
                 title="تعديل"
               >
