@@ -13,6 +13,7 @@ import { DeleteLyricsButton } from "@/components/DeleteLyricsButton";
 import { AddToPlaylist } from "@/components/AddToPlaylist";
 import { FavoriteButton } from "@/components/FavoriteButton";
 import { ShareLyrics } from "@/components/ShareLyrics";
+import { ExportLyricsImage } from "@/components/ExportLyricsImage";
 import { LyricsFontControls } from "@/components/LyricsFontControls";
 import { btnSecondary, focusRing } from "@/lib/ui";
 
@@ -37,6 +38,7 @@ export default async function LyricsPage({ params }: { params: Promise<{ id: str
     content: lyrics.content,
     tags: lyrics.tags,
   });
+  const contentHtml = renderLyricsHtml(lyrics.content);
 
   return (
     <article className="rounded-xl border border-neutral-200 bg-white p-6 shadow-sm">
@@ -51,6 +53,14 @@ export default async function LyricsPage({ params }: { params: Promise<{ id: str
         </div>
         <div className="flex flex-shrink-0 flex-wrap gap-3">
           <ShareLyrics shareUrl={shareUrl} title={lyrics.title} shareText={shareText} />
+          <ExportLyricsImage
+            title={lyrics.title}
+            artist={lyrics.artist}
+            album={lyrics.album}
+            contentHtml={contentHtml}
+            tags={lyrics.tags}
+            siteLabel={host || undefined}
+          />
           {session && <FavoriteButton lyricsId={lyrics.id} initialFavorited={favorited} />}
           {session && <AddToPlaylist lyricsId={lyrics.id} />}
           {canModify && (
@@ -73,7 +83,7 @@ export default async function LyricsPage({ params }: { params: Promise<{ id: str
         <LyricsFontControls />
       </div>
 
-      <div dir="rtl" className={lyricsProseCls} dangerouslySetInnerHTML={{ __html: renderLyricsHtml(lyrics.content) }} />
+      <div dir="rtl" className={lyricsProseCls} dangerouslySetInnerHTML={{ __html: contentHtml }} />
 
       {lyrics.tags.length > 0 && (
         <div className="mt-4 flex flex-wrap gap-2">
