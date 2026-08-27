@@ -55,7 +55,7 @@ export function AddToPlaylist({ lyricsId }: { lyricsId: string }) {
         aria-expanded={open}
         aria-label="إضافة إلى وصلة"
         title="إضافة إلى وصلة"
-        className={`${btnSecondary} h-11 w-11 p-0`}
+        className={`${btnSecondary} h-11 w-11 !p-0`}
       >
         <ListPlus className="h-6 w-6" aria-hidden="true" />
       </button>

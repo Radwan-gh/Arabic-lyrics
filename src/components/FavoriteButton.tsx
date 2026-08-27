@@ -76,7 +76,7 @@ export function FavoriteButton({
       aria-pressed={favorited}
       aria-label={label}
       title={label}
-      className={`${btnSecondary} h-11 w-11 p-0 ${favorited ? "border-emerald-300 text-emerald-700 hover:bg-emerald-50" : ""}`}
+      className={`${btnSecondary} h-11 w-11 !p-0 ${favorited ? "border-emerald-300 text-emerald-700 hover:bg-emerald-50" : ""}`}
     >
       <Heart className={`h-6 w-6 ${favorited ? "fill-current" : ""}`} aria-hidden="true" />
     </button>
