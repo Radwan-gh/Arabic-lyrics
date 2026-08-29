@@ -244,17 +244,16 @@ export function ExportLyricsImage({
         onClick={exportImage}
         disabled={busy}
         aria-label="تصدير الأنشودة كصورة"
-        title="تصدير الأنشودة كصورة PNG"
-        className={`${btnSecondary} h-11 px-4 ${error ? "border-red-300 text-red-700" : ""}`}
+        title={error ? error : busy ? "جارٍ التصدير…" : done ? "تم" : "تصدير الأنشودة كصورة PNG"}
+        className={`${btnSecondary} h-11 w-11 !p-0 ${error ? "border-red-300 text-red-700" : ""}`}
       >
         {busy ? (
-          <Loader2 className="h-5 w-5 animate-spin motion-reduce:animate-none" aria-hidden="true" />
+          <Loader2 className="h-6 w-6 animate-spin motion-reduce:animate-none" aria-hidden="true" />
         ) : done ? (
-          <Check className="h-5 w-5 text-emerald-700" aria-hidden="true" />
+          <Check className="h-6 w-6 text-emerald-700" aria-hidden="true" />
         ) : (
-          <ImageDown className="h-5 w-5" aria-hidden="true" />
+          <ImageDown className="h-6 w-6" aria-hidden="true" />
         )}
-        <span>{error ? error : busy ? "جارٍ التصدير…" : done ? "تم" : "صورة"}</span>
       </button>
 
       {/* البطاقة المُلتقَطة: خارج الشاشة، بعرض ثابت لتخطيط ثابت عند الالتقاط. */}
