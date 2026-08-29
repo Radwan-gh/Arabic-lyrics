@@ -53,30 +53,28 @@ export function ShareLyrics({ shareUrl, title, shareText }: ShareLyricsProps) {
         type="button"
         onClick={shareLink}
         aria-label="مشاركة رابط الأنشودة"
-        title="مشاركة رابط الأنشودة"
-        className={`${btnSecondary} h-11 px-4`}
+        title={shared ? "تم نسخ الرابط" : "مشاركة رابط الأنشودة"}
+        className={`${btnSecondary} h-11 w-11 !p-0`}
       >
         {shared ? (
-          <Check className="h-5 w-5 text-emerald-700" aria-hidden="true" />
+          <Check className="h-6 w-6 text-emerald-700" aria-hidden="true" />
         ) : (
-          <Share2 className="h-5 w-5" aria-hidden="true" />
+          <Share2 className="h-6 w-6" aria-hidden="true" />
         )}
-        <span>{shared ? "تم نسخ الرابط" : "مشاركة"}</span>
       </button>
 
       <button
         type="button"
         onClick={copyLyrics}
         aria-label="نسخ الأنشودة"
-        title="نسخ الأنشودة (منسّقة لواتساب)"
-        className={`${btnSecondary} h-11 px-4 ${copied ? "border-emerald-300 text-emerald-700" : ""}`}
+        title={copied ? "تم النسخ" : "نسخ الأنشودة (منسّقة لواتساب)"}
+        className={`${btnSecondary} h-11 w-11 !p-0 ${copied ? "border-emerald-300 text-emerald-700" : ""}`}
       >
         {copied ? (
-          <Check className="h-5 w-5 text-emerald-700" aria-hidden="true" />
+          <Check className="h-6 w-6 text-emerald-700" aria-hidden="true" />
         ) : (
-          <Copy className="h-5 w-5" aria-hidden="true" />
+          <Copy className="h-6 w-6" aria-hidden="true" />
         )}
-        <span>{copied ? "تم النسخ" : "نسخ الأنشودة"}</span>
       </button>
     </>
   );
