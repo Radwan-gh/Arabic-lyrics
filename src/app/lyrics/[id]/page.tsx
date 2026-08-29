@@ -15,6 +15,7 @@ import { FavoriteButton } from "@/components/FavoriteButton";
 import { ShareLyrics } from "@/components/ShareLyrics";
 import { ExportLyricsImage } from "@/components/ExportLyricsImage";
 import { LyricsFontControls } from "@/components/LyricsFontControls";
+import { KeepScreenAwake } from "@/components/KeepScreenAwake";
 import { btnSecondary, focusRing } from "@/lib/ui";
 
 export default async function LyricsPage({ params }: { params: Promise<{ id: string }> }) {
@@ -79,7 +80,8 @@ export default async function LyricsPage({ params }: { params: Promise<{ id: str
         </div>
       </header>
 
-      <div className="mb-4 flex justify-end">
+      <div className="mb-4 flex flex-wrap items-center justify-end gap-3">
+        <KeepScreenAwake />
         <LyricsFontControls />
       </div>
 
