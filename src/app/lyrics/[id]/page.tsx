@@ -52,7 +52,8 @@ export default async function LyricsPage({ params }: { params: Promise<{ id: str
             أضافها {lyrics.createdBy?.name ?? "مستخدم محذوف"} · {formatDate(lyrics.createdAt)} · {lyrics.viewCount} مشاهدة
           </p>
         </div>
-        <div className="flex flex-shrink-0 flex-wrap gap-3">
+        <div className="flex flex-shrink-0 flex-wrap items-center gap-2">
+          {session && <FavoriteButton lyricsId={lyrics.id} initialFavorited={favorited} />}
           <ShareLyrics shareUrl={shareUrl} title={lyrics.title} shareText={shareText} />
           <ExportLyricsImage
             title={lyrics.title}
@@ -62,10 +63,10 @@ export default async function LyricsPage({ params }: { params: Promise<{ id: str
             tags={lyrics.tags}
             siteLabel={host || undefined}
           />
-          {session && <FavoriteButton lyricsId={lyrics.id} initialFavorited={favorited} />}
           {session && <AddToPlaylist lyricsId={lyrics.id} />}
           {canModify && (
             <>
+              <span aria-hidden="true" className="mx-1 h-6 w-px self-center bg-neutral-200" />
               <Link
                 href={`/lyrics/${lyrics.id}/edit`}
                 className={`${btnSecondary} h-11 w-11 !p-0`}
