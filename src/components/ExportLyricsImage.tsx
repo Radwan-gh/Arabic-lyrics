@@ -3,7 +3,11 @@
 import { useRef, useState } from "react";
 import { ImageDown, Check, Loader2 } from "lucide-react";
 import { lyricsProseFormatCls } from "@/lib/lyrics-prose";
+import { readStoredLyricsScale } from "@/lib/lyrics-font";
 import { btnSecondary } from "@/lib/ui";
+
+// حجم خطّ نصّ الأنشودة الأساسي داخل البطاقة (بكسل) عند معامل تكبير ‎1.
+const LYRICS_BASE_FONT_PX = 20;
 
 interface ExportLyricsImageProps {
   /** Nasheed title. */
@@ -40,6 +44,7 @@ export function ExportLyricsImage({
   siteLabel,
 }: ExportLyricsImageProps) {
   const cardRef = useRef<HTMLDivElement>(null);
+  const lyricsRef = useRef<HTMLDivElement>(null);
   const [busy, setBusy] = useState(false);
   const [done, setDone] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -51,6 +56,13 @@ export function ExportLyricsImage({
     setBusy(true);
     setError(null);
     try {
+      // نطبّق حجم الخط الذي اختاره القارئ (متحكّم A− / A+) على نصّ الأنشودة داخل
+      // البطاقة، فتُطابق الصورة المصدَّرة ما يراه على الشاشة.
+      if (lyricsRef.current) {
+        const scale = readStoredLyricsScale();
+        lyricsRef.current.style.fontSize = `${Math.round(LYRICS_BASE_FONT_PX * scale)}px`;
+      }
+
       // نحمّل المكتبة عند الطلب فقط حتى لا تُثقِل حزمة الصفحة الأولى.
       const { toBlob } = await import("html-to-image");
 
@@ -146,8 +158,9 @@ export function ExportLyricsImage({
             <div style={{ height: 1, backgroundColor: "#e5e5e5", margin: "24px 0" }} />
 
             <div
+              ref={lyricsRef}
               className={lyricsProseFormatCls}
-              style={{ fontSize: 20, lineHeight: 2 }}
+              style={{ fontSize: LYRICS_BASE_FONT_PX, lineHeight: 2 }}
               dangerouslySetInnerHTML={{ __html: contentHtml }}
             />
 
