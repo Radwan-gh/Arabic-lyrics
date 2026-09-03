@@ -16,9 +16,9 @@ type DuplicateMatch = {
   album: string | null;
 };
 
-const RichTextEditor = dynamic(() => import("./RichTextEditor").then((m) => m.RichTextEditor), {
+const LyricsTextEditor = dynamic(() => import("./LyricsTextEditor").then((m) => m.LyricsTextEditor), {
   ssr: false,
-  loading: () => <div className="min-h-[12rem] rounded-lg border border-neutral-300 bg-neutral-50" />,
+  loading: () => <div className="min-h-[16rem] rounded-lg border border-neutral-300 bg-neutral-50" />,
 });
 
 interface LyricsFormValues {
@@ -239,7 +239,7 @@ export function LyricsForm({
       </Field>
 
       <Field label="الأنشودة">
-        <RichTextEditor
+        <LyricsTextEditor
           content={initialContentHtml}
           onChange={(html) => setValues((v) => ({ ...v, content: html }))}
         />
