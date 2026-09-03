@@ -1,5 +1,5 @@
 import type { Metadata, Viewport } from "next";
-import { Tajawal } from "next/font/google";
+import { Tajawal, Scheherazade_New } from "next/font/google";
 import "./globals.css";
 import { Navbar } from "@/components/Navbar";
 import { ServiceWorkerRegister } from "@/components/ServiceWorkerRegister";
@@ -10,6 +10,13 @@ const tajawal = Tajawal({
   subsets: ["arabic"],
   weight: ["400", "500", "700", "800"],
   variable: "--font-tajawal",
+});
+
+// خطّ نسخ لعرض الأناشيد (العنوان والنصّ) — أوضح للتشكيل. يُطبَّق عبر أداة font-naskh.
+const scheherazade = Scheherazade_New({
+  subsets: ["arabic"],
+  weight: ["400", "700"],
+  variable: "--font-scheherazade",
 });
 
 export const metadata: Metadata = {
@@ -33,7 +40,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
   const session = await getCurrentUser();
 
   return (
-    <html lang="ar" dir="rtl" className={tajawal.variable}>
+    <html lang="ar" dir="rtl" className={`${tajawal.variable} ${scheherazade.variable}`}>
       <head>
         {/* يطبّق حجم خط الأناشيد المحفوظ قبل الرسم لمنع وميض تغيّر الحجم. */}
         <script dangerouslySetInnerHTML={{ __html: LYRICS_SCALE_NO_FLASH_SCRIPT }} />

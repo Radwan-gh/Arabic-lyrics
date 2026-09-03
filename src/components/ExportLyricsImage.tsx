@@ -273,7 +273,16 @@ export function ExportLyricsImage({
           <div style={{ padding: "68px 74px 54px" }}>
             {/* الرأس: يظهر في الشريحة الأولى فقط */}
             <div ref={headerRef}>
-              <h2 style={{ margin: 0, fontSize: 50, fontWeight: 800, lineHeight: 1.35, color: "#0a0a0a" }}>
+              <h2
+                style={{
+                  margin: 0,
+                  fontSize: 50,
+                  fontWeight: 800,
+                  lineHeight: 1.35,
+                  color: "#0a0a0a",
+                  fontFamily: "var(--font-scheherazade), 'Amiri', serif",
+                }}
+              >
                 {title}
               </h2>
               {artist ? (

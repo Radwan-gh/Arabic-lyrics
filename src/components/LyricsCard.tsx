@@ -26,7 +26,7 @@ export function LyricsCard({ id, title, artist, album, tags, createdAt, contentH
     <li className="rounded-xl border border-neutral-200 bg-white p-4 shadow-sm transition hover:-translate-y-0.5 hover:shadow-md motion-reduce:transition-none motion-reduce:hover:translate-y-0">
       <div className="flex items-start justify-between gap-2">
         <Link href={`/lyrics/${id}`} className={`block min-w-0 flex-1 rounded-sm ${focusRing}`}>
-          <h2 className="truncate text-lg font-bold text-neutral-900">{title}</h2>
+          <h2 className="truncate text-lg font-bold text-neutral-900 font-naskh">{title}</h2>
           {artist && <p className="truncate text-sm text-emerald-700">{artist}</p>}
           {album && <p className="truncate text-xs text-neutral-500">{album}</p>}
         </Link>

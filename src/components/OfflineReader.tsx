@@ -305,7 +305,7 @@ function DetailMirror({ lyric }: { lyric: OfflineLyric | null }) {
   return (
     <article className="rounded-xl border border-neutral-200 bg-white p-6 shadow-sm">
       <header className="mb-4 flex flex-col gap-1 border-b border-neutral-100 pb-4">
-        <h1 className="text-2xl font-extrabold">{lyric.title}</h1>
+        <h1 className="text-2xl font-extrabold font-naskh">{lyric.title}</h1>
         {lyric.artist && <p className="text-emerald-700">{lyric.artist}</p>}
         {lyric.album && <p className="text-sm text-neutral-500">{lyric.album}</p>}
         <p className="text-xs text-neutral-500">{formatDate(new Date(lyric.createdAt))}</p>
