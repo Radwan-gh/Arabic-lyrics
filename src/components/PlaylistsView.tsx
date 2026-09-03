@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useState } from "react";
 import { Plus, Eye, Settings2, Trash2 } from "lucide-react";
+import { Spinner } from "./Spinner";
 import { formatDate } from "@/lib/format";
 import { inputSm, btnPrimary, btnSecondary, btnDanger, focusRing } from "@/lib/ui";
 
@@ -87,8 +88,14 @@ export function PlaylistsView({ initial }: { initial: PlaylistSummary[] }) {
           </p>
         )}
         <button type="submit" disabled={busy || !title.trim()} className={`${btnPrimary} self-start`}>
-          <Plus className="h-4 w-4" aria-hidden="true" />
-          {busy ? "جارٍ الإنشاء…" : "إنشاء"}
+          {busy ? (
+            <Spinner label="جارٍ الإنشاء…" />
+          ) : (
+            <>
+              <Plus className="h-4 w-4" aria-hidden="true" />
+              إنشاء
+            </>
+          )}
         </button>
       </form>
 
