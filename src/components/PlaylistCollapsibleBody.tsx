@@ -93,7 +93,7 @@ export function PlaylistCollapsibleBody({ items }: { items: PlaylistBodyItem[] }
                 <span className="flex items-baseline gap-2">
                   <span className="text-sm text-neutral-400">{index + 1}</span>
                   <span>
-                    <span className="text-xl font-bold hover:text-emerald-700">{item.title}</span>
+                    <span className="text-xl font-bold font-naskh hover:text-emerald-700">{item.title}</span>
                     {item.artist && <span className="mr-2 text-sm text-emerald-700">{item.artist}</span>}
                   </span>
                 </span>

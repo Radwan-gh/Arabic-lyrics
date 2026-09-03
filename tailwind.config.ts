@@ -6,6 +6,7 @@ const config: Config = {
     extend: {
       fontFamily: {
         sans: ["var(--font-tajawal)", "Tahoma", "Arial", "sans-serif"],
+        naskh: ["var(--font-scheherazade)", "Amiri", "serif"],
       },
     },
   },

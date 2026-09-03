@@ -45,7 +45,7 @@ export default async function LyricsPage({ params }: { params: Promise<{ id: str
     <article className="rounded-xl border border-neutral-200 bg-white px-3 py-5 shadow-sm sm:p-6">
       <header className="mb-4 flex flex-col gap-4 border-b border-neutral-100 pb-4 sm:flex-row sm:items-start sm:justify-between">
         <div className="flex flex-col gap-1">
-          <h1 className="text-2xl font-extrabold">{lyrics.title}</h1>
+          <h1 className="text-2xl font-extrabold font-naskh">{lyrics.title}</h1>
           {lyrics.artist && <p className="text-emerald-700">{lyrics.artist}</p>}
           {lyrics.album && <p className="text-sm text-neutral-500">{lyrics.album}</p>}
           <p className="text-xs text-neutral-500">
