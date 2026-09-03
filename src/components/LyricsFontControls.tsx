@@ -2,13 +2,12 @@
 
 import { useEffect, useState } from "react";
 import {
-  LYRICS_SCALE_CSS_VAR,
   LYRICS_SCALE_DEFAULT,
+  LYRICS_SCALE_EVENT,
   LYRICS_SCALE_MAX,
   LYRICS_SCALE_MIN,
-  LYRICS_SCALE_STORAGE_KEY,
-  clampLyricsScale,
   readStoredLyricsScale,
+  setLyricsScale,
   stepLyricsScale,
 } from "@/lib/lyrics-font";
 import { focusRing } from "@/lib/ui";
@@ -20,31 +19,23 @@ import { focusRing } from "@/lib/ui";
 // المتغيّر مبكرًا؛ وهذا المكوّن يزامن الحالة بعد التركيب.
 // ─────────────────────────────────────────────────────────────────────────────
 
-function applyScale(scale: number) {
-  document.documentElement.style.setProperty(LYRICS_SCALE_CSS_VAR, String(scale));
-}
-
-function persistScale(scale: number) {
-  try {
-    localStorage.setItem(LYRICS_SCALE_STORAGE_KEY, String(scale));
-  } catch {
-    // قد يكون التخزين معطّلًا (تصفّح خاص) — نُبقي التغيير للجلسة الحالية فقط.
-  }
-}
-
 export function LyricsFontControls({ className = "" }: { className?: string }) {
   const [scale, setScale] = useState(LYRICS_SCALE_DEFAULT);
 
-  // زامِن مع القيمة المحفوظة بعد التركيب (تفاديًا لاختلاف الخادم/العميل).
+  // زامِن مع القيمة المحفوظة بعد التركيب، واستمع لتغيّرات الحجم الآتية من مصدر آخر
+  // (حركة الإصبعين على النص) لتحديث النسبة المعروضة حيًّا.
   useEffect(() => {
     setScale(readStoredLyricsScale());
+    const onChange = (e: Event) => {
+      const detail = (e as CustomEvent<number>).detail;
+      if (typeof detail === "number") setScale(detail);
+    };
+    window.addEventListener(LYRICS_SCALE_EVENT, onChange);
+    return () => window.removeEventListener(LYRICS_SCALE_EVENT, onChange);
   }, []);
 
   const update = (next: number) => {
-    const clamped = clampLyricsScale(next);
-    setScale(clamped);
-    applyScale(clamped);
-    persistScale(clamped);
+    setScale(setLyricsScale(next));
   };
 
   const atMin = scale <= LYRICS_SCALE_MIN;

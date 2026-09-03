@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { ChevronUp, ChevronDown } from "lucide-react";
-import { lyricsProseCls } from "@/lib/lyrics-prose";
+import { LyricsProse } from "@/components/LyricsProse";
 import { focusRing } from "@/lib/ui";
 
 export interface PlaylistBodyItem {
@@ -103,10 +103,9 @@ export function PlaylistCollapsibleBody({ items }: { items: PlaylistBodyItem[] }
               </button>
 
               {!isCollapsed && (
-                <div
-                  dir="rtl"
-                  className={`mt-3 border-t border-neutral-100 pt-3 ${lyricsProseCls}`}
-                  dangerouslySetInnerHTML={{ __html: item.contentHtml }}
+                <LyricsProse
+                  html={item.contentHtml}
+                  className="mt-3 border-t border-neutral-100 pt-3"
                 />
               )}
             </li>

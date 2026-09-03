@@ -7,7 +7,6 @@ import { getLyricsAndIncrementViews } from "@/lib/lyrics";
 import { isFavorited } from "@/lib/favorites";
 import { renderLyricsHtml } from "@/lib/render-lyrics";
 import { buildWhatsAppLyrics } from "@/lib/whatsapp-lyrics";
-import { lyricsProseCls } from "@/lib/lyrics-prose";
 import { formatDate } from "@/lib/format";
 import { DeleteLyricsButton } from "@/components/DeleteLyricsButton";
 import { AddToPlaylist } from "@/components/AddToPlaylist";
@@ -15,6 +14,7 @@ import { FavoriteButton } from "@/components/FavoriteButton";
 import { ShareLyrics } from "@/components/ShareLyrics";
 import { ExportLyricsImage } from "@/components/ExportLyricsImage";
 import { LyricsFontControls } from "@/components/LyricsFontControls";
+import { LyricsProse } from "@/components/LyricsProse";
 import { KeepScreenAwake } from "@/components/KeepScreenAwake";
 import { btnSecondary, focusRing } from "@/lib/ui";
 
@@ -86,7 +86,7 @@ export default async function LyricsPage({ params }: { params: Promise<{ id: str
         <LyricsFontControls />
       </div>
 
-      <div dir="rtl" className={lyricsProseCls} dangerouslySetInnerHTML={{ __html: contentHtml }} />
+      <LyricsProse html={contentHtml} />
 
       {lyrics.tags.length > 0 && (
         <div className="mt-4 flex flex-wrap gap-2">
