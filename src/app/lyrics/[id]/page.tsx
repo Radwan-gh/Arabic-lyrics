@@ -42,7 +42,7 @@ export default async function LyricsPage({ params }: { params: Promise<{ id: str
   const contentHtml = renderLyricsHtml(lyrics.content);
 
   return (
-    <article className="rounded-xl border border-neutral-200 bg-white p-6 shadow-sm">
+    <article className="rounded-xl border border-neutral-200 bg-white px-3 py-5 shadow-sm sm:p-6">
       <header className="mb-4 flex flex-col gap-4 border-b border-neutral-100 pb-4 sm:flex-row sm:items-start sm:justify-between">
         <div className="flex flex-col gap-1">
           <h1 className="text-2xl font-extrabold">{lyrics.title}</h1>

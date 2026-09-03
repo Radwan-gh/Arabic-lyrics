@@ -82,7 +82,7 @@ export function PlaylistCollapsibleBody({ items }: { items: PlaylistBodyItem[] }
             <li
               key={item.lyricsId}
               id={`nasheed-${item.lyricsId}`}
-              className="scroll-mt-20 rounded-xl border border-neutral-200 bg-white p-5 shadow-sm"
+              className="scroll-mt-20 rounded-xl border border-neutral-200 bg-white px-3 py-5 shadow-sm sm:p-5"
             >
               <button
                 type="button"
