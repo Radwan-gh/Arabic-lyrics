@@ -5,9 +5,9 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { LyricsCard } from "@/components/LyricsCard";
 import { ReadingControlsBar } from "@/components/ReadingControlsBar";
 import { PlaylistCollapsibleBody, type PlaylistBodyItem } from "@/components/PlaylistCollapsibleBody";
+import { LyricsProse } from "@/components/LyricsProse";
 import { buildSearchText, normalizeArabic } from "@/lib/arabic-search";
 import { formatDate } from "@/lib/format";
-import { lyricsProseCls } from "@/lib/lyrics-prose";
 import { focusRing } from "@/lib/ui";
 import {
   OFFLINE_LYRICS_URL,
@@ -313,7 +313,7 @@ function DetailMirror({ lyric }: { lyric: OfflineLyric | null }) {
 
       <ReadingControlsBar className="mb-4" />
 
-      <div dir="rtl" className={lyricsProseCls} dangerouslySetInnerHTML={{ __html: lyric.contentHtml }} />
+      <LyricsProse html={lyric.contentHtml} />
 
       {lyric.tags.length > 0 && (
         <div className="mt-4 flex flex-wrap gap-2">

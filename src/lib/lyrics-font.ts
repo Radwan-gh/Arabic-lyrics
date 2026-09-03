@@ -22,6 +22,13 @@ export const LYRICS_SCALE_STORAGE_KEY = "lyrics-font-scale";
 /** متغيّر CSS الذي يقرؤه `lyricsProseCls`. */
 export const LYRICS_SCALE_CSS_VAR = "--lyrics-scale";
 
+/**
+ * حدث على `window` يُطلَق عند كل تغيّر للحجم (من الأزرار أو حركة اللمس) حاملاً
+ * القيمة المُقيّدة في `detail`. يسمح للأزرار بمزامنة نسبتها المعروضة حيًّا أثناء
+ * الـ pinch دون ربطٍ مباشر بين المكوّنات.
+ */
+export const LYRICS_SCALE_EVENT = "lyrics-scale-change";
+
 /** يُقيّد قيمة التكبير ضمن الحدود المسموحة، ويُرجع الافتراضي لأي قيمة غير صالحة. */
 export function clampLyricsScale(value: number): number {
   if (!Number.isFinite(value)) return LYRICS_SCALE_DEFAULT;
@@ -43,6 +50,39 @@ export function stepLyricsScale(current: number, direction: 1 | -1): number {
   });
   const next = Math.min(LYRICS_SCALE_LEVELS.length - 1, Math.max(0, idx + direction));
   return LYRICS_SCALE_LEVELS[next];
+}
+
+/**
+ * يطبّق الحجم على جذر الصفحة (متغيّر CSS) ويُطلق حدث المزامنة. رخيص بما يكفي
+ * لاستدعائه في كل إطار من حركة اللمس (لا يكتب على localStorage). يُرجع القيمة
+ * المُقيّدة. آمن على الخادم (يخرج بلا أثر إن لم يوجد `document`).
+ */
+export function applyLyricsScale(value: number): number {
+  const clamped = clampLyricsScale(value);
+  if (typeof document === "undefined") return clamped;
+  document.documentElement.style.setProperty(LYRICS_SCALE_CSS_VAR, String(clamped));
+  window.dispatchEvent(new CustomEvent(LYRICS_SCALE_EVENT, { detail: clamped }));
+  return clamped;
+}
+
+/** يحفظ الحجم في localStorage (يتجاهل الفشل في التصفّح الخاص). */
+export function persistLyricsScale(value: number): void {
+  try {
+    localStorage.setItem(LYRICS_SCALE_STORAGE_KEY, String(clampLyricsScale(value)));
+  } catch {
+    // قد يكون التخزين معطّلًا (تصفّح خاص) — نُبقي التغيير للجلسة الحالية فقط.
+  }
+}
+
+/**
+ * يضبط الحجم: يُقيّد ثم يطبّق (متغيّر CSS + حدث)، ويحفظ في localStorage افتراضيًا.
+ * مرّر `persist=false` للتحديث الحيّ أثناء حركة اللمس، ثم احفظ القيمة النهائية مرّة
+ * واحدة عند نهايتها. يُرجع القيمة المُقيّدة.
+ */
+export function setLyricsScale(value: number, persist = true): number {
+  const clamped = applyLyricsScale(value);
+  if (persist) persistLyricsScale(clamped);
+  return clamped;
 }
 
 /** يقرأ التكبير المحفوظ من localStorage (يُرجع الافتراضي إن تعذّر). */
