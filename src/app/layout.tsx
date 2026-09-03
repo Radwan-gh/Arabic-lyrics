@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from "next";
 import { Tajawal } from "next/font/google";
 import "./globals.css";
 import { Navbar } from "@/components/Navbar";
+import { RouteProgress } from "@/components/RouteProgress";
 import { ServiceWorkerRegister } from "@/components/ServiceWorkerRegister";
 import { getCurrentUser } from "@/lib/session";
 import { LYRICS_SCALE_NO_FLASH_SCRIPT } from "@/lib/lyrics-font";
@@ -39,6 +40,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
         <script dangerouslySetInnerHTML={{ __html: LYRICS_SCALE_NO_FLASH_SCRIPT }} />
       </head>
       <body className="min-h-screen bg-neutral-50 font-sans text-neutral-900 antialiased">
+        <RouteProgress />
         <a
           href="#main"
           className="sr-only focus:not-sr-only focus:absolute focus:top-2 focus:z-50 focus:rounded-lg focus:bg-emerald-700 focus:px-4 focus:py-2 focus:text-white focus:shadow-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:ring-offset-2"

@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
 import { ListPlus, Check, X } from "lucide-react";
+import { Spinner } from "./Spinner";
 import { btnSecondary, focusRing } from "@/lib/ui";
 
 interface PlaylistOption {
@@ -63,7 +64,9 @@ export function AddToPlaylist({ lyricsId }: { lyricsId: string }) {
       {open && (
         <div role="menu" className="absolute z-10 mt-1 max-h-72 w-64 overflow-auto rounded-lg border border-neutral-200 bg-white p-2 shadow-lg">
           {playlists === null ? (
-            <p className="p-2 text-sm text-neutral-500">جارٍ التحميل…</p>
+            <div className="p-2 text-sm text-neutral-500">
+              <Spinner label="جارٍ التحميل…" />
+            </div>
           ) : playlists.length === 0 ? (
             <div className="p-2 text-sm text-neutral-500">
               لا توجد وصلات بعد.{" "}

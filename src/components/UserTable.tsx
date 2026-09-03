@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { KeyRound, Trash2, UserPlus } from "lucide-react";
+import { Spinner } from "./Spinner";
 import { inputCls, inputSm, btnPrimary, focusRing } from "@/lib/ui";
 
 type Role = "ADMIN" | "EDITOR" | "VIEWER";
@@ -261,8 +262,14 @@ function CreateUserForm({ onCreated }: { onCreated: (user: UserRow) => void }) {
       </div>
 
       <button type="submit" disabled={loading} className={`${btnPrimary} self-start`}>
-        <UserPlus className="h-4 w-4" aria-hidden="true" />
-        {loading ? "جارٍ الإنشاء..." : "إنشاء الحساب"}
+        {loading ? (
+          <Spinner label="جارٍ الإنشاء…" />
+        ) : (
+          <>
+            <UserPlus className="h-4 w-4" aria-hidden="true" />
+            إنشاء الحساب
+          </>
+        )}
       </button>
     </form>
   );

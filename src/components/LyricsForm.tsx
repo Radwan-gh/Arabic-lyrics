@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import dynamic from "next/dynamic";
 import { Save } from "lucide-react";
+import { Spinner } from "./Spinner";
 import { TagPicker } from "./TagPicker";
 import { toEditableHtml } from "@/lib/lyrics-content";
 import { inputCls, btnPrimary } from "@/lib/ui";
@@ -262,13 +263,25 @@ export function LyricsForm({
             onClick={() => void submit(true)}
             className="inline-flex items-center justify-center gap-2 rounded-lg border border-amber-400 bg-amber-100 px-4 py-2.5 text-sm font-semibold text-amber-900 transition-colors hover:bg-amber-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-500 focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
           >
-            {loading ? "جارٍ الحفظ..." : mode === "create" ? "نشر رغم وجود المشابه" : "حفظ رغم وجود المشابه"}
+            {loading ? (
+              <Spinner label="جارٍ الحفظ…" />
+            ) : mode === "create" ? (
+              "نشر رغم وجود المشابه"
+            ) : (
+              "حفظ رغم وجود المشابه"
+            )}
           </button>
         </div>
       ) : (
         <button type="submit" disabled={loading} className={`${btnPrimary} mt-2`}>
-          <Save className="h-4 w-4" aria-hidden="true" />
-          {loading ? "جارٍ الحفظ..." : mode === "create" ? "نشر الأنشودة" : "حفظ التعديلات"}
+          {loading ? (
+            <Spinner label="جارٍ الحفظ…" />
+          ) : (
+            <>
+              <Save className="h-4 w-4" aria-hidden="true" />
+              {mode === "create" ? "نشر الأنشودة" : "حفظ التعديلات"}
+            </>
+          )}
         </button>
       )}
     </form>
