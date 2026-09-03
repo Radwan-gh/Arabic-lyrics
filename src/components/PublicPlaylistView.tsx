@@ -4,8 +4,7 @@ import Link from "next/link";
 import { ChevronLeft } from "lucide-react";
 import { focusRing } from "@/lib/ui";
 import { PlaylistCollapsibleBody, type PlaylistBodyItem } from "@/components/PlaylistCollapsibleBody";
-import { LyricsFontControls } from "@/components/LyricsFontControls";
-import { ScreenBrightnessControl } from "@/components/ScreenBrightnessControl";
+import { ReadingControlsBar } from "@/components/ReadingControlsBar";
 
 interface Props {
   title: string;
@@ -26,11 +25,7 @@ export function PublicPlaylistView({ title, description, ownerName, items }: Pro
         </p>
       </header>
 
-      {/* أدوات القراءة: سطوع الشاشة وحجم خط النشيد */}
-      <div className="flex flex-wrap items-center justify-between gap-x-4 gap-y-3 rounded-xl border border-neutral-200 bg-white px-4 py-3 shadow-sm">
-        <ScreenBrightnessControl />
-        <LyricsFontControls />
-      </div>
+      <ReadingControlsBar />
 
       <PlaylistCollapsibleBody items={items} />
 

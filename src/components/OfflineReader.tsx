@@ -3,7 +3,8 @@
 import Link from "next/link";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { LyricsCard } from "@/components/LyricsCard";
-import { LyricsFontControls } from "@/components/LyricsFontControls";
+import { ReadingControlsBar } from "@/components/ReadingControlsBar";
+import { PlaylistCollapsibleBody, type PlaylistBodyItem } from "@/components/PlaylistCollapsibleBody";
 import { buildSearchText, normalizeArabic } from "@/lib/arabic-search";
 import { formatDate } from "@/lib/format";
 import { lyricsProseCls } from "@/lib/lyrics-prose";
@@ -190,12 +191,7 @@ function OfflineMirror({ route, data }: { route: Exclude<Route, { kind: "hub" }>
       ) : route.kind === "playlists" ? (
         <PlaylistsMirror me={me} />
       ) : (
-        <PlaylistMirror
-          me={me}
-          id={route.id}
-          lyricsById={lyricsById}
-          filterBySearch={filterBySearch}
-        />
+        <PlaylistMirror me={me} id={route.id} lyricsById={lyricsById} />
       )}
     </div>
   );
@@ -315,9 +311,7 @@ function DetailMirror({ lyric }: { lyric: OfflineLyric | null }) {
         <p className="text-xs text-neutral-500">{formatDate(new Date(lyric.createdAt))}</p>
       </header>
 
-      <div className="mb-4 flex justify-end">
-        <LyricsFontControls />
-      </div>
+      <ReadingControlsBar className="mb-4" />
 
       <div dir="rtl" className={lyricsProseCls} dangerouslySetInnerHTML={{ __html: lyric.contentHtml }} />
 
@@ -423,24 +417,30 @@ function PlaylistsMirror({ me }: { me: OfflineMe | null }) {
   );
 }
 
-// مرآة قائمة واحدة.
+// مرآة الوصلة (القائمة الواحدة): تعرض جسم القراءة القابل للطيّ نفسه المستخدَم أونلاين
+// مع بار أدوات القراءة (سطوع الشاشة + حجم الخط)، فتعمل الميزتان دون اتصال أيضًا.
 function PlaylistMirror({
   me,
   id,
   lyricsById,
-  filterBySearch,
 }: {
   me: OfflineMe | null;
   id: string;
   lyricsById: Map<string, OfflineLyric>;
-  filterBySearch: (list: OfflineLyric[], q: string) => OfflineLyric[];
 }) {
-  const [query, setQuery] = useState("");
   const playlist: OfflinePlaylist | null = me?.playlists.find((p) => p.id === id) ?? null;
 
-  const items = useMemo(
+  const bodyItems = useMemo<PlaylistBodyItem[]>(
     () =>
-      (playlist?.itemIds ?? []).map((lid) => lyricsById.get(lid)).filter((l): l is OfflineLyric => !!l),
+      (playlist?.itemIds ?? [])
+        .map((lid) => lyricsById.get(lid))
+        .filter((l): l is OfflineLyric => !!l)
+        .map((l) => ({
+          lyricsId: l.id,
+          title: l.title,
+          artist: l.artist,
+          contentHtml: l.contentHtml,
+        })),
     [playlist, lyricsById]
   );
 
@@ -460,8 +460,6 @@ function PlaylistMirror({
     );
   }
 
-  const filtered = filterBySearch(items, query);
-
   return (
     <div className="flex flex-col gap-6">
       <Link href="/playlists" className={`self-start rounded-sm text-sm font-medium text-emerald-700 hover:underline ${focusRing}`}>
@@ -470,17 +468,12 @@ function PlaylistMirror({
       <div>
         <h1 className="text-2xl font-bold">{playlist.title}</h1>
         {playlist.description && <p className="mt-0.5 text-sm text-neutral-500">{playlist.description}</p>}
+        <p className="mt-1 text-sm text-neutral-500">{bodyItems.length} نشيد</p>
       </div>
-      {items.length > 3 && (
-        <input
-          type="search"
-          value={query}
-          onChange={(e) => setQuery(e.target.value)}
-          placeholder="ابحث في القائمة… (يتجاهل التشكيل)"
-          className={`w-full rounded-lg border border-neutral-300 px-4 py-2.5 text-sm outline-none focus:border-emerald-500 ${focusRing}`}
-        />
-      )}
-      <LyricsGrid items={filtered} emptyText={query ? "لا توجد نتائج مطابقة لبحثك" : "هذه القائمة فارغة."} />
+
+      <ReadingControlsBar />
+
+      <PlaylistCollapsibleBody items={bodyItems} />
     </div>
   );
 }
