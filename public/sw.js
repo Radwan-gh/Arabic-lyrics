@@ -15,7 +15,7 @@
 // باستخراج روابط /_next/static من صفحة /offline نفسها (لا نعتمد على زيارة
 // المستخدم لصفحة /offline وهو متصل).
 
-const VERSION = "v4";
+const VERSION = "v5";
 const STATIC_CACHE = `anaasheed-static-${VERSION}`; // أصول ثابتة + تنقّلات
 const DATA_CACHE = `anaasheed-data-${VERSION}`; // لقطات JSON للقراءة دون اتصال
 const KNOWN_CACHES = [STATIC_CACHE, DATA_CACHE];

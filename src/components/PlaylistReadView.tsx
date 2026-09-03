@@ -4,6 +4,7 @@ import Link from "next/link";
 import { ChevronRight, Settings2 } from "lucide-react";
 import { btnSecondary, focusRing } from "@/lib/ui";
 import { PlaylistCollapsibleBody, type PlaylistBodyItem } from "@/components/PlaylistCollapsibleBody";
+import { ReadingControlsBar } from "@/components/ReadingControlsBar";
 
 interface Props {
   id: string;
@@ -29,6 +30,8 @@ export function PlaylistReadView({ id, title, description, isPublic, items }: Pr
           {items.length} نشيد · {isPublic ? "عامة" : "خاصة"}
         </p>
       </div>
+
+      <ReadingControlsBar />
 
       <PlaylistCollapsibleBody items={items} />
 
