@@ -5,7 +5,6 @@ import { Navbar } from "@/components/Navbar";
 import { ServiceWorkerRegister } from "@/components/ServiceWorkerRegister";
 import { getCurrentUser } from "@/lib/session";
 import { LYRICS_SCALE_NO_FLASH_SCRIPT } from "@/lib/lyrics-font";
-import { BRIGHTNESS_NO_FLASH_SCRIPT } from "@/lib/brightness";
 
 const tajawal = Tajawal({
   subsets: ["arabic"],
@@ -38,8 +37,6 @@ export default async function RootLayout({ children }: { children: React.ReactNo
       <head>
         {/* يطبّق حجم خط الأناشيد المحفوظ قبل الرسم لمنع وميض تغيّر الحجم. */}
         <script dangerouslySetInnerHTML={{ __html: LYRICS_SCALE_NO_FLASH_SCRIPT }} />
-        {/* يطبّق سطوع الشاشة المحفوظ قبل الرسم لمنع وميض التعتيم. */}
-        <script dangerouslySetInnerHTML={{ __html: BRIGHTNESS_NO_FLASH_SCRIPT }} />
       </head>
       <body className="min-h-screen bg-neutral-50 font-sans text-neutral-900 antialiased">
         <a
