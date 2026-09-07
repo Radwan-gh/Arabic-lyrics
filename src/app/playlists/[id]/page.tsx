@@ -3,6 +3,7 @@ import { headers } from "next/headers";
 import { getCurrentUser } from "@/lib/session";
 import { getOwnedPlaylist } from "@/lib/playlists";
 import { PlaylistDetailView } from "@/components/PlaylistDetailView";
+import { PlaylistDetailScreen } from "@/components/PlaylistDetailScreen";
 
 export const dynamic = "force-dynamic";
 
@@ -19,21 +20,37 @@ export default async function PlaylistDetailPage({ params }: { params: Promise<{
   const proto = hdrs.get("x-forwarded-proto") ?? "https";
   const shareUrl = host ? `${proto}://${host}/p/${playlist.shareToken}` : `/p/${playlist.shareToken}`;
 
+  const items = playlist.items.map((item) => ({
+    lyricsId: item.lyricsId,
+    title: item.lyrics.title,
+    artist: item.lyrics.artist,
+    album: item.lyrics.album,
+  }));
+
   return (
-    <PlaylistDetailView
-      playlist={{
-        id: playlist.id,
-        title: playlist.title,
-        description: playlist.description,
-        isPublic: playlist.isPublic,
-        items: playlist.items.map((item) => ({
-          lyricsId: item.lyricsId,
-          title: item.lyrics.title,
-          artist: item.lyrics.artist,
-          album: item.lyrics.album,
-        })),
-      }}
-      shareUrl={shareUrl}
-    />
+    <>
+      <div className="sm:hidden">
+        <PlaylistDetailScreen
+          id={playlist.id}
+          title={playlist.title}
+          description={playlist.description}
+          isPublic={playlist.isPublic}
+          items={items}
+          shareUrl={shareUrl}
+        />
+      </div>
+      <div className="hidden sm:block">
+        <PlaylistDetailView
+          playlist={{
+            id: playlist.id,
+            title: playlist.title,
+            description: playlist.description,
+            isPublic: playlist.isPublic,
+            items,
+          }}
+          shareUrl={shareUrl}
+        />
+      </div>
+    </>
   );
 }

@@ -2,6 +2,7 @@ import { redirect } from "next/navigation";
 import { prisma } from "@/lib/prisma";
 import { getCurrentUser } from "@/lib/session";
 import { PlaylistsView } from "@/components/PlaylistsView";
+import { PlaylistsScreen } from "@/components/PlaylistsScreen";
 
 export const dynamic = "force-dynamic";
 
@@ -31,5 +32,14 @@ export default async function PlaylistsPage() {
     itemCount: p._count.items,
   }));
 
-  return <PlaylistsView initial={initial} />;
+  return (
+    <>
+      <div className="sm:hidden">
+        <PlaylistsScreen initial={initial} />
+      </div>
+      <div className="hidden sm:block">
+        <PlaylistsView initial={initial} />
+      </div>
+    </>
+  );
 }

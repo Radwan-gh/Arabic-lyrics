@@ -4,6 +4,7 @@ import { prisma } from "@/lib/prisma";
 import { formatDate } from "@/lib/format";
 import { PlaylistSearchBar } from "@/components/PlaylistSearchBar";
 import { Pagination } from "@/components/Pagination";
+import { DiscoverScreen } from "@/components/DiscoverScreen";
 import { focusRing } from "@/lib/ui";
 
 export const dynamic = "force-dynamic";
@@ -44,6 +45,11 @@ export default async function DiscoverPage({
         createdAt: true,
         owner: { select: { name: true } },
         _count: { select: { items: true } },
+        items: {
+          take: 3,
+          orderBy: { position: "asc" },
+          select: { lyrics: { select: { title: true } } },
+        },
       },
     }),
     prisma.playlist.count({ where }),
@@ -60,38 +66,56 @@ export default async function DiscoverPage({
   }
 
   return (
-    <div className="flex flex-col gap-6">
-      <div>
-        <h1 className="text-2xl font-extrabold">الوصلات العامة</h1>
-        <p className="mt-1 text-sm text-neutral-500">ابحث في وصلات الأناشيد التي شاركها المستخدمون علناً.</p>
+    <>
+      <div className="sm:hidden">
+        <DiscoverScreen
+          query={query}
+          items={items.map((p) => ({
+            token: p.shareToken,
+            title: p.title,
+            ownerName: p.owner?.name ?? "مستخدم",
+            itemCount: p._count.items,
+            previewTitles: p.items.map((i) => i.lyrics.title),
+          }))}
+          page={page}
+          pageCount={pageCount}
+          pageHref={pageHref}
+        />
       </div>
 
-      <PlaylistSearchBar defaultValue={query} />
+      <div className="hidden flex-col gap-6 sm:flex">
+        <div>
+          <h1 className="text-2xl font-extrabold">الوصلات العامة</h1>
+          <p className="mt-1 text-sm text-neutral-500">ابحث في وصلات الأناشيد التي شاركها المستخدمون علناً.</p>
+        </div>
 
-      {items.length === 0 ? (
-        <p className="rounded-lg border border-dashed border-neutral-300 p-8 text-center text-neutral-500">
-          {query ? "لا توجد وصلات عامة مطابقة لبحثك" : "لا توجد وصلات عامة بعد"}
-        </p>
-      ) : (
-        <ul className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
-          {items.map((p) => (
-            <li
-              key={p.shareToken}
-              className="rounded-xl border border-neutral-200 bg-white p-4 shadow-sm transition hover:-translate-y-0.5 hover:shadow-md motion-reduce:transition-none motion-reduce:hover:translate-y-0"
-            >
-              <Link href={`/p/${p.shareToken}`} className={`block rounded-sm ${focusRing}`}>
-                <h2 className="truncate text-lg font-bold text-neutral-900">{p.title}</h2>
-                {p.description && <p className="mt-0.5 line-clamp-2 text-sm text-neutral-500">{p.description}</p>}
-              </Link>
-              <p className="mt-2 text-xs text-neutral-500">
-                {p.owner?.name ?? "مستخدم"} · {p._count.items} نشيد · {formatDate(p.createdAt)}
-              </p>
-            </li>
-          ))}
-        </ul>
-      )}
+        <PlaylistSearchBar defaultValue={query} />
 
-      <Pagination page={page} pageCount={pageCount} hrefFor={pageHref} />
-    </div>
+        {items.length === 0 ? (
+          <p className="rounded-lg border border-dashed border-neutral-300 p-8 text-center text-neutral-500">
+            {query ? "لا توجد وصلات عامة مطابقة لبحثك" : "لا توجد وصلات عامة بعد"}
+          </p>
+        ) : (
+          <ul className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
+            {items.map((p) => (
+              <li
+                key={p.shareToken}
+                className="rounded-xl border border-neutral-200 bg-white p-4 shadow-sm transition hover:-translate-y-0.5 hover:shadow-md motion-reduce:transition-none motion-reduce:hover:translate-y-0"
+              >
+                <Link href={`/p/${p.shareToken}`} className={`block rounded-sm ${focusRing}`}>
+                  <h2 className="truncate text-lg font-bold text-neutral-900">{p.title}</h2>
+                  {p.description && <p className="mt-0.5 line-clamp-2 text-sm text-neutral-500">{p.description}</p>}
+                </Link>
+                <p className="mt-2 text-xs text-neutral-500">
+                  {p.owner?.name ?? "مستخدم"} · {p._count.items} نشيد · {formatDate(p.createdAt)}
+                </p>
+              </li>
+            ))}
+          </ul>
+        )}
+
+        <Pagination page={page} pageCount={pageCount} hrefFor={pageHref} />
+      </div>
+    </>
   );
 }

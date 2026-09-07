@@ -2,6 +2,7 @@ import { redirect } from "next/navigation";
 import { prisma } from "@/lib/prisma";
 import { getCurrentUser } from "@/lib/session";
 import { UserTable } from "@/components/UserTable";
+import { AdminUsersScreen } from "@/components/AdminUsersScreen";
 
 export default async function AdminUsersPage() {
   const session = await getCurrentUser();
@@ -21,9 +22,14 @@ export default async function AdminUsersPage() {
   });
 
   return (
-    <div>
-      <h1 className="mb-4 text-xl font-bold">إدارة المستخدمين</h1>
-      <UserTable initialUsers={users} currentUserId={session.userId} />
-    </div>
+    <>
+      <div className="sm:hidden">
+        <AdminUsersScreen initialUsers={users} currentUserId={session.userId} />
+      </div>
+      <div className="hidden sm:block">
+        <h1 className="mb-4 text-xl font-bold">إدارة المستخدمين</h1>
+        <UserTable initialUsers={users} currentUserId={session.userId} />
+      </div>
+    </>
   );
 }
