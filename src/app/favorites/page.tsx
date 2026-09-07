@@ -10,6 +10,7 @@ import { FavoritesSortSelect } from "@/components/FavoritesSortSelect";
 import { FavoritesReorderList } from "@/components/FavoritesReorderList";
 import { FavoriteButton } from "@/components/FavoriteButton";
 import { Pagination } from "@/components/Pagination";
+import { FavoritesScreen } from "@/components/FavoritesScreen";
 
 export const dynamic = "force-dynamic";
 
@@ -49,6 +50,9 @@ export default async function FavoritesPage({
     ...(Object.keys(lyricsWhere).length ? { lyrics: lyricsWhere } : {}),
   };
 
+  // العدّاد بجانب العنوان في شاشة الموبايل — إجمالي المفضّلة بلا تصفية.
+  const totalCount = await prisma.favorite.count({ where: { userId: session.userId } });
+
   const controls = (
     <div className="flex flex-col gap-3">
       <div className="flex flex-wrap items-center justify-between gap-3">
@@ -86,25 +90,42 @@ export default async function FavoritesPage({
     const reorderable = query.length === 0;
 
     return (
-      <div className="flex flex-col gap-6">
-        {header}
-        {controls}
+      <>
+        <div className="sm:hidden">
+          <FavoritesScreen
+            totalCount={totalCount}
+            query={query}
+            sort={sort}
+            sortOptions={SORT_OPTIONS}
+            isCustom
+            reorderable={reorderable}
+            items={items}
+            page={1}
+            pageCount={1}
+            pageHref={() => "/favorites?sort=custom"}
+          />
+        </div>
 
-        {items.length === 0 ? (
-          <p className="rounded-lg border border-dashed border-neutral-300 p-8 text-center text-neutral-500">
-            {query ? "لا توجد أناشيد مطابقة لبحثك في مفضّلتك" : "لا توجد أناشيد في مفضّلتك بعد. أضف أناشيد إليها من صفحة الأنشودة."}
-          </p>
-        ) : (
-          <>
-            <p className="text-sm text-neutral-500">
-              {reorderable
-                ? "استخدم الأسهم ▲▼ لإعادة ترتيب مفضّلتك. يُحفظ الترتيب تلقائياً."
-                : "امسح البحث لإعادة ترتيب مفضّلتك."}
+        <div className="hidden flex-col gap-6 sm:flex">
+          {header}
+          {controls}
+
+          {items.length === 0 ? (
+            <p className="rounded-lg border border-dashed border-neutral-300 p-8 text-center text-neutral-500">
+              {query ? "لا توجد أناشيد مطابقة لبحثك في مفضّلتك" : "لا توجد أناشيد في مفضّلتك بعد. أضف أناشيد إليها من صفحة الأنشودة."}
             </p>
-            <FavoritesReorderList initial={items} reorderable={reorderable} />
-          </>
-        )}
-      </div>
+          ) : (
+            <>
+              <p className="text-sm text-neutral-500">
+                {reorderable
+                  ? "استخدم الأسهم ▲▼ لإعادة ترتيب مفضّلتك. يُحفظ الترتيب تلقائياً."
+                  : "امسح البحث لإعادة ترتيب مفضّلتك."}
+              </p>
+              <FavoritesReorderList initial={items} reorderable={reorderable} />
+            </>
+          )}
+        </div>
+      </>
     );
   }
 
@@ -137,33 +158,50 @@ export default async function FavoritesPage({
   }
 
   return (
-    <div className="flex flex-col gap-6">
-      {header}
-      {controls}
+    <>
+      <div className="sm:hidden">
+        <FavoritesScreen
+          totalCount={totalCount}
+          query={query}
+          sort={sort}
+          sortOptions={SORT_OPTIONS}
+          isCustom={false}
+          reorderable={false}
+          items={cards.map((c) => ({ lyricsId: c.id, title: c.title, artist: c.artist }))}
+          page={page}
+          pageCount={pageCount}
+          pageHref={pageHref}
+        />
+      </div>
 
-      {cards.length === 0 ? (
-        <p className="rounded-lg border border-dashed border-neutral-300 p-8 text-center text-neutral-500">
-          {query ? "لا توجد أناشيد مطابقة لبحثك في مفضّلتك" : "لا توجد أناشيد في مفضّلتك بعد. أضف أناشيد إليها من صفحة الأنشودة."}
-        </p>
-      ) : (
-        <ul className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
-          {cards.map((item) => (
-            <LyricsCard
-              key={item.id}
-              id={item.id}
-              title={item.title}
-              artist={item.artist}
-              album={item.album}
-              tags={item.tags}
-              createdAt={item.createdAt}
-              contentHtml={item.contentHtml}
-              action={<FavoriteButton lyricsId={item.id} initialFavorited variant="icon" refreshOnToggle />}
-            />
-          ))}
-        </ul>
-      )}
+      <div className="hidden flex-col gap-6 sm:flex">
+        {header}
+        {controls}
 
-      <Pagination page={page} pageCount={pageCount} hrefFor={pageHref} />
-    </div>
+        {cards.length === 0 ? (
+          <p className="rounded-lg border border-dashed border-neutral-300 p-8 text-center text-neutral-500">
+            {query ? "لا توجد أناشيد مطابقة لبحثك في مفضّلتك" : "لا توجد أناشيد في مفضّلتك بعد. أضف أناشيد إليها من صفحة الأنشودة."}
+          </p>
+        ) : (
+          <ul className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
+            {cards.map((item) => (
+              <LyricsCard
+                key={item.id}
+                id={item.id}
+                title={item.title}
+                artist={item.artist}
+                album={item.album}
+                tags={item.tags}
+                createdAt={item.createdAt}
+                contentHtml={item.contentHtml}
+                action={<FavoriteButton lyricsId={item.id} initialFavorited variant="icon" refreshOnToggle />}
+              />
+            ))}
+          </ul>
+        )}
+
+        <Pagination page={page} pageCount={pageCount} hrefFor={pageHref} />
+      </div>
+    </>
   );
 }

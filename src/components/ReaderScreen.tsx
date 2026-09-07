@@ -162,8 +162,10 @@ export function ReaderScreen({
           <ChevronRight className="h-[22px] w-[22px]" aria-hidden="true" />
         </button>
         <div className="flex-1" />
-        {loggedIn && <FavoriteButton lyricsId={lyricsId} initialFavorited={favorited} key={lyricsId} />}
-        {loggedIn && <AddToPlaylist lyricsId={lyricsId} />}
+        {loggedIn && (
+          <FavoriteButton lyricsId={lyricsId} initialFavorited={favorited} variant="plain" key={lyricsId} />
+        )}
+        {loggedIn && <AddToPlaylist lyricsId={lyricsId} variant="plain" />}
         <div className="relative" ref={moreRef}>
           <button
             type="button"

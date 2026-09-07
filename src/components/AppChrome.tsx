@@ -7,7 +7,12 @@ import type { SessionPayload } from "@/lib/jwt";
 // مسارات الشاشات الغامرة على الموبايل: بلا شريط تنقّل علوي ولا حشوة الحاوية
 // المعتادة — كل شاشة تبني كرومها الخاص (شبيهًا بتطبيق أصلي). سطح المكتب (sm+)
 // يبقى دائمًا على التخطيط المعتاد بغضّ النظر عن هذه القائمة.
-const IMMERSIVE_MOBILE_ROUTES = [/^\/lyrics\/(?!new$)[^/]+$/];
+const IMMERSIVE_MOBILE_ROUTES = [
+  /^\/lyrics\/(?!new$)[^/]+$/,
+  /^\/favorites$/,
+  /^\/playlists$/,
+  /^\/playlists\/[^/]+$/,
+];
 
 function isImmersive(pathname: string): boolean {
   return IMMERSIVE_MOBILE_ROUTES.some((re) => re.test(pathname));

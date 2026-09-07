@@ -8,8 +8,9 @@ import { btnSecondary, focusRing } from "@/lib/ui";
 interface FavoriteButtonProps {
   lyricsId: string;
   initialFavorited: boolean;
-  /** "button" = labelled action (detail page); "icon" = compact heart (cards). */
-  variant?: "button" | "icon";
+  /** "button" = bordered action (desktop detail page); "icon" = compact heart
+   * (cards); "plain" = borderless 44px touch target (mobile immersive screens). */
+  variant?: "button" | "icon" | "plain";
   /** Refresh the server component after a change — used by the favorites list so
    * an un-favorited item drops out and pagination stays correct. */
   refreshOnToggle?: boolean;
@@ -61,6 +62,24 @@ export function FavoriteButton({
         title={label}
         className={`inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-lg leading-none transition-colors disabled:opacity-50 ${
           favorited ? "text-emerald-700 hover:bg-emerald-50" : "text-neutral-400 hover:bg-neutral-100 hover:text-neutral-600"
+        } ${focusRing}`}
+      >
+        <Heart className={`h-5 w-5 ${favorited ? "fill-current" : ""}`} aria-hidden="true" />
+      </button>
+    );
+  }
+
+  if (variant === "plain") {
+    return (
+      <button
+        type="button"
+        onClick={toggle}
+        disabled={pending}
+        aria-pressed={favorited}
+        aria-label={label}
+        title={label}
+        className={`inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-transparent leading-none transition-colors disabled:opacity-50 ${
+          favorited ? "text-emerald-700 hover:bg-emerald-50" : "text-[#3c4a44] hover:bg-black/5"
         } ${focusRing}`}
       >
         <Heart className={`h-5 w-5 ${favorited ? "fill-current" : ""}`} aria-hidden="true" />
