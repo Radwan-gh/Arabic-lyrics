@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { LyricsCard } from "@/components/LyricsCard";
+import { OfflineHubScreen } from "@/components/OfflineHubScreen";
 import { ReadingControlsBar } from "@/components/ReadingControlsBar";
 import { PlaylistCollapsibleBody, type PlaylistBodyItem } from "@/components/PlaylistCollapsibleBody";
 import { LyricsProse } from "@/components/LyricsProse";
@@ -25,7 +26,7 @@ const PAGE_SIZE = 12;
 // التطبيق يجلب اللقطات عبر fetch العادي؛ يتولّى الـ service worker إرجاعها من
 // الكاش عند انقطاع الشبكة (راجع public/sw.js).
 // ─────────────────────────────────────────────────────────────────────────────
-interface OfflineData {
+export interface OfflineData {
   collection: OfflineCollection | null;
   me: OfflineMe | null;
   loading: boolean;
@@ -36,7 +37,7 @@ interface OfflineData {
   reload: () => void;
 }
 
-function useOfflineData(): OfflineData {
+export function useOfflineData(): OfflineData {
   const [collection, setCollection] = useState<OfflineCollection | null>(null);
   const [me, setMe] = useState<OfflineMe | null>(null);
   const [loading, setLoading] = useState(true);
@@ -141,7 +142,16 @@ export function OfflineReader() {
   }, []);
 
   if (!route || route.kind === "hub") {
-    return <OfflineHub data={data} />;
+    return (
+      <>
+        <div className="sm:hidden">
+          <OfflineHubScreen data={data} />
+        </div>
+        <div className="hidden sm:block">
+          <OfflineHub data={data} />
+        </div>
+      </>
+    );
   }
   return <OfflineMirror route={route} data={data} />;
 }

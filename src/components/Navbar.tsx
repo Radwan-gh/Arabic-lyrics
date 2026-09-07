@@ -135,16 +135,41 @@ export function Navbar({ user }: { user: SessionPayload | null }) {
       </div>
 
       {open && (
-        <nav
-          id="mobile-nav"
-          className="flex origin-top animate-nav-drop flex-col gap-1 border-t border-neutral-200 bg-white px-4 py-3 sm:hidden"
-        >
-          <NavLinks user={user} onLogout={handleLogout} mobile onNavigate={() => setOpen(false)} />
-        </nav>
+        <div className="fixed inset-0 z-30 sm:hidden">
+          <div className="absolute inset-0 bg-[#14211c]/35" />
+          <nav
+            id="mobile-nav"
+            aria-label="القائمة"
+            className="absolute inset-y-0 end-0 flex w-[300px] max-w-[85vw] flex-col bg-white p-5"
+          >
+            <div className="flex items-center gap-3 border-b border-neutral-100 pb-[18px]">
+              <span className="inline-flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-emerald-50 text-lg font-extrabold text-emerald-700">
+                {user ? user.name.trim().charAt(0) : <User className="h-5 w-5" aria-hidden="true" />}
+              </span>
+              {user ? (
+                <div>
+                  <div className="text-base font-bold text-neutral-900">{user.name}</div>
+                  <div className="text-[13px] text-neutral-500">{ROLE_LABELS[user.role]}</div>
+                </div>
+              ) : (
+                <div className="text-base font-bold text-neutral-900">زائر</div>
+              )}
+            </div>
+            <div className="flex flex-1 flex-col gap-1 overflow-y-auto pt-2">
+              <NavLinks user={user} onLogout={handleLogout} mobile onNavigate={() => setOpen(false)} />
+            </div>
+          </nav>
+        </div>
       )}
     </header>
   );
 }
+
+const ROLE_LABELS: Record<SessionPayload["role"], string> = {
+  ADMIN: "مدير النظام",
+  EDITOR: "محرر",
+  VIEWER: "قارئ",
+};
 
 function NavLinks({
   user,

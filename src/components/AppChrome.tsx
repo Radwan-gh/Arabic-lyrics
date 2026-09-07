@@ -12,6 +12,9 @@ const IMMERSIVE_MOBILE_ROUTES = [
   /^\/favorites$/,
   /^\/playlists$/,
   /^\/playlists\/[^/]+$/,
+  /^\/discover$/,
+  /^\/offline$/,
+  /^\/p\/[^/]+$/,
 ];
 
 function isImmersive(pathname: string): boolean {
