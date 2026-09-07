@@ -5,6 +5,7 @@ import { Pencil } from "lucide-react";
 import { getCurrentUser } from "@/lib/session";
 import { getLyricsAndIncrementViews } from "@/lib/lyrics";
 import { isFavorited } from "@/lib/favorites";
+import { getPlaylistNavContext } from "@/lib/playlists";
 import { renderLyricsHtml } from "@/lib/render-lyrics";
 import { buildWhatsAppLyrics } from "@/lib/whatsapp-lyrics";
 import { formatDate } from "@/lib/format";
@@ -16,15 +17,26 @@ import { ExportLyricsImage } from "@/components/ExportLyricsImage";
 import { LyricsFontControls } from "@/components/LyricsFontControls";
 import { LyricsProse } from "@/components/LyricsProse";
 import { KeepScreenAwake } from "@/components/KeepScreenAwake";
+import { ReaderScreen } from "@/components/ReaderScreen";
 import { btnSecondary, focusRing } from "@/lib/ui";
 
-export default async function LyricsPage({ params }: { params: Promise<{ id: string }> }) {
+export default async function LyricsPage({
+  params,
+  searchParams,
+}: {
+  params: Promise<{ id: string }>;
+  searchParams: Promise<{ playlist?: string }>;
+}) {
   const { id } = await params;
+  const { playlist: playlistId } = await searchParams;
   const [lyrics, session] = await Promise.all([getLyricsAndIncrementViews(id), getCurrentUser()]);
 
   if (!lyrics) notFound();
 
-  const favorited = session ? await isFavorited(session.userId, lyrics.id) : false;
+  const [favorited, playlistNav] = await Promise.all([
+    session ? isFavorited(session.userId, lyrics.id) : Promise.resolve(false),
+    playlistId ? getPlaylistNavContext(playlistId, lyrics.id, session?.userId ?? null) : Promise.resolve(null),
+  ]);
 
   const canModify =
     !!session && (session.role === "ADMIN" || (session.role === "EDITOR" && session.userId === lyrics.createdById));
@@ -42,7 +54,28 @@ export default async function LyricsPage({ params }: { params: Promise<{ id: str
   const contentHtml = renderLyricsHtml(lyrics.content);
 
   return (
-    <article className="rounded-xl border border-neutral-200 bg-white px-3 py-5 shadow-sm sm:p-6">
+    <>
+      {/* الموبايل: شاشة قراءة غامرة (كروم أدنى، تنقّل بالسحب). سطح المكتب يبقى كما هو أدناه. */}
+      <div className="sm:hidden">
+        <ReaderScreen
+          lyricsId={lyrics.id}
+          title={lyrics.title}
+          artist={lyrics.artist}
+          album={lyrics.album}
+          viewCount={lyrics.viewCount}
+          tags={lyrics.tags}
+          contentHtml={contentHtml}
+          favorited={favorited}
+          loggedIn={!!session}
+          canModify={canModify}
+          shareUrl={shareUrl}
+          shareText={shareText}
+          siteLabel={host || undefined}
+          playlist={playlistNav}
+        />
+      </div>
+
+      <article className="hidden rounded-xl border border-neutral-200 bg-white px-3 py-5 shadow-sm sm:block sm:p-6">
       <header className="mb-4 flex flex-col gap-4 border-b border-neutral-100 pb-4 sm:flex-row sm:items-start sm:justify-between">
         <div className="flex flex-col gap-1">
           <h1 className="text-2xl font-extrabold font-naskh">{lyrics.title}</h1>
@@ -101,6 +134,7 @@ export default async function LyricsPage({ params }: { params: Promise<{ id: str
           ))}
         </div>
       )}
-    </article>
+      </article>
+    </>
   );
 }

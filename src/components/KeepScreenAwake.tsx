@@ -1,85 +1,21 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState } from "react";
 import { Sun, Moon } from "lucide-react";
 import { btnSecondary } from "@/lib/ui";
-import { isWakeLockSupported, persistWakeLockPref, readStoredWakeLockPref } from "@/lib/wake-lock";
+import { useKeepScreenAwake } from "@/lib/use-keep-screen-awake";
 
 // ─────────────────────────────────────────────────────────────────────────────
 // زرّ «إبقاء الشاشة مضيئة» لصفحة الأنشودة: يمنع الموبايل من إطفاء الشاشة أثناء القراءة
-// عبر واجهة Screen Wake Lock. يبدأ مطفأً في كل زيارة، لكن يُحفظ آخر اختيار في localStorage
-// ويُعاد تطبيقه تلقائيًا في الأناشيد التالية. يختفي كليًا على المتصفحات غير المدعومة.
-// المتصفّحات تُحرّر القفل تلقائيًا عند إخفاء التبويب، لذا نُعيد طلبه عند عودة الصفحة للواجهة.
+// عبر واجهة Screen Wake Lock (المنطق في lib/use-keep-screen-awake.ts، مشترك مع مفتاح
+// التبديل في لوح ضبط القراءة على الموبايل). يبدأ مطفأً في كل زيارة، لكن يُحفظ آخر اختيار
+// في localStorage ويُعاد تطبيقه تلقائيًا في الأناشيد التالية. يختفي كليًا على المتصفحات
+// غير المدعومة.
 // ─────────────────────────────────────────────────────────────────────────────
 
 export function KeepScreenAwake({ className = "" }: { className?: string }) {
-  const [supported, setSupported] = useState(false);
-  const [enabled, setEnabled] = useState(false);
-  const sentinelRef = useRef<WakeLockSentinel | null>(null);
-  // تفضيل المستخدم المقصود — مرجعًا حتى يقرأه مستمع تغيّر الظهور دون إعادة اشتراك.
-  const wantOnRef = useRef(false);
-
-  const release = useCallback(async () => {
-    const sentinel = sentinelRef.current;
-    sentinelRef.current = null;
-    if (sentinel) {
-      try {
-        await sentinel.release();
-      } catch {
-        // القفل ربّما حُرِّر مسبقًا من النظام — لا شيء لفعله.
-      }
-    }
-    setEnabled(false);
-  }, []);
-
-  const acquire = useCallback(async () => {
-    // لا يُطلب القفل إلا والصفحة ظاهرة (شرط الواجهة في المتصفّحات).
-    if (sentinelRef.current || document.visibilityState !== "visible") return;
-    try {
-      const sentinel = await navigator.wakeLock.request("screen");
-      sentinelRef.current = sentinel;
-      setEnabled(true);
-      // يُطلقه النظام عند إطفاء الشاشة/إخفاء التبويب؛ نُحدّث الحالة تبعًا لذلك.
-      sentinel.addEventListener("release", () => {
-        if (sentinelRef.current === sentinel) sentinelRef.current = null;
-        setEnabled(false);
-      });
-    } catch {
-      // قد يُرفض الطلب (يتطلّب تفاعلًا، أو الصفحة مخفية) — نُبقيه مطفأً بصدق.
-      setEnabled(false);
-    }
-  }, []);
-
-  // كشف الدعم + تطبيق التفضيل المحفوظ بعد التركيب، وإعادة الطلب عند عودة الصفحة للواجهة.
-  useEffect(() => {
-    if (!isWakeLockSupported()) return;
-    setSupported(true);
-
-    if (readStoredWakeLockPref()) {
-      wantOnRef.current = true;
-      void acquire();
-    }
-
-    const onVisibility = () => {
-      if (document.visibilityState === "visible" && wantOnRef.current) void acquire();
-    };
-    document.addEventListener("visibilitychange", onVisibility);
-
-    return () => {
-      document.removeEventListener("visibilitychange", onVisibility);
-      void release();
-    };
-  }, [acquire, release]);
+  const { supported, enabled, toggle } = useKeepScreenAwake();
 
   if (!supported) return null;
-
-  const toggle = () => {
-    const next = !enabled;
-    wantOnRef.current = next;
-    persistWakeLockPref(next);
-    if (next) void acquire();
-    else void release();
-  };
 
   return (
     <button

@@ -1,7 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import { Tajawal, Scheherazade_New } from "next/font/google";
 import "./globals.css";
-import { Navbar } from "@/components/Navbar";
+import { AppChrome } from "@/components/AppChrome";
 import { RouteProgress } from "@/components/RouteProgress";
 import { ServiceWorkerRegister } from "@/components/ServiceWorkerRegister";
 import { getCurrentUser } from "@/lib/session";
@@ -54,10 +54,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
         >
           تخطَّ إلى المحتوى
         </a>
-        <Navbar user={session} />
-        <main id="main" className="mx-auto max-w-5xl px-2 py-6 sm:px-4">
-          {children}
-        </main>
+        <AppChrome user={session}>{children}</AppChrome>
         <ServiceWorkerRegister authenticated={!!session} />
       </body>
     </html>
