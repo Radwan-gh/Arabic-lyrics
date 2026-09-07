@@ -8,13 +8,16 @@ import type { SessionPayload } from "@/lib/jwt";
 // المعتادة — كل شاشة تبني كرومها الخاص (شبيهًا بتطبيق أصلي). سطح المكتب (sm+)
 // يبقى دائمًا على التخطيط المعتاد بغضّ النظر عن هذه القائمة.
 const IMMERSIVE_MOBILE_ROUTES = [
-  /^\/lyrics\/(?!new$)[^/]+$/,
+  /^\/lyrics\/[^/]+$/,
   /^\/favorites$/,
   /^\/playlists$/,
   /^\/playlists\/[^/]+$/,
   /^\/discover$/,
   /^\/offline$/,
   /^\/p\/[^/]+$/,
+  /^\/login$/,
+  /^\/admin\/users$/,
+  /^\/admin\/tags$/,
 ];
 
 function isImmersive(pathname: string): boolean {

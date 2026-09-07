@@ -5,9 +5,9 @@ import { KeyRound, Trash2, UserPlus } from "lucide-react";
 import { Spinner } from "./Spinner";
 import { inputCls, inputSm, btnPrimary, focusRing } from "@/lib/ui";
 
-type Role = "ADMIN" | "EDITOR" | "VIEWER";
+export type Role = "ADMIN" | "EDITOR" | "VIEWER";
 
-interface UserRow {
+export interface UserRow {
   id: string;
   name: string;
   email: string;
@@ -17,7 +17,7 @@ interface UserRow {
   _count: { lyrics: number };
 }
 
-const ROLE_LABELS: Record<Role, string> = { ADMIN: "مدير", EDITOR: "محرر", VIEWER: "مشاهد" };
+export const ROLE_LABELS: Record<Role, string> = { ADMIN: "مدير", EDITOR: "محرر", VIEWER: "مشاهد" };
 
 export function UserTable({ initialUsers, currentUserId }: { initialUsers: UserRow[]; currentUserId: string }) {
   const [users, setUsers] = useState(initialUsers);
@@ -169,7 +169,7 @@ export function UserTable({ initialUsers, currentUserId }: { initialUsers: UserR
   );
 }
 
-function CreateUserForm({ onCreated }: { onCreated: (user: UserRow) => void }) {
+export function CreateUserForm({ onCreated }: { onCreated: (user: UserRow) => void }) {
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
