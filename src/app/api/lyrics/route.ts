@@ -5,6 +5,7 @@ import { getCurrentUser } from "@/lib/session";
 import { sanitizeLyricsHtml } from "@/lib/sanitize-lyrics";
 import { buildLyricsWhere } from "@/lib/lyrics-search";
 import { buildSearchText, normalizeArabic } from "@/lib/arabic-search";
+import { findArabicMatch, splitAtMatch, buildContentSnippet } from "@/lib/arabic-highlight";
 import { findDuplicateLyrics } from "@/lib/lyrics";
 
 const PAGE_SIZE = 12;
@@ -17,7 +18,7 @@ export async function GET(req: Request) {
 
   const where = buildLyricsWhere(q, tags);
 
-  const [items, total] = await Promise.all([
+  const [rows, total] = await Promise.all([
     prisma.lyrics.findMany({
       where,
       orderBy: { createdAt: "desc" },
@@ -30,11 +31,25 @@ export async function GET(req: Request) {
         album: true,
         tags: true,
         createdAt: true,
+        // يُستخدم لبناء مقتطف مظلَّل فقط (راجع lib/arabic-highlight) — لا يُعاد كما هو.
+        content: q ? true : false,
         createdBy: { select: { name: true } },
       },
     }),
     prisma.lyrics.count({ where }),
   ]);
+
+  // تظليل: العنوان أولًا، وإلا مقتطف من الكلمات — مطابقةً لتجربة شاشة البحث
+  // الكاملة على الموبايل. بلا استعلام (q فارغة) لا حاجة لأيّ من هذا.
+  const items = rows.map(({ content, ...rest }) => {
+    if (!q) return rest;
+    const titleSpan = findArabicMatch(rest.title, q);
+    if (titleSpan) {
+      return { ...rest, titleMatch: splitAtMatch(rest.title, titleSpan), snippet: null };
+    }
+    const snippet = content ? buildContentSnippet(content, q) : null;
+    return { ...rest, titleMatch: null, snippet };
+  });
 
   return NextResponse.json({
     items,
