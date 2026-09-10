@@ -19,6 +19,7 @@ import {
 } from "lucide-react";
 import { useReorderableList } from "@/lib/use-reorderable-list";
 import { useDragReorder } from "@/lib/use-drag-reorder";
+import { MenuButton } from "@/components/MenuButton";
 import { focusRing } from "@/lib/ui";
 
 interface Item {
@@ -161,9 +162,12 @@ export function PlaylistDetailScreen({ id, title, description, isPublic: initial
   return (
     <div className="flex min-h-dvh flex-col bg-[#f7f7f4] text-[#14211c]">
       <header className="flex items-center justify-between px-3 pt-2">
-        <button type="button" onClick={() => router.back()} aria-label="رجوع" className={`inline-flex h-11 w-11 items-center justify-center rounded-xl text-[#3c4a44] ${focusRing}`}>
-          <ChevronRight className="h-[22px] w-[22px]" aria-hidden="true" />
-        </button>
+        <div className="flex gap-0.5">
+          <button type="button" onClick={() => router.back()} aria-label="رجوع" className={`inline-flex h-11 w-11 items-center justify-center rounded-xl text-[#3c4a44] ${focusRing}`}>
+            <ChevronRight className="h-[22px] w-[22px]" aria-hidden="true" />
+          </button>
+          <MenuButton />
+        </div>
         <div className="flex gap-0.5">
           <button type="button" onClick={copyLink} aria-label="مشاركة الوصلة" className={`inline-flex h-11 w-11 items-center justify-center rounded-xl text-[#3c4a44] ${focusRing}`}>
             {copied ? <Check className="h-5 w-5 text-emerald-700" aria-hidden="true" /> : <Upload className="h-5 w-5" aria-hidden="true" />}

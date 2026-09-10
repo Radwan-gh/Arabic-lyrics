@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { ChevronRight, ListMusic, Globe, Lock, Plus, X } from "lucide-react";
 import { Spinner } from "@/components/Spinner";
+import { MenuButton } from "@/components/MenuButton";
 import { focusRing } from "@/lib/ui";
 
 interface PlaylistSummary {
@@ -57,6 +58,8 @@ export function PlaylistsScreen({ initial }: { initial: PlaylistSummary[] }) {
           <ChevronRight className="h-[22px] w-[22px]" aria-hidden="true" />
         </button>
         <span className="text-xl font-extrabold">وصلاتي</span>
+        <div className="flex-1" />
+        <MenuButton />
       </header>
 
       <div className="flex-1 px-5 pb-24">

@@ -11,6 +11,7 @@ import { ExportLyricsImage } from "@/components/ExportLyricsImage";
 import { DeleteLyricsButton } from "@/components/DeleteLyricsButton";
 import { ReaderTypeSheet } from "@/components/ReaderTypeSheet";
 import { PerformanceMode } from "@/components/PerformanceMode";
+import { MenuButton } from "@/components/MenuButton";
 import { lyricsProseFormatCls } from "@/lib/lyrics-prose";
 import { LYRICS_SCALE_DEFAULT, readStoredLyricsScale, setLyricsScale } from "@/lib/lyrics-font";
 import {
@@ -161,6 +162,7 @@ export function ReaderScreen({
         <button type="button" onClick={() => router.back()} aria-label="رجوع" className={iconBtn}>
           <ChevronRight className="h-[22px] w-[22px]" aria-hidden="true" />
         </button>
+        <MenuButton className={iconBtn} />
         <div className="flex-1" />
         {loggedIn && (
           <FavoriteButton lyricsId={lyricsId} initialFavorited={favorited} variant="plain" key={lyricsId} />

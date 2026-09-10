@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { ChevronRight, Search } from "lucide-react";
 import { Pagination } from "@/components/Pagination";
+import { MenuButton } from "@/components/MenuButton";
 import { focusRing } from "@/lib/ui";
 
 export interface DiscoverRow {
@@ -44,6 +45,8 @@ export function DiscoverScreen({ query, items, page, pageCount, pageHref }: Disc
           <ChevronRight className="h-[22px] w-[22px]" aria-hidden="true" />
         </button>
         <span className="text-xl font-extrabold">الوصلات العامة</span>
+        <div className="flex-1" />
+        <MenuButton />
       </header>
 
       <form onSubmit={submitSearch} className="px-5 pb-3.5">

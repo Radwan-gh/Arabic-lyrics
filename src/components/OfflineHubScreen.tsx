@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { ChevronRight, CloudOff } from "lucide-react";
 import type { OfflineData } from "@/components/OfflineReader";
 import { useInstallPrompt } from "@/lib/use-install-prompt";
+import { MenuButton } from "@/components/MenuButton";
 import { focusRing } from "@/lib/ui";
 
 /** شاشة «دون اتصال» الغامرة على الموبايل — نسخة مبسّطة من OfflineHub تطابق التصميم:
@@ -34,6 +35,8 @@ export function OfflineHubScreen({ data }: { data: OfflineData }) {
           <ChevronRight className="h-[22px] w-[22px]" aria-hidden="true" />
         </button>
         <span className="text-xl font-extrabold">المحفوظ للقراءة</span>
+        <div className="flex-1" />
+        <MenuButton />
       </header>
 
       <div className="flex flex-col gap-3 px-5 pb-4 pt-2">

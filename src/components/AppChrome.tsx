@@ -2,6 +2,7 @@
 
 import { usePathname } from "next/navigation";
 import { Navbar } from "@/components/Navbar";
+import { MenuProvider } from "@/lib/menu-context";
 import type { SessionPayload } from "@/lib/jwt";
 
 // مسارات الشاشات الغامرة على الموبايل: بلا شريط تنقّل علوي ولا حشوة الحاوية
@@ -29,16 +30,14 @@ export function AppChrome({ user, children }: { user: SessionPayload | null; chi
   const immersive = isImmersive(pathname);
 
   return (
-    <>
-      <div className={immersive ? "hidden sm:block" : ""}>
-        <Navbar user={user} />
-      </div>
+    <MenuProvider>
+      <Navbar user={user} compact={immersive} />
       <main
         id="main"
         className={immersive ? "sm:mx-auto sm:max-w-5xl sm:px-4 sm:py-6" : "mx-auto max-w-5xl px-2 py-6 sm:px-4"}
       >
         {children}
       </main>
-    </>
+    </MenuProvider>
   );
 }

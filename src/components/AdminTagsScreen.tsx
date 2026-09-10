@@ -3,6 +3,7 @@
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { ChevronRight, Search, Pencil, Trash2 } from "lucide-react";
+import { MenuButton } from "@/components/MenuButton";
 import { focusRing } from "@/lib/ui";
 
 interface TagRow {
@@ -77,6 +78,8 @@ export function AdminTagsScreen({ initialTags }: { initialTags: TagRow[] }) {
           <ChevronRight className="h-[22px] w-[22px]" aria-hidden="true" />
         </button>
         <span className="text-xl font-extrabold">إدارة الوسوم</span>
+        <div className="flex-1" />
+        <MenuButton />
       </header>
 
       <div className="px-5 pb-3.5">
