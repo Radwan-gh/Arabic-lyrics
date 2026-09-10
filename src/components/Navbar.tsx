@@ -145,9 +145,19 @@ export function Navbar({ user, compact = false }: { user: SessionPayload | null;
           MenuButton في أي شاشة غامرة، بصرف النظر عن ظهور الشريط نفسه. */}
       {open && (
         <div className="fixed inset-0 z-30 sm:hidden">
-          <div className="absolute inset-0 bg-[#14211c]/35" />
+          {/* لمس الطبقة المعتمة خارج الدرج يُغلقه — عنصر منفصل عن headerRef لأن
+              هذه الطبقة نفسها داخل حاوية headerRef فلا يلتقطها كاشف "الضغط
+              خارج الرأس" في useEffect أعلاه. */}
+          <button
+            type="button"
+            aria-label="إغلاق القائمة"
+            className="absolute inset-0 bg-[#14211c]/35"
+            onClick={() => setOpen(false)}
+          />
           <nav
             id="mobile-nav"
+            role="dialog"
+            aria-modal="true"
             aria-label="القائمة"
             className="absolute inset-y-0 end-0 flex w-[300px] max-w-[85vw] flex-col bg-white p-5"
           >
@@ -156,13 +166,21 @@ export function Navbar({ user, compact = false }: { user: SessionPayload | null;
                 {user ? user.name.trim().charAt(0) : <User className="h-5 w-5" aria-hidden="true" />}
               </span>
               {user ? (
-                <div>
+                <div className="min-w-0 flex-1">
                   <div className="text-base font-bold text-neutral-900">{user.name}</div>
                   <div className="text-[13px] text-neutral-500">{ROLE_LABELS[user.role]}</div>
                 </div>
               ) : (
-                <div className="text-base font-bold text-neutral-900">زائر</div>
+                <div className="min-w-0 flex-1 text-base font-bold text-neutral-900">زائر</div>
               )}
+              <button
+                type="button"
+                onClick={() => setOpen(false)}
+                aria-label="إغلاق القائمة"
+                className={`inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-lg text-neutral-500 transition-colors hover:bg-neutral-100 ${focusRing}`}
+              >
+                <X className="h-5 w-5" aria-hidden="true" />
+              </button>
             </div>
             <div className="flex flex-1 flex-col gap-1 overflow-y-auto pt-2">
               <NavLinks user={user} onLogout={handleLogout} mobile onNavigate={() => setOpen(false)} />
