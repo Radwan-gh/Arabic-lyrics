@@ -11,6 +11,22 @@
 const DIACRITICS_RE =
   /[ؐ-ًؚ-ٰٟۖ-ۜ۟-۪ۤۧۨ-ۭـ]/g;
 
+/** هل هذا الحرف الواحد من علامات التشكيل/التطويل أعلاه؟ مبنيّة على نقاط
+ * Unicode مباشرة (لا على نسخ حرفي لنطاق الرمز المركّب) ليستخدمها أي كود يحتاج
+ * فحصًا حرفًا-بحرف (راجع lib/arabic-highlight.ts). */
+export function isArabicDiacritic(code: number): boolean {
+  return (
+    (code >= 0x0610 && code <= 0x061a) ||
+    (code >= 0x064b && code <= 0x065f) ||
+    code === 0x0670 ||
+    (code >= 0x06d6 && code <= 0x06dc) ||
+    (code >= 0x06df && code <= 0x06e4) ||
+    (code >= 0x06e7 && code <= 0x06e8) ||
+    (code >= 0x06ea && code <= 0x06ed) ||
+    code === 0x0640
+  );
+}
+
 // كيانات HTML الشائعة التي قد ترد في نص Quill المخزَّن.
 const HTML_ENTITIES: Record<string, string> = {
   "&amp;": "&",

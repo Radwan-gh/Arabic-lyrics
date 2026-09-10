@@ -3,11 +3,13 @@ import { renderLyricsHtml } from "@/lib/render-lyrics";
 import { buildLyricsWhere } from "@/lib/lyrics-search";
 import { getCurrentUser } from "@/lib/session";
 import { getFavoritedLyricsIds } from "@/lib/favorites";
+import { getTagCounts } from "@/lib/tags";
 import { SearchBar } from "@/components/SearchBar";
 import { TagFilterBar } from "@/components/TagFilterBar";
 import { LyricsCard } from "@/components/LyricsCard";
 import { FavoriteButton } from "@/components/FavoriteButton";
 import { Pagination } from "@/components/Pagination";
+import { HomeScreen } from "@/components/HomeScreen";
 
 const PAGE_SIZE = 12;
 
@@ -26,7 +28,7 @@ export default async function HomePage({
   const where = buildLyricsWhere(q, tags);
   const isFiltered = Boolean(q) || tags.length > 0;
 
-  const [items, total, grandTotal, session] = await Promise.all([
+  const [items, total, grandTotal, session, tagCounts] = await Promise.all([
     prisma.lyrics.findMany({
       where,
       orderBy: { createdAt: "desc" },
@@ -37,6 +39,7 @@ export default async function HomePage({
     prisma.lyrics.count({ where }),
     prisma.lyrics.count(),
     getCurrentUser(),
+    getTagCounts(),
   ]);
 
   const favoritedIds = session
@@ -61,7 +64,29 @@ export default async function HomePage({
   }
 
   return (
-    <div className="flex flex-col gap-6">
+    <>
+      <div className="sm:hidden">
+        <HomeScreen
+          query={q}
+          selectedTags={tags}
+          items={items.map((i) => ({
+            id: i.id,
+            title: i.title,
+            artist: i.artist,
+            tags: i.tags,
+            favorited: favoritedIds.has(i.id),
+          }))}
+          grandTotal={grandTotal}
+          filteredTotal={total}
+          isFiltered={isFiltered}
+          tagCounts={tagCounts}
+          page={page}
+          pageCount={pageCount}
+          loggedIn={!!session}
+        />
+      </div>
+
+      <div className="hidden flex-col gap-6 sm:flex">
       <SearchBar defaultValue={q} tags={tags} />
 
       <div className="flex flex-col gap-1.5">
@@ -103,6 +128,7 @@ export default async function HomePage({
       )}
 
       <Pagination page={page} pageCount={pageCount} hrefFor={(p) => `/?${queryString({ page: String(p) })}`} />
-    </div>
+      </div>
+    </>
   );
 }
