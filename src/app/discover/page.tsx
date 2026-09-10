@@ -79,7 +79,6 @@ export default async function DiscoverPage({
           }))}
           page={page}
           pageCount={pageCount}
-          pageHref={pageHref}
         />
       </div>
 

@@ -21,12 +21,14 @@ interface DiscoverScreenProps {
   items: DiscoverRow[];
   page: number;
   pageCount: number;
-  pageHref: (page: number) => string;
 }
 
 /** شاشة «الوصلات العامة» الغامرة على الموبايل: بحث دائم + بطاقات معاينة (اسم
- * المُعِدّ، عدد الأناشيد، وأول عناوينها). سطح المكتب يبقى على شبكة البطاقات الحالية. */
-export function DiscoverScreen({ query, items, page, pageCount, pageHref }: DiscoverScreenProps) {
+ * المُعِدّ، عدد الأناشيد، وأول عناوينها). سطح المكتب يبقى على شبكة البطاقات الحالية.
+ *
+ * `pageHref` يُبنى هنا محليًا بدل تمريره من الخادم — دوال JS لا يمكن تمريرها من
+ * مكوّن خادم إلى مكوّن عميل (غير قابلة للتسلسل)، وهذا كان يُسقط الصفحة بخطأ 500. */
+export function DiscoverScreen({ query, items, page, pageCount }: DiscoverScreenProps) {
   const router = useRouter();
   const [search, setSearch] = useState(query);
 
@@ -36,6 +38,14 @@ export function DiscoverScreen({ query, items, page, pageCount, pageHref }: Disc
     if (search.trim()) params.set("q", search.trim());
     const qs = params.toString();
     router.push(qs ? `/discover?${qs}` : "/discover");
+  }
+
+  function pageHref(p: number) {
+    const params = new URLSearchParams();
+    if (query) params.set("q", query);
+    if (p > 1) params.set("page", String(p));
+    const qs = params.toString();
+    return qs ? `/discover?${qs}` : "/discover";
   }
 
   return (

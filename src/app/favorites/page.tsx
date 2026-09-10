@@ -102,7 +102,6 @@ export default async function FavoritesPage({
             items={items}
             page={1}
             pageCount={1}
-            pageHref={() => "/favorites?sort=custom"}
           />
         </div>
 
@@ -170,7 +169,6 @@ export default async function FavoritesPage({
           items={cards.map((c) => ({ lyricsId: c.id, title: c.title, artist: c.artist }))}
           page={page}
           pageCount={pageCount}
-          pageHref={pageHref}
         />
       </div>
 

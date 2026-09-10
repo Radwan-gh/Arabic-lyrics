@@ -28,11 +28,13 @@ interface FavoritesScreenProps {
   items: FavoritesRow[];
   page: number;
   pageCount: number;
-  pageHref: (page: number) => string;
 }
 
 /** شاشة المفضلة الغامرة على الموبايل: بحث دائم، شرائط ترتيب أفقية، وقائمة صفوف
- * (سحب بمقبض في الترتيب المخصّص). سطح المكتب يبقى على التخطيط الحالي (بطاقات/أسهم). */
+ * (سحب بمقبض في الترتيب المخصّص). سطح المكتب يبقى على التخطيط الحالي (بطاقات/أسهم).
+ *
+ * `pageHref` يُبنى هنا محليًا لا يُمرَّر من الخادم — دوال JS غير قابلة للتسلسل
+ * عبر حدّ خادم/عميل، وتمريرها كان يُسقط الصفحة بخطأ 500. */
 export function FavoritesScreen({
   totalCount,
   query,
@@ -43,7 +45,6 @@ export function FavoritesScreen({
   items: initialItems,
   page,
   pageCount,
-  pageHref,
 }: FavoritesScreenProps) {
   const router = useRouter();
   const [search, setSearch] = useState(query);
@@ -65,6 +66,15 @@ export function FavoritesScreen({
     if (next !== "recent") params.set("sort", next);
     const qs = params.toString();
     router.push(qs ? `/favorites?${qs}` : "/favorites");
+  }
+
+  function pageHref(p: number) {
+    const params = new URLSearchParams();
+    if (query) params.set("q", query);
+    if (sort !== "recent") params.set("sort", sort);
+    if (p > 1) params.set("page", String(p));
+    const qs = params.toString();
+    return qs ? `/favorites?${qs}` : "/favorites";
   }
 
   return (
