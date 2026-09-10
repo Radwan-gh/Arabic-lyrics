@@ -6,6 +6,7 @@ import dynamic from "next/dynamic";
 import { X, TriangleAlert } from "lucide-react";
 import { TagPicker } from "./TagPicker";
 import type { useLyricsForm } from "@/lib/use-lyrics-form";
+import { MenuButton } from "@/components/MenuButton";
 import { focusRing } from "@/lib/ui";
 
 const LyricsTextEditor = dynamic(() => import("./LyricsTextEditor").then((m) => m.LyricsTextEditor), {
@@ -34,6 +35,7 @@ export function NewLyricScreen({ form }: { form: ReturnType<typeof useLyricsForm
             <X className="h-[22px] w-[22px]" aria-hidden="true" />
           </button>
           <span className="text-lg font-extrabold">أنشودة جديدة</span>
+          <MenuButton />
         </div>
         <button
           type="button"

@@ -25,10 +25,16 @@ import type { SessionPayload } from "@/lib/jwt";
 import { focusRing } from "@/lib/ui";
 import { CLEAR_PRIVATE_MESSAGE } from "@/lib/offline";
 import { PWAInstallButton } from "@/components/PWAInstallButton";
+import { useMenu } from "@/lib/menu-context";
 
-export function Navbar({ user }: { user: SessionPayload | null }) {
-  const [open, setOpen] = useState(false);
-  const headerRef = useRef<HTMLElement>(null);
+/**
+ * `compact`: الشاشات الغامرة على الموبايل (راجع AppChrome) تُخفي شريط Navbar
+ * نفسه هناك — تبقى هذه الترويسة مُركَّبة (لهذا يُخفى الشريط بـ CSS لا بعدم
+ * التركيب) حتى يبقى درج القائمة صالحًا للفتح من MenuButton في شاشة كل مسار.
+ */
+export function Navbar({ user, compact = false }: { user: SessionPayload | null; compact?: boolean }) {
+  const { open, setOpen } = useMenu();
+  const headerRef = useRef<HTMLDivElement>(null);
   const router = useRouter();
 
   // Close the mobile menu when clicking/tapping anywhere outside the header,
@@ -76,10 +82,10 @@ export function Navbar({ user }: { user: SessionPayload | null }) {
   }
 
   return (
-    <header
-      ref={headerRef}
-      className="sticky top-0 z-20 border-b border-neutral-200 bg-white/90 backdrop-blur"
-    >
+    <div ref={headerRef}>
+      <header
+        className={`sticky top-0 z-20 border-b border-neutral-200 bg-white/90 backdrop-blur ${compact ? "max-sm:hidden" : ""}`}
+      >
       <div className="mx-auto flex max-w-5xl items-center justify-between px-4 py-3">
         <Link
           href="/"
@@ -133,7 +139,10 @@ export function Navbar({ user }: { user: SessionPayload | null }) {
           </div>
         </div>
       </div>
+      </header>
 
+      {/* الدرج مستقلّ عن إخفاء الشريط أعلاه (compact) — يبقى صالحًا للفتح من
+          MenuButton في أي شاشة غامرة، بصرف النظر عن ظهور الشريط نفسه. */}
       {open && (
         <div className="fixed inset-0 z-30 sm:hidden">
           <div className="absolute inset-0 bg-[#14211c]/35" />
@@ -161,7 +170,7 @@ export function Navbar({ user }: { user: SessionPayload | null }) {
           </nav>
         </div>
       )}
-    </header>
+    </div>
   );
 }
 

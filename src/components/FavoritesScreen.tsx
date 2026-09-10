@@ -9,6 +9,7 @@ import { Pagination } from "@/components/Pagination";
 import { useReorderableList } from "@/lib/use-reorderable-list";
 import { useDragReorder } from "@/lib/use-drag-reorder";
 import { persistFavoritesOrder } from "@/lib/favorites-order";
+import { MenuButton } from "@/components/MenuButton";
 import { focusRing } from "@/lib/ui";
 
 export interface FavoritesRow {
@@ -74,6 +75,8 @@ export function FavoritesScreen({
         </button>
         <span className="text-xl font-extrabold">المفضلة</span>
         <span className="text-sm text-[#6b7670]">{totalCount.toLocaleString("ar-EG")}</span>
+        <div className="flex-1" />
+        <MenuButton />
       </header>
 
       <form onSubmit={submitSearch} className="px-5 pb-2 pt-1">

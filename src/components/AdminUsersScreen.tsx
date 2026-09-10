@@ -4,6 +4,7 @@ import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { ChevronRight, Plus, X } from "lucide-react";
 import { CreateUserForm, type Role, type UserRow } from "./UserTable";
+import { MenuButton } from "@/components/MenuButton";
 import { focusRing } from "@/lib/ui";
 
 // تسميات الأدوار في التصميم تطابق شارات "مدير / محرر / قارئ" هنا؛ الجدول على
@@ -59,6 +60,8 @@ export function AdminUsersScreen({ initialUsers, currentUserId }: { initialUsers
           <ChevronRight className="h-[22px] w-[22px]" aria-hidden="true" />
         </button>
         <span className="text-xl font-extrabold">إدارة المستخدمين</span>
+        <div className="flex-1" />
+        <MenuButton />
       </header>
 
       <div className="flex-1 px-5 pb-24">
