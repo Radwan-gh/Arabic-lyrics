@@ -5,7 +5,7 @@ import { useEffect, useRef, useState, useTransition } from "react";
 import { Search, X } from "lucide-react";
 import { inputCls, btnPrimary, focusRing } from "@/lib/ui";
 
-export function SearchBar({ defaultValue, tags }: { defaultValue: string; tags?: string[] }) {
+export function SearchBar({ defaultValue, tags, sort }: { defaultValue: string; tags?: string[]; sort?: string }) {
   const [value, setValue] = useState(defaultValue);
   const router = useRouter();
   const [, startTransition] = useTransition();
@@ -15,6 +15,7 @@ export function SearchBar({ defaultValue, tags }: { defaultValue: string; tags?:
     const params = new URLSearchParams();
     if (nextValue.trim()) params.set("q", nextValue.trim());
     if (tags?.length) params.set("tags", tags.join(","));
+    if (sort) params.set("sort", sort);
     const qs = params.toString();
     startTransition(() => {
       router.replace(qs ? `/?${qs}` : "/");
@@ -29,7 +30,7 @@ export function SearchBar({ defaultValue, tags }: { defaultValue: string; tags?:
     const timer = setTimeout(() => runSearch(value), 350);
     return () => clearTimeout(timer);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [value, defaultValue, tags]);
+  }, [value, defaultValue, tags, sort]);
 
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
