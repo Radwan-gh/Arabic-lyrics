@@ -2,28 +2,30 @@ import { NextResponse } from "next/server";
 import { z } from "zod";
 import { prisma } from "@/lib/prisma";
 import { getCurrentUser } from "@/lib/session";
+import { getFavoritedLyricsIds } from "@/lib/favorites";
 import { sanitizeLyricsHtml } from "@/lib/sanitize-lyrics";
-import { buildLyricsWhere } from "@/lib/lyrics-search";
+import { renderLyricsHtml } from "@/lib/render-lyrics";
+import { buildLyricsWhere, buildLyricsOrderBy, parseLyricsSort, LYRICS_PAGE_SIZE } from "@/lib/lyrics-search";
 import { buildSearchText, normalizeArabic } from "@/lib/arabic-search";
 import { findArabicMatch, splitAtMatch, buildContentSnippet } from "@/lib/arabic-highlight";
 import { findDuplicateLyrics } from "@/lib/lyrics";
-
-const PAGE_SIZE = 12;
 
 export async function GET(req: Request) {
   const { searchParams } = new URL(req.url);
   const q = searchParams.get("q")?.trim() || "";
   const tags = (searchParams.get("tags")?.split(",") ?? []).map((t) => t.trim()).filter(Boolean);
   const page = Math.max(1, Number(searchParams.get("page")) || 1);
+  const sort = parseLyricsSort(searchParams.get("sort"), "date_desc");
 
   const where = buildLyricsWhere(q, tags);
+  const session = await getCurrentUser();
 
   const [rows, total] = await Promise.all([
     prisma.lyrics.findMany({
       where,
-      orderBy: { createdAt: "desc" },
-      skip: (page - 1) * PAGE_SIZE,
-      take: PAGE_SIZE,
+      orderBy: buildLyricsOrderBy(sort),
+      skip: (page - 1) * LYRICS_PAGE_SIZE,
+      take: LYRICS_PAGE_SIZE,
       select: {
         id: true,
         title: true,
@@ -31,32 +33,35 @@ export async function GET(req: Request) {
         album: true,
         tags: true,
         createdAt: true,
-        // يُستخدم لبناء مقتطف مظلَّل فقط (راجع lib/arabic-highlight) — لا يُعاد كما هو.
-        content: q ? true : false,
+        // يُستخدم أيضًا لبناء المقتطف المظلَّل (راجع lib/arabic-highlight) ولعرض
+        // الأنشودة كاملة عند التمرير اللانهائي في الرئيسية — لا يُعاد خامًا.
+        content: true,
         createdBy: { select: { name: true } },
       },
     }),
     prisma.lyrics.count({ where }),
   ]);
 
+  const favoritedIds = session ? await getFavoritedLyricsIds(session.userId, rows.map((r) => r.id)) : new Set<string>();
+
   // تظليل: العنوان أولًا، وإلا مقتطف من الكلمات — مطابقةً لتجربة شاشة البحث
   // الكاملة على الموبايل. بلا استعلام (q فارغة) لا حاجة لأيّ من هذا.
   const items = rows.map(({ content, ...rest }) => {
-    if (!q) return rest;
+    const base = { ...rest, contentHtml: renderLyricsHtml(content), favorited: favoritedIds.has(rest.id) };
+    if (!q) return { ...base, titleMatch: null, snippet: null };
     const titleSpan = findArabicMatch(rest.title, q);
     if (titleSpan) {
-      return { ...rest, titleMatch: splitAtMatch(rest.title, titleSpan), snippet: null };
+      return { ...base, titleMatch: splitAtMatch(rest.title, titleSpan), snippet: null };
     }
-    const snippet = content ? buildContentSnippet(content, q) : null;
-    return { ...rest, titleMatch: null, snippet };
+    return { ...base, titleMatch: null, snippet: buildContentSnippet(content, q) };
   });
 
   return NextResponse.json({
     items,
     total,
     page,
-    pageSize: PAGE_SIZE,
-    pageCount: Math.max(1, Math.ceil(total / PAGE_SIZE)),
+    pageSize: LYRICS_PAGE_SIZE,
+    pageCount: Math.max(1, Math.ceil(total / LYRICS_PAGE_SIZE)),
   });
 }
 
