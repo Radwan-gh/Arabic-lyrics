@@ -16,7 +16,7 @@ export function buildLyricsWhere(q: string, tags: string[]): Prisma.LyricsWhereI
 }
 
 /** حجم صفحة القائمة المشترك بين تحميل الرئيسية الأول ومسار الـ API (التمرير اللانهائي). */
-export const LYRICS_PAGE_SIZE = 12;
+export const LYRICS_PAGE_SIZE = 50;
 
 /** أبجدي (تصاعدي/تنازلي حسب الحرف الأول)، أو بتاريخ الإضافة (الأحدث/الأقدم). */
 export type LyricsSort = "title_asc" | "title_desc" | "date_desc" | "date_asc";

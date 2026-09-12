@@ -14,7 +14,7 @@ import { FavoritesScreen } from "@/components/FavoritesScreen";
 
 export const dynamic = "force-dynamic";
 
-const PAGE_SIZE = 12;
+const PAGE_SIZE = 50;
 
 const SORTS = {
   recent: { label: "الأحدث", orderBy: { createdAt: "desc" } },
