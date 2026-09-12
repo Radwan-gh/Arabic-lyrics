@@ -1,6 +1,6 @@
 import { prisma } from "@/lib/prisma";
 import { renderLyricsHtml } from "@/lib/render-lyrics";
-import { buildLyricsWhere, buildLyricsOrderBy, parseTitleSort, LYRICS_PAGE_SIZE } from "@/lib/lyrics-search";
+import { buildLyricsWhere, buildLyricsOrderBy, parseLyricsSort, LYRICS_PAGE_SIZE } from "@/lib/lyrics-search";
 import { getCurrentUser } from "@/lib/session";
 import { getFavoritedLyricsIds } from "@/lib/favorites";
 import { getTagCounts } from "@/lib/tags";
@@ -17,7 +17,7 @@ export default async function HomePage({
     .split(",")
     .map((t) => t.trim())
     .filter(Boolean);
-  const sort = parseTitleSort(sortParam);
+  const sort = parseLyricsSort(sortParam, "title_asc");
 
   const where = buildLyricsWhere(q, tags);
   const isFiltered = Boolean(q) || tags.length > 0;

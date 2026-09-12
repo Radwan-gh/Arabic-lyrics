@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
-import type { TitleSort } from "@/lib/lyrics-search";
+import type { LyricsSort } from "@/lib/lyrics-search";
 
 export interface LyricsFeedItem {
   id: string;
@@ -17,7 +17,7 @@ export interface LyricsFeedItem {
 interface UseLyricsFeedArgs {
   query: string;
   tags: string[];
-  sort: TitleSort;
+  sort: LyricsSort;
   initialItems: LyricsFeedItem[];
   initialHasMore: boolean;
 }

@@ -15,7 +15,7 @@ export async function GET(req: Request) {
   const q = searchParams.get("q")?.trim() || "";
   const tags = (searchParams.get("tags")?.split(",") ?? []).map((t) => t.trim()).filter(Boolean);
   const page = Math.max(1, Number(searchParams.get("page")) || 1);
-  const sort = parseLyricsSort(searchParams.get("sort"));
+  const sort = parseLyricsSort(searchParams.get("sort"), "date_desc");
 
   const where = buildLyricsWhere(q, tags);
   const session = await getCurrentUser();

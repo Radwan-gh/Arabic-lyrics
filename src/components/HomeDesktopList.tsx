@@ -1,20 +1,19 @@
 "use client";
 
-import { useRouter } from "next/navigation";
 import { SearchBar } from "@/components/SearchBar";
 import { TagFilterBar } from "@/components/TagFilterBar";
 import { LyricsCard } from "@/components/LyricsCard";
 import { FavoriteButton } from "@/components/FavoriteButton";
-import { TitleSortToggle } from "@/components/TitleSortToggle";
+import { LyricsSortSelect } from "@/components/LyricsSortSelect";
 import { BackToTopButton } from "@/components/BackToTopButton";
 import { Spinner } from "@/components/Spinner";
 import { useLyricsFeed, type LyricsFeedItem } from "@/lib/use-lyrics-feed";
-import type { TitleSort } from "@/lib/lyrics-search";
+import type { LyricsSort } from "@/lib/lyrics-search";
 
 interface HomeDesktopListProps {
   query: string;
   selectedTags: string[];
-  sort: TitleSort;
+  sort: LyricsSort;
   initialItems: LyricsFeedItem[];
   initialHasMore: boolean;
   grandTotal: number;
@@ -25,9 +24,9 @@ interface HomeDesktopListProps {
 
 const formatCount = (n: number) => n.toLocaleString("en-US");
 
-/** فهرس الأناشيد على سطح المكتب: شبكة بطاقات مرتّبة أبجديًا بتمرير لانهائي
- * (بلا ترقيم صفحات)، مع مفتاح ترتيب تصاعدي/تنازلي وزرّ عودة إلى الأعلى.
- * النسخة الغامرة على الموبايل في HomeScreen. */
+/** فهرس الأناشيد على سطح المكتب: شبكة بطاقات مرتّبة أبجديًا (أو بالتاريخ) بتمرير
+ * لانهائي (بلا ترقيم صفحات)، مع مفتاح ترتيب وزرّ عودة إلى الأعلى. النسخة
+ * الغامرة على الموبايل في HomeScreen. */
 export function HomeDesktopList({
   query,
   selectedTags,
@@ -39,7 +38,6 @@ export function HomeDesktopList({
   isFiltered,
   loggedIn,
 }: HomeDesktopListProps) {
-  const router = useRouter();
   const { items, hasMore, loading, sentinelRef } = useLyricsFeed({
     query,
     tags: selectedTags,
@@ -48,18 +46,9 @@ export function HomeDesktopList({
     initialHasMore,
   });
 
-  // نُبقي الرابط نظيفًا حين يكون الترتيب الافتراضي (تصاعدي) — يطابق سلوك buildUrl
-  // في نسخة الموبايل.
-  const sortParam = sort === "title_desc" ? "title_desc" : undefined;
-
-  function setSort(next: TitleSort) {
-    const params = new URLSearchParams();
-    if (query) params.set("q", query);
-    if (selectedTags.length) params.set("tags", selectedTags.join(","));
-    if (next !== "title_asc") params.set("sort", next);
-    const qs = params.toString();
-    router.push(qs ? `/?${qs}` : "/");
-  }
+  // نُبقي الرابط نظيفًا حين يكون الترتيب الافتراضي (أبجدي تصاعدي) — يطابق سلوك
+  // buildUrl في نسخة الموبايل.
+  const sortParam = sort !== "title_asc" ? sort : undefined;
 
   return (
     <div className="flex flex-col gap-6">
@@ -75,7 +64,7 @@ export function HomeDesktopList({
           <span className="font-medium text-neutral-800">الكل : {formatCount(grandTotal)}</span>
           {isFiltered && <span> ، نتائج البحث : {formatCount(filteredTotal)}</span>}
         </p>
-        <TitleSortToggle sort={sort} onChange={setSort} className="text-sm font-medium text-emerald-700" />
+        <LyricsSortSelect sort={sort} query={query} tags={selectedTags} className="text-neutral-600" />
       </div>
 
       {items.length === 0 ? (

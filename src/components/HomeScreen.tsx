@@ -7,18 +7,18 @@ import { Music, Search } from "lucide-react";
 import { FavoriteButton } from "@/components/FavoriteButton";
 import { MenuButton } from "@/components/MenuButton";
 import { SearchOverlayScreen } from "@/components/SearchOverlayScreen";
-import { TitleSortToggle } from "@/components/TitleSortToggle";
+import { LyricsSortSelect } from "@/components/LyricsSortSelect";
 import { BackToTopButton } from "@/components/BackToTopButton";
 import { Spinner } from "@/components/Spinner";
 import { useLyricsFeed, type LyricsFeedItem } from "@/lib/use-lyrics-feed";
 import type { TagCount } from "@/lib/tags";
-import type { TitleSort } from "@/lib/lyrics-search";
+import type { LyricsSort } from "@/lib/lyrics-search";
 import { focusRing } from "@/lib/ui";
 
 interface HomeScreenProps {
   query: string;
   selectedTags: string[];
-  sort: TitleSort;
+  sort: LyricsSort;
   initialItems: LyricsFeedItem[];
   initialHasMore: boolean;
   grandTotal: number;
@@ -28,10 +28,10 @@ interface HomeScreenProps {
   loggedIn: boolean;
 }
 
-/** شاشة الرئيسية الغامرة على الموبايل — فهرس أناشيد أبجدي: ترويسة وبحث وشريط
- * وسوم ثابتون أثناء التمرير، قائمة صفوف بتمرير لانهائي (بلا ترقيم صفحات)، مفتاح
- * ترتيب أبجدي تصاعدي/تنازلي، وزرّ عودة إلى الأعلى. سطح المكتب يبقى على شبكة
- * البطاقات (راجع HomeDesktopList). */
+/** شاشة الرئيسية الغامرة على الموبايل — فهرس أناشيد: ترويسة وبحث وشريط وسوم
+ * ثابتون أثناء التمرير، قائمة صفوف بتمرير لانهائي (بلا ترقيم صفحات)، مفتاح
+ * ترتيب (أبجدي تصاعدي/تنازلي أو بتاريخ الإضافة)، وزرّ عودة إلى الأعلى. سطح
+ * المكتب يبقى على شبكة البطاقات (راجع HomeDesktopList). */
 export function HomeScreen({
   query,
   selectedTags,
@@ -56,7 +56,7 @@ export function HomeScreen({
     initialHasMore,
   });
 
-  function buildUrl(overrides: { q?: string; tags?: string[]; sort?: TitleSort }) {
+  function buildUrl(overrides: { q?: string; tags?: string[]; sort?: LyricsSort }) {
     const params = new URLSearchParams();
     const nextQ = overrides.q ?? query;
     const nextTags = overrides.tags ?? selectedTags;
@@ -168,12 +168,8 @@ export function HomeScreen({
       </div>
 
       <div className="flex-1 border-t border-[#e6e6e1] bg-white">
-        <div className="flex items-center justify-between gap-2 bg-[#f7f7f4] px-5 py-2.5">
-          <TitleSortToggle
-            sort={sort}
-            onChange={(next) => router.push(buildUrl({ sort: next }))}
-            className="text-[13px] font-bold text-emerald-700"
-          />
+        <div className="flex flex-wrap items-center justify-between gap-2 bg-[#f7f7f4] px-5 py-2.5">
+          <LyricsSortSelect sort={sort} query={query} tags={selectedTags} className="text-[13px] text-[#3c4a44]" />
           <span className="text-[13px] text-[#6b7670]">
             {isFiltered ? "نتائج البحث · " : ""}
             {filteredTotal.toLocaleString("ar-EG")} نشيداً
