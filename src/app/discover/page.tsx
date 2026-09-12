@@ -9,7 +9,7 @@ import { focusRing } from "@/lib/ui";
 
 export const dynamic = "force-dynamic";
 
-const PAGE_SIZE = 12;
+const PAGE_SIZE = 50;
 
 export default async function DiscoverPage({
   searchParams,
