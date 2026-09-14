@@ -22,7 +22,20 @@ export function SearchBar({ defaultValue, tags, sort }: { defaultValue: string; 
     });
   }
 
+  // Stay in sync when `q` changes from outside this field — e.g. the mobile
+  // search screen, mounted alongside this one and merely CSS-hidden, running
+  // its own live search. Without this, this field's untouched local value
+  // goes stale, and the effect below (seeing it no longer match the new `q`)
+  // "corrects" the URL back to it a moment later, silently wiping out a
+  // search made elsewhere.
+  useEffect(() => {
+    setValue(defaultValue);
+  }, [defaultValue]);
+
   // Live search: update results automatically a short moment after typing stops.
+  // `defaultValue` is deliberately left out of the deps below — see the sync
+  // effect above, which keeps `value` matching it whenever it changes for a
+  // reason other than this field's own typing.
   useEffect(() => {
     // Skip when the current value already matches the URL (initial mount, or
     // arriving via a URL that already carries `q`) to avoid a redundant nav.
@@ -30,7 +43,7 @@ export function SearchBar({ defaultValue, tags, sort }: { defaultValue: string; 
     const timer = setTimeout(() => runSearch(value), 350);
     return () => clearTimeout(timer);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [value, defaultValue, tags, sort]);
+  }, [value, tags, sort]);
 
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault();

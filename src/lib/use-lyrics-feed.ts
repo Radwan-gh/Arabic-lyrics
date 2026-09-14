@@ -35,12 +35,19 @@ export function useLyricsFeed({ query, tags, sort, initialItems, initialHasMore 
   const [loading, setLoading] = useState(false);
   const pageRef = useRef(1);
   const loadingRef = useRef(false);
+  const abortRef = useRef<AbortController | null>(null);
   const tagsKey = tags.join(",");
 
   useEffect(() => {
+    // يُلغي أي طلب «تحميل المزيد» لا يزال قيد التنفيذ لاستعلام سابق (مثلاً
+    // بحث حيّ يبدّل النتائج بينما كان التمرير اللانهائي يجلب صفحة تالية له)،
+    // حتى لا تصل نتائجه متأخرةً فتُلحق عناصر الاستعلام القديم بقائمة الجديد.
+    abortRef.current?.abort();
     setItems(initialItems);
     setHasMore(initialHasMore);
     pageRef.current = 1;
+    loadingRef.current = false;
+    setLoading(false);
   }, [initialItems, initialHasMore]);
 
   const loadMore = useCallback(async () => {
@@ -53,15 +60,18 @@ export function useLyricsFeed({ query, tags, sort, initialItems, initialHasMore 
     if (tagsKey) params.set("tags", tagsKey);
     params.set("sort", sort);
     params.set("page", String(nextPage));
+    const controller = new AbortController();
+    abortRef.current = controller;
     try {
-      const res = await fetch(`/api/lyrics?${params.toString()}`);
+      const res = await fetch(`/api/lyrics?${params.toString()}`, { signal: controller.signal });
       if (!res.ok) return;
       const data: { items: LyricsFeedItem[]; pageCount: number } = await res.json();
       pageRef.current = nextPage;
       setItems((prev) => [...prev, ...data.items]);
       setHasMore(nextPage < data.pageCount);
     } catch {
-      // فشل الشبكة: تبقى hasMore كما هي فيُعاد المحاولة عند تقاطع الحارس مجددًا.
+      // فشل الشبكة أو إلغاء الطلب (استعلام جديد وصل قبل اكتمال هذه الصفحة):
+      // تبقى hasMore كما هي فيُعاد المحاولة عند تقاطع الحارس مجددًا.
     } finally {
       loadingRef.current = false;
       setLoading(false);
