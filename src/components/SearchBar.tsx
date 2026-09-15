@@ -5,13 +5,27 @@ import { useEffect, useRef, useState, useTransition } from "react";
 import { Search, X } from "lucide-react";
 import { inputCls, btnPrimary, focusRing } from "@/lib/ui";
 
-export function SearchBar({ defaultValue, tags }: { defaultValue: string; tags?: string[] }) {
+export function SearchBar({
+  defaultValue,
+  tags,
+  onSearch,
+}: {
+  defaultValue: string;
+  tags?: string[];
+  /** عند تمريرها، تُستدعى بدل التنقّل عبر الموجّه (وضع مُتحكَّم به — يلزم
+   * للقراءة دون اتصال، حيث لا يمكن للموجّه جلب صفحة جديدة). */
+  onSearch?: (value: string) => void;
+}) {
   const [value, setValue] = useState(defaultValue);
   const router = useRouter();
   const [, startTransition] = useTransition();
   const inputRef = useRef<HTMLInputElement>(null);
 
   function runSearch(nextValue: string) {
+    if (onSearch) {
+      onSearch(nextValue.trim());
+      return;
+    }
     const params = new URLSearchParams();
     if (nextValue.trim()) params.set("q", nextValue.trim());
     if (tags?.length) params.set("tags", tags.join(","));

@@ -14,14 +14,21 @@ export function FavoritesSortSelect({
   value,
   query,
   options,
+  onSort,
 }: {
   value: string;
   query: string;
   options: Option[];
+  /** عند تمريرها، تُستدعى بدل التنقّل عبر الموجّه (وضع مُتحكَّم به — للقراءة دون اتصال). */
+  onSort?: (value: string) => void;
 }) {
   const router = useRouter();
 
   function onChange(e: React.ChangeEvent<HTMLSelectElement>) {
+    if (onSort) {
+      onSort(e.target.value);
+      return;
+    }
     const params = new URLSearchParams();
     if (query) params.set("q", query);
     if (e.target.value) params.set("sort", e.target.value);

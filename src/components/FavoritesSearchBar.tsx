@@ -5,12 +5,25 @@ import { useState } from "react";
 import { Search } from "lucide-react";
 import { inputCls, btnPrimary } from "@/lib/ui";
 
-export function FavoritesSearchBar({ defaultValue, sort }: { defaultValue: string; sort?: string }) {
+export function FavoritesSearchBar({
+  defaultValue,
+  sort,
+  onSearch,
+}: {
+  defaultValue: string;
+  sort?: string;
+  /** عند تمريرها، تُستدعى بدل التنقّل عبر الموجّه (وضع مُتحكَّم به — للقراءة دون اتصال). */
+  onSearch?: (value: string) => void;
+}) {
   const [value, setValue] = useState(defaultValue);
   const router = useRouter();
 
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
+    if (onSearch) {
+      onSearch(value.trim());
+      return;
+    }
     const params = new URLSearchParams();
     if (value.trim()) params.set("q", value.trim());
     if (sort && sort !== "recent") params.set("sort", sort);

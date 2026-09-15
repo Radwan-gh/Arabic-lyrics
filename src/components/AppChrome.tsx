@@ -3,6 +3,7 @@
 import { usePathname } from "next/navigation";
 import { Navbar } from "@/components/Navbar";
 import { MenuProvider } from "@/lib/menu-context";
+import { useRealLocation } from "@/hooks/use-real-location";
 import type { SessionPayload } from "@/lib/jwt";
 
 // مسارات الشاشات الغامرة على الموبايل: بلا شريط تنقّل علوي ولا حشوة الحاوية
@@ -28,7 +29,13 @@ function isImmersive(pathname: string): boolean {
 
 export function AppChrome({ user, children }: { user: SessionPayload | null; children: React.ReactNode }) {
   const pathname = usePathname();
-  const immersive = isImmersive(pathname);
+  // الـ service worker قد يخدم غلاف "/offline" الاحتياطي لأي مسار حقيقي آخر
+  // غير مخزَّن أثناء انقطاع الشبكة (راجع public/sw.js وOfflineShell) — فحينها
+  // يُبلِغ usePathname بـ"/offline" خطأً بدل المسار الفعلي في شريط العنوان.
+  // صحِّح بالمسار الحقيقي بعد التركيب لتحديد الكروم الغامر بدقّة.
+  const realLocation = useRealLocation();
+  const effectivePathname = pathname === "/offline" && realLocation ? realLocation.pathname : pathname;
+  const immersive = isImmersive(effectivePathname);
 
   return (
     <MenuProvider>

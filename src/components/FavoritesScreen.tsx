@@ -2,79 +2,53 @@
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { ChevronRight, Search, GripVertical } from "lucide-react";
 import { FavoriteButton } from "@/components/FavoriteButton";
 import { Pagination } from "@/components/Pagination";
+import { OfflineBanner } from "@/components/OfflineBanner";
+import { OfflineEmptyState } from "@/components/OfflineEmptyState";
 import { useReorderableList } from "@/lib/use-reorderable-list";
 import { useDragReorder } from "@/lib/use-drag-reorder";
 import { persistFavoritesOrder } from "@/lib/favorites-order";
 import { MenuButton } from "@/components/MenuButton";
+import { useOfflineFavorites, type FavoritesSsrData } from "@/hooks/use-offline-favorites";
 import { focusRing } from "@/lib/ui";
-
-export interface FavoritesRow {
-  lyricsId: string;
-  title: string;
-  artist: string | null;
-}
-
-interface FavoritesScreenProps {
-  totalCount: number;
-  query: string;
-  sort: string;
-  sortOptions: { value: string; label: string }[];
-  isCustom: boolean;
-  reorderable: boolean;
-  items: FavoritesRow[];
-  page: number;
-  pageCount: number;
-}
 
 /** شاشة المفضلة الغامرة على الموبايل: بحث دائم، شرائط ترتيب أفقية، وقائمة صفوف
  * (سحب بمقبض في الترتيب المخصّص). سطح المكتب يبقى على التخطيط الحالي (بطاقات/أسهم).
  *
- * `pageHref` يُبنى هنا محليًا لا يُمرَّر من الخادم — دوال JS غير قابلة للتسلسل
- * عبر حدّ خادم/عميل، وتمريرها كان يُسقط الصفحة بخطأ 500. */
-export function FavoritesScreen({
-  totalCount,
-  query,
-  sort,
-  sortOptions,
-  isCustom,
-  reorderable,
-  items: initialItems,
-  page,
-  pageCount,
-}: FavoritesScreenProps) {
+ * تعمل أيضًا للقراءة دون اتصال: `ssr` يُمرَّر null حين لم تُصيَّر الصفحة على
+ * الخادم إطلاقًا (غلاف احتياطي)، فتُقرأ المفضّلة من اللقطة المخزَّنة. */
+export function FavoritesScreen({ ssr }: { ssr: FavoritesSsrData | null }) {
   const router = useRouter();
+  const { view, online, loggedIn, sourcedFromCache, commitSearch, commitSort, pageHref, commitPage } =
+    useOfflineFavorites(ssr);
+  const { totalCount, query, sort, sortOptions, isCustom, reorderable, items: initialItems, page, pageCount } = view;
+
   const [search, setSearch] = useState(query);
   const { items, move } = useReorderableList(initialItems, (i) => i.lyricsId, persistFavoritesOrder);
   const { draggingIndex, offsetY, startDrag, onDragMove, endDrag, onKeyDown } = useDragReorder(items.length, move);
 
+  useEffect(() => setSearch(query), [query]);
+
   function submitSearch(e: React.FormEvent) {
     e.preventDefault();
-    const params = new URLSearchParams();
-    if (search.trim()) params.set("q", search.trim());
-    if (sort !== "recent") params.set("sort", sort);
-    const qs = params.toString();
-    router.push(qs ? `/favorites?${qs}` : "/favorites");
+    commitSearch(search);
   }
 
-  function changeSort(next: string) {
-    const params = new URLSearchParams();
-    if (query) params.set("q", query);
-    if (next !== "recent") params.set("sort", next);
-    const qs = params.toString();
-    router.push(qs ? `/favorites?${qs}` : "/favorites");
-  }
-
-  function pageHref(p: number) {
-    const params = new URLSearchParams();
-    if (query) params.set("q", query);
-    if (sort !== "recent") params.set("sort", sort);
-    if (p > 1) params.set("page", String(p));
-    const qs = params.toString();
-    return qs ? `/favorites?${qs}` : "/favorites";
+  if (!loggedIn) {
+    return (
+      <div className="flex min-h-dvh flex-col gap-4 bg-[#f7f7f4] p-6 text-[#14211c]">
+        <header className="flex items-center gap-2">
+          <button type="button" onClick={() => router.back()} aria-label="رجوع" className={`inline-flex h-11 w-11 items-center justify-center rounded-xl text-[#3c4a44] ${focusRing}`}>
+            <ChevronRight className="h-[22px] w-[22px]" aria-hidden="true" />
+          </button>
+          <MenuButton />
+        </header>
+        <OfflineEmptyState>سجّل الدخول وأنت متصل بالإنترنت لحفظ مفضّلتك للقراءة دون اتصال.</OfflineEmptyState>
+      </div>
+    );
   }
 
   return (
@@ -88,6 +62,10 @@ export function FavoritesScreen({
         <div className="flex-1" />
         <MenuButton />
       </header>
+
+      <div className="px-5 pt-1">
+        <OfflineBanner online={online} sourcedFromCache={sourcedFromCache} />
+      </div>
 
       <form onSubmit={submitSearch} className="px-5 pb-2 pt-1">
         <div className="relative">
@@ -108,7 +86,7 @@ export function FavoritesScreen({
           <button
             key={opt.value}
             type="button"
-            onClick={() => changeSort(opt.value)}
+            onClick={() => commitSort(opt.value)}
             aria-pressed={opt.value === sort}
             className={`h-[34px] shrink-0 whitespace-nowrap rounded-full px-3.5 text-sm ${
               opt.value === sort
@@ -164,7 +142,7 @@ export function FavoritesScreen({
                     </Link>
                     {item.artist && <div className="mt-0.5 truncate text-[13px] text-[#6b7670]">{item.artist}</div>}
                   </div>
-                  <FavoriteButton lyricsId={item.lyricsId} initialFavorited variant="plain" refreshOnToggle />
+                  {online && <FavoriteButton lyricsId={item.lyricsId} initialFavorited variant="plain" refreshOnToggle />}
                 </li>
               ))}
             </ul>
@@ -174,7 +152,12 @@ export function FavoritesScreen({
 
       {!isCustom && pageCount > 1 && (
         <div className="px-4 py-4">
-          <Pagination page={page} pageCount={pageCount} hrefFor={pageHref} />
+          <Pagination
+            page={page}
+            pageCount={pageCount}
+            hrefFor={pageHref}
+            onPageChange={sourcedFromCache ? commitPage : undefined}
+          />
         </div>
       )}
     </div>

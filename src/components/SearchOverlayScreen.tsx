@@ -4,8 +4,12 @@ import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
 import { ChevronRight, Search, X } from "lucide-react";
 import { addRecentSearch, readRecentSearches } from "@/lib/recent-searches";
+import { filterLyricsByTags, filterLyricsBySearch } from "@/lib/offline-filter";
+import type { OfflineLyric } from "@/lib/offline";
 import type { TagCount } from "@/lib/tags";
 import { focusRing } from "@/lib/ui";
+
+const OFFLINE_RESULTS_LIMIT = 30;
 
 interface HighlightSpan {
   before: string;
@@ -42,10 +46,15 @@ export function SearchOverlayScreen({
   initialQuery,
   popularTags,
   onClose,
+  offlineIndex,
 }: {
   initialQuery: string;
   popularTags: TagCount[];
   onClose: () => void;
+  /** حين تُمرَّر، تُحسَب النتائج محليًا من هذه اللقطة بدل GET /api/lyrics —
+   * يلزم للقراءة دون اتصال (المسار لا يُخزَّنه الـ service worker). بلا تظليل
+   * مطابقة (titleMatch/snippet دومًا null) لبساطة الحساب في العميل. */
+  offlineIndex?: { lyrics: OfflineLyric[]; searchIndex: Map<string, string> } | null;
 }) {
   const [query, setQuery] = useState(initialQuery);
   const [activeTag, setActiveTag] = useState<string | null>(null);
@@ -66,6 +75,24 @@ export function SearchOverlayScreen({
       setTotal(0);
       return;
     }
+
+    if (offlineIndex) {
+      const byTag = activeTag ? filterLyricsByTags(offlineIndex.lyrics, [activeTag]) : offlineIndex.lyrics;
+      const filtered = term ? filterLyricsBySearch(byTag, term, offlineIndex.searchIndex) : byTag;
+      setResults(
+        filtered.slice(0, OFFLINE_RESULTS_LIMIT).map((l) => ({
+          id: l.id,
+          title: l.title,
+          artist: l.artist,
+          tags: l.tags,
+          titleMatch: null,
+          snippet: null,
+        }))
+      );
+      setTotal(filtered.length);
+      return;
+    }
+
     const controller = new AbortController();
     const timer = setTimeout(() => {
       const params = new URLSearchParams();
@@ -88,7 +115,7 @@ export function SearchOverlayScreen({
       controller.abort();
       clearTimeout(timer);
     };
-  }, [query, activeTag]);
+  }, [query, activeTag, offlineIndex]);
 
   function runQuery(term: string) {
     setActiveTag(null);

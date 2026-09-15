@@ -11,25 +11,55 @@ export function Pagination({
   page,
   pageCount,
   hrefFor,
+  onPageChange,
 }: {
   page: number;
   pageCount: number;
   hrefFor: (page: number) => string;
+  /** عند تمريرها، تُعرَض أزرار تستدعيها بدل روابط تنقّل — وضع مُتحكَّم به يلزم
+   * للقراءة دون اتصال، حيث لا يمكن جلب صفحة جديدة من الخادم. */
+  onPageChange?: (page: number) => void;
 }) {
   if (pageCount <= 1) return null;
 
   const pages = pageWindow(page, pageCount);
   const cell =
     "inline-flex h-9 min-w-9 items-center justify-center rounded-lg px-3 text-sm transition-colors " + focusRing;
+  const disabledCell = `${cell} border border-neutral-100 text-neutral-300`;
+
+  function PageLink({ p, children, ariaLabel, ariaCurrent, rel }: {
+    p: number;
+    children: React.ReactNode;
+    ariaLabel: string;
+    ariaCurrent?: "page";
+    rel?: string;
+  }) {
+    const cls =
+      ariaCurrent === "page"
+        ? `${cell} bg-emerald-700 font-semibold text-white`
+        : `${cell} border border-neutral-200 text-neutral-600 hover:bg-neutral-100`;
+    if (onPageChange) {
+      return (
+        <button type="button" onClick={() => onPageChange(p)} aria-label={ariaLabel} aria-current={ariaCurrent} className={cls}>
+          {children}
+        </button>
+      );
+    }
+    return (
+      <Link href={hrefFor(p)} rel={rel} aria-label={ariaLabel} aria-current={ariaCurrent} className={cls}>
+        {children}
+      </Link>
+    );
+  }
 
   return (
     <nav aria-label="ترقيم الصفحات" className="flex flex-wrap items-center justify-center gap-1.5">
       {page > 1 ? (
-        <Link href={hrefFor(page - 1)} rel="prev" aria-label="الصفحة السابقة" className={`${cell} border border-neutral-200 text-neutral-600 hover:bg-neutral-100`}>
+        <PageLink p={page - 1} ariaLabel="الصفحة السابقة" rel="prev">
           <ChevronRight className="h-4 w-4" aria-hidden="true" />
-        </Link>
+        </PageLink>
       ) : (
-        <span aria-hidden className={`${cell} border border-neutral-100 text-neutral-300`}>
+        <span aria-hidden className={disabledCell}>
           <ChevronRight className="h-4 w-4" />
         </span>
       )}
@@ -40,28 +70,18 @@ export function Pagination({
             …
           </span>
         ) : (
-          <Link
-            key={p}
-            href={hrefFor(p)}
-            aria-label={`الصفحة ${p}`}
-            aria-current={p === page ? "page" : undefined}
-            className={
-              p === page
-                ? `${cell} bg-emerald-700 font-semibold text-white`
-                : `${cell} border border-neutral-200 text-neutral-600 hover:bg-neutral-100`
-            }
-          >
+          <PageLink key={p} p={p} ariaLabel={`الصفحة ${p}`} ariaCurrent={p === page ? "page" : undefined}>
             {p}
-          </Link>
+          </PageLink>
         )
       )}
 
       {page < pageCount ? (
-        <Link href={hrefFor(page + 1)} rel="next" aria-label="الصفحة التالية" className={`${cell} border border-neutral-200 text-neutral-600 hover:bg-neutral-100`}>
+        <PageLink p={page + 1} ariaLabel="الصفحة التالية" rel="next">
           <ChevronLeft className="h-4 w-4" aria-hidden="true" />
-        </Link>
+        </PageLink>
       ) : (
-        <span aria-hidden className={`${cell} border border-neutral-100 text-neutral-300`}>
+        <span aria-hidden className={disabledCell}>
           <ChevronLeft className="h-4 w-4" />
         </span>
       )}

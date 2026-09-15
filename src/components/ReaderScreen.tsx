@@ -12,6 +12,9 @@ import { DeleteLyricsButton } from "@/components/DeleteLyricsButton";
 import { ReaderTypeSheet } from "@/components/ReaderTypeSheet";
 import { PerformanceMode } from "@/components/PerformanceMode";
 import { MenuButton } from "@/components/MenuButton";
+import { OfflineBanner } from "@/components/OfflineBanner";
+import { OfflineEmptyState } from "@/components/OfflineEmptyState";
+import { useOfflineLyricsDetail, type ReaderSsrData } from "@/hooks/use-offline-lyrics-detail";
 import { lyricsProseFormatCls } from "@/lib/lyrics-prose";
 import { LYRICS_SCALE_DEFAULT, readStoredLyricsScale, setLyricsScale } from "@/lib/lyrics-font";
 import {
@@ -28,24 +31,6 @@ import {
 } from "@/lib/lyrics-reading-prefs";
 import { useKeepScreenAwake } from "@/lib/use-keep-screen-awake";
 import { focusRing } from "@/lib/ui";
-import type { PlaylistNavContext } from "@/lib/playlists";
-
-interface ReaderScreenProps {
-  lyricsId: string;
-  title: string;
-  artist: string | null;
-  album: string | null;
-  viewCount: number;
-  tags: string[];
-  contentHtml: string;
-  favorited: boolean;
-  loggedIn: boolean;
-  canModify: boolean;
-  shareUrl: string;
-  shareText: string;
-  siteLabel?: string;
-  playlist: PlaylistNavContext | null;
-}
 
 const iconBtn =
   "inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-xl border-0 bg-transparent text-[#3c4a44] transition-colors hover:bg-black/5 " +
@@ -56,22 +41,8 @@ const iconBtn =
  * وُجد سياقها)، لوح ضبط القراءة، ووضع الأداء. سطح المكتب يبقى على التخطيط
  * التقليدي في page.tsx (هذا المكوّن مخفي هناك بـ`sm:hidden`).
  */
-export function ReaderScreen({
-  lyricsId,
-  title,
-  artist,
-  album,
-  viewCount,
-  tags,
-  contentHtml,
-  favorited,
-  loggedIn,
-  canModify,
-  shareUrl,
-  shareText,
-  siteLabel,
-  playlist,
-}: ReaderScreenProps) {
+export function ReaderScreen({ ssr, id }: { ssr: ReaderSsrData | null; id: string }) {
+  const { view, online, found, sourcedFromCache } = useOfflineLyricsDetail(ssr, id);
   const router = useRouter();
   const [scale, setScale] = useState(LYRICS_SCALE_DEFAULT);
   const [lineSpacing, setLineSpacing] = useState<LineSpacing>(LINE_SPACING_DEFAULT);
@@ -97,23 +68,23 @@ export function ReaderScreen({
     return () => document.removeEventListener("mousedown", onClick);
   }, [moreOpen]);
 
-  function goTo(id: string | null) {
-    if (!id || !playlist) return;
-    router.push(`/lyrics/${id}?playlist=${playlist.playlistId}`);
+  function goTo(targetId: string | null) {
+    if (!targetId || !view?.playlist) return;
+    router.push(`/lyrics/${targetId}?playlist=${view.playlist.playlistId}`);
   }
 
   function onTouchStart(e: React.TouchEvent) {
     touchStartX.current = e.touches[0]?.clientX ?? null;
   }
   function onTouchEnd(e: React.TouchEvent) {
-    if (touchStartX.current === null || !playlist) return;
+    if (touchStartX.current === null || !view?.playlist) return;
     const endX = e.changedTouches[0]?.clientX ?? touchStartX.current;
     const dx = endX - touchStartX.current;
     touchStartX.current = null;
     if (Math.abs(dx) < 48) return;
     // RTL: سحب لليمين (dx > 0) = التالي، لليسار = السابق.
-    if (dx > 0) goTo(playlist.nextId);
-    else goTo(playlist.prevId);
+    if (dx > 0) goTo(view.playlist.nextId);
+    else goTo(view.playlist.prevId);
   }
 
   function updateScale(next: number) {
@@ -128,30 +99,51 @@ export function ReaderScreen({
     persistReadingAppearance(next);
   }
 
-  const editHref = `/lyrics/${lyricsId}/edit`;
+  if (!found || !view) {
+    return (
+      <div className="flex min-h-dvh flex-col gap-4 p-6">
+        <header className="flex items-center gap-1">
+          <button type="button" onClick={() => router.back()} aria-label="رجوع" className={iconBtn}>
+            <ChevronRight className="h-[22px] w-[22px]" aria-hidden="true" />
+          </button>
+          <MenuButton className={iconBtn} />
+        </header>
+        <OfflineEmptyState>
+          هذه الأنشودة غير محفوظة على جهازك. اتصل بالإنترنت لعرضها، أو عُد إلى المجموعة المحفوظة.
+          <span className="mt-3 block">
+            <Link href="/" className={`font-medium text-emerald-700 hover:underline ${focusRing}`}>
+              ▸ المجموعة المحفوظة
+            </Link>
+          </span>
+        </OfflineEmptyState>
+      </div>
+    );
+  }
+
+  const editHref = `/lyrics/${view.lyricsId}/edit`;
 
   if (performanceMode) {
     return (
       <PerformanceMode
-        title={title}
-        artist={artist}
-        contentHtml={contentHtml}
+        title={view.title}
+        artist={view.artist}
+        contentHtml={view.contentHtml}
         scale={scale}
         lineSpacing={lineSpacing}
         onClose={() => setPerformanceMode(false)}
         playlist={
-          playlist
+          view.playlist
             ? {
-                title: playlist.playlistTitle,
-                position: playlist.position,
-                total: playlist.total,
-                prevTitle: playlist.prevTitle,
-                nextTitle: playlist.nextTitle,
+                title: view.playlist.playlistTitle,
+                position: view.playlist.position,
+                total: view.playlist.total,
+                prevTitle: view.playlist.prevTitle,
+                nextTitle: view.playlist.nextTitle,
               }
             : null
         }
-        onSwipePrev={() => goTo(playlist?.prevId ?? null)}
-        onSwipeNext={() => goTo(playlist?.nextId ?? null)}
+        onSwipePrev={() => goTo(view.playlist?.prevId ?? null)}
+        onSwipeNext={() => goTo(view.playlist?.nextId ?? null)}
       />
     );
   }
@@ -164,10 +156,10 @@ export function ReaderScreen({
         </button>
         <MenuButton className={iconBtn} />
         <div className="flex-1" />
-        {loggedIn && (
-          <FavoriteButton lyricsId={lyricsId} initialFavorited={favorited} variant="plain" key={lyricsId} />
+        {view.loggedIn && online && (
+          <FavoriteButton lyricsId={view.lyricsId} initialFavorited={view.favorited} variant="plain" key={view.lyricsId} />
         )}
-        {loggedIn && <AddToPlaylist lyricsId={lyricsId} variant="plain" />}
+        {view.loggedIn && online && <AddToPlaylist lyricsId={view.lyricsId} variant="plain" />}
         <div className="relative" ref={moreRef}>
           <button
             type="button"
@@ -184,16 +176,16 @@ export function ReaderScreen({
               role="menu"
               className="absolute end-0 top-full z-10 mt-1 flex w-56 flex-wrap gap-2 rounded-2xl border border-neutral-200 bg-white p-3 shadow-lg"
             >
-              <ShareLyrics shareUrl={shareUrl} title={title} shareText={shareText} />
+              <ShareLyrics shareUrl={view.shareUrl} title={view.title} shareText={view.shareText} />
               <ExportLyricsImage
-                title={title}
-                artist={artist}
-                album={album}
-                contentHtml={contentHtml}
-                tags={tags}
-                siteLabel={siteLabel}
+                title={view.title}
+                artist={view.artist}
+                album={view.album}
+                contentHtml={view.contentHtml}
+                tags={view.tags}
+                siteLabel={view.siteLabel}
               />
-              {canModify && (
+              {view.canModify && (
                 <>
                   <Link
                     href={editHref}
@@ -203,7 +195,7 @@ export function ReaderScreen({
                   >
                     <Pencil className="h-5 w-5" aria-hidden="true" />
                   </Link>
-                  <DeleteLyricsButton id={lyricsId} />
+                  <DeleteLyricsButton id={view.lyricsId} />
                 </>
               )}
             </div>
@@ -211,16 +203,22 @@ export function ReaderScreen({
         </div>
       </header>
 
+      {!online && (
+        <div className="px-6 pb-2">
+          <OfflineBanner online={online} sourcedFromCache={sourcedFromCache} />
+        </div>
+      )}
+
       <div className="flex-1 overflow-y-auto px-6 pb-4 pt-1" onTouchStart={onTouchStart} onTouchEnd={onTouchEnd}>
-        <h1 className="font-naskh text-[30px] font-extrabold leading-[1.35]">{title}</h1>
+        <h1 className="font-naskh text-[30px] font-extrabold leading-[1.35]">{view.title}</h1>
         <div className="mt-1.5 text-[15px] text-[#6b7670]">
-          {[artist, album, viewCount > 0 ? `${viewCount.toLocaleString("ar-EG")} قراءة` : null]
+          {[view.artist, view.album, view.viewCount > 0 ? `${view.viewCount.toLocaleString("ar-EG")} قراءة` : null]
             .filter(Boolean)
             .join(" · ")}
         </div>
-        {tags.length > 0 && (
+        {view.tags.length > 0 && (
           <div className="mt-[14px] flex flex-wrap gap-2">
-            {tags.map((tag) => (
+            {view.tags.map((tag) => (
               <Link
                 key={tag}
                 href={`/?tags=${encodeURIComponent(tag)}`}
@@ -234,7 +232,7 @@ export function ReaderScreen({
         <div
           className={`mt-[22px] ${lyricsProseFormatCls} ${LINE_SPACING_CLS[lineSpacing]}`}
           style={{ fontSize: `calc(1.4375rem * ${scale})` }}
-          dangerouslySetInnerHTML={{ __html: contentHtml }}
+          dangerouslySetInnerHTML={{ __html: view.contentHtml }}
         />
       </div>
 
@@ -242,8 +240,8 @@ export function ReaderScreen({
         <div className="flex items-center justify-between gap-2 rounded-[18px] border border-[#e6e6e1] bg-white p-1.5">
           <button
             type="button"
-            onClick={() => goTo(playlist?.prevId ?? null)}
-            disabled={!playlist?.prevId}
+            onClick={() => goTo(view.playlist?.prevId ?? null)}
+            disabled={!view.playlist?.prevId}
             aria-label="النشيد السابق"
             className={`inline-flex h-11 w-11 items-center justify-center rounded-xl text-[#3c4a44] disabled:opacity-30 ${focusRing}`}
           >
@@ -273,18 +271,18 @@ export function ReaderScreen({
           </button>
           <button
             type="button"
-            onClick={() => goTo(playlist?.nextId ?? null)}
-            disabled={!playlist?.nextId}
+            onClick={() => goTo(view.playlist?.nextId ?? null)}
+            disabled={!view.playlist?.nextId}
             aria-label="النشيد التالي"
             className={`inline-flex h-11 w-11 items-center justify-center rounded-xl text-[#3c4a44] disabled:opacity-30 ${focusRing}`}
           >
             <ChevronLeft className="h-5 w-5" aria-hidden="true" />
           </button>
         </div>
-        {playlist && (
+        {view.playlist && (
           <p className="mt-2 text-center text-xs text-[#8a938d]">
-            اسحب يميناً أو يساراً للتنقل داخل الوصلة · {playlist.position.toLocaleString("ar-EG")} من{" "}
-            {playlist.total.toLocaleString("ar-EG")}
+            اسحب يميناً أو يساراً للتنقل داخل الوصلة · {view.playlist.position.toLocaleString("ar-EG")} من{" "}
+            {view.playlist.total.toLocaleString("ar-EG")}
           </p>
         )}
       </div>

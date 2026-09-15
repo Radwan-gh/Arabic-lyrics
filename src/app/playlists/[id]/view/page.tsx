@@ -17,15 +17,18 @@ export default async function PlaylistViewPage({ params }: { params: Promise<{ i
   return (
     <PlaylistReadView
       id={playlist.id}
-      title={playlist.title}
-      description={playlist.description}
-      isPublic={playlist.isPublic}
-      items={playlist.items.map((item) => ({
-        lyricsId: item.lyricsId,
-        title: item.lyrics.title,
-        artist: item.lyrics.artist,
-        contentHtml: renderLyricsHtml(item.lyrics.content),
-      }))}
+      ssr={{
+        id: playlist.id,
+        title: playlist.title,
+        description: playlist.description,
+        isPublic: playlist.isPublic,
+        items: playlist.items.map((item) => ({
+          lyricsId: item.lyricsId,
+          title: item.lyrics.title,
+          artist: item.lyrics.artist,
+          contentHtml: renderLyricsHtml(item.lyrics.content),
+        })),
+      }}
     />
   );
 }

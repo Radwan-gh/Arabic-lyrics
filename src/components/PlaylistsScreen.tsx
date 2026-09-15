@@ -2,29 +2,30 @@
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { ChevronRight, ListMusic, Globe, Lock, Plus, X } from "lucide-react";
 import { Spinner } from "@/components/Spinner";
 import { MenuButton } from "@/components/MenuButton";
+import { OfflineBanner } from "@/components/OfflineBanner";
+import { OfflineEmptyState } from "@/components/OfflineEmptyState";
+import { useOfflinePlaylists, type PlaylistSummary } from "@/hooks/use-offline-playlists";
 import { focusRing } from "@/lib/ui";
 
-interface PlaylistSummary {
-  id: string;
-  title: string;
-  itemCount: number;
-  isPublic: boolean;
-}
-
 /** شاشة «وصلاتي» الغامرة على الموبايل: قائمة صفوف تنتقل إلى إدارة كل وصلة، وزرّ
- * عائم لإنشاء وصلة جديدة (لوح منبثق مصغّر — لا شاشة إنشاء منفصلة في التصميم). */
-export function PlaylistsScreen({ initial }: { initial: PlaylistSummary[] }) {
+ * عائم لإنشاء وصلة جديدة (لوح منبثق مصغّر — لا شاشة إنشاء منفصلة في التصميم).
+ * تعمل أيضًا للقراءة دون اتصال: تُمرَّر `initial` كـ null حين لم تُصيَّر الصفحة
+ * على الخادم إطلاقًا (غلاف احتياطي)، فتُقرأ الوصلات من اللقطة المخزَّنة. */
+export function PlaylistsScreen({ initial }: { initial: PlaylistSummary[] | null }) {
   const router = useRouter();
-  const [playlists, setPlaylists] = useState(initial);
+  const { items, online, loggedIn, sourcedFromCache, hrefFor, canCreate } = useOfflinePlaylists(initial);
+  const [playlists, setPlaylists] = useState(items);
   const [createOpen, setCreateOpen] = useState(false);
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => setPlaylists(items), [items]);
 
   async function createPlaylist(e: React.FormEvent) {
     e.preventDefault();
@@ -41,7 +42,17 @@ export function PlaylistsScreen({ initial }: { initial: PlaylistSummary[] }) {
         setError(data.error ?? "تعذّر إنشاء الوصلة");
         return;
       }
-      setPlaylists((prev) => [{ id: data.playlist.id, title: data.playlist.title, itemCount: 0, isPublic: false }, ...prev]);
+      setPlaylists((prev) => [
+        {
+          id: data.playlist.id,
+          title: data.playlist.title,
+          description: null,
+          itemCount: 0,
+          isPublic: false,
+          createdAt: new Date().toISOString(),
+        },
+        ...prev,
+      ]);
       setTitle("");
       setDescription("");
       setCreateOpen(false);
@@ -62,8 +73,14 @@ export function PlaylistsScreen({ initial }: { initial: PlaylistSummary[] }) {
         <MenuButton />
       </header>
 
-      <div className="flex-1 px-5 pb-24">
-        {playlists.length === 0 ? (
+      <div className="px-5 pt-1">
+        <OfflineBanner online={online} sourcedFromCache={sourcedFromCache} />
+      </div>
+
+      <div className="flex-1 px-5 pb-24 pt-3">
+        {!loggedIn ? (
+          <OfflineEmptyState>سجّل الدخول وأنت متصل بالإنترنت لحفظ قوائمك للقراءة دون اتصال.</OfflineEmptyState>
+        ) : playlists.length === 0 ? (
           <p className="rounded-2xl border border-dashed border-[#d9d9d3] p-8 text-center text-sm text-[#6b7670]">
             لا توجد وصلات بعد. أنشئ وصلتك الأولى بزر + بالأسفل.
           </p>
@@ -72,7 +89,7 @@ export function PlaylistsScreen({ initial }: { initial: PlaylistSummary[] }) {
             {playlists.map((p) => (
               <li key={p.id}>
                 <Link
-                  href={`/playlists/${p.id}`}
+                  href={hrefFor(p.id)}
                   className={`flex items-center gap-3.5 rounded-2xl border border-[#e6e6e1] bg-white p-4 ${focusRing}`}
                 >
                   <span className={`flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl ${p.isPublic ? "bg-[#ecfdf5] text-emerald-700" : "bg-[#f2f2ee] text-[#5c6660]"}`}>
@@ -97,14 +114,16 @@ export function PlaylistsScreen({ initial }: { initial: PlaylistSummary[] }) {
         )}
       </div>
 
-      <button
-        type="button"
-        onClick={() => setCreateOpen(true)}
-        className="absolute bottom-7 start-5 inline-flex h-[60px] items-center gap-2 rounded-full bg-emerald-700 px-[22px] text-base font-semibold text-white shadow-[0_10px_24px_rgba(4,120,87,0.35)]"
-      >
-        <Plus className="h-[22px] w-[22px]" aria-hidden="true" />
-        وصلة جديدة
-      </button>
+      {loggedIn && canCreate && (
+        <button
+          type="button"
+          onClick={() => setCreateOpen(true)}
+          className="absolute bottom-7 start-5 inline-flex h-[60px] items-center gap-2 rounded-full bg-emerald-700 px-[22px] text-base font-semibold text-white shadow-[0_10px_24px_rgba(4,120,87,0.35)]"
+        >
+          <Plus className="h-[22px] w-[22px]" aria-hidden="true" />
+          وصلة جديدة
+        </button>
+      )}
 
       {createOpen && (
         <div className="fixed inset-0 z-50" role="dialog" aria-modal="true" aria-label="وصلة جديدة">

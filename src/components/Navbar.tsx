@@ -17,7 +17,6 @@ import {
   X,
   Music,
   User,
-  WifiOff,
   ChevronDown,
   type LucideIcon,
 } from "lucide-react";
@@ -226,7 +225,6 @@ function NavLinks({
     <>
       <NavItem href="/" icon={Home} label="الرئيسية" />
       <NavItem href="/discover" icon={Compass} label="الوصلات العامة" />
-      <NavItem href="/offline" icon={WifiOff} label="دون اتصال" />
       {user && (user.role === "ADMIN" || user.role === "EDITOR") && (
         <NavItem href="/lyrics/new" icon={PlusCircle} label="إضافة أنشودة" />
       )}

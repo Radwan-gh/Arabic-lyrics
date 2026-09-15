@@ -4,12 +4,9 @@ import { buildLyricsWhere } from "@/lib/lyrics-search";
 import { getCurrentUser } from "@/lib/session";
 import { getFavoritedLyricsIds } from "@/lib/favorites";
 import { getTagCounts } from "@/lib/tags";
-import { SearchBar } from "@/components/SearchBar";
-import { TagFilterBar } from "@/components/TagFilterBar";
-import { LyricsCard } from "@/components/LyricsCard";
-import { FavoriteButton } from "@/components/FavoriteButton";
-import { Pagination } from "@/components/Pagination";
 import { HomeScreen } from "@/components/HomeScreen";
+import { HomeView } from "@/components/HomeView";
+import type { HomeSsrData } from "@/hooks/use-offline-home";
 
 const PAGE_SIZE = 12;
 
@@ -46,89 +43,36 @@ export default async function HomePage({
     ? await getFavoritedLyricsIds(session.userId, items.map((i) => i.id))
     : new Set<string>();
 
-  const formatCount = (n: number) => n.toLocaleString("en-US");
-
-  const cards = items.map((item) => ({ ...item, contentHtml: renderLyricsHtml(item.content) }));
-
   const pageCount = Math.max(1, Math.ceil(total / PAGE_SIZE));
 
-  function queryString(overrides: Record<string, string>) {
-    const params = new URLSearchParams();
-    if (q) params.set("q", q);
-    if (tags.length) params.set("tags", tags.join(","));
-    for (const [key, value] of Object.entries(overrides)) {
-      if (value) params.set(key, value);
-      else params.delete(key);
-    }
-    return params.toString();
-  }
+  const ssr: HomeSsrData = {
+    q,
+    tags,
+    items: items.map((item) => ({
+      id: item.id,
+      title: item.title,
+      artist: item.artist,
+      album: item.album,
+      tags: item.tags,
+      createdAt: item.createdAt.toISOString(),
+      contentHtml: renderLyricsHtml(item.content),
+      favorited: favoritedIds.has(item.id),
+    })),
+    grandTotal,
+    filteredTotal: total,
+    isFiltered,
+    tagCounts,
+    page,
+    pageCount,
+    loggedIn: !!session,
+  };
 
   return (
     <>
       <div className="sm:hidden">
-        <HomeScreen
-          query={q}
-          selectedTags={tags}
-          items={items.map((i) => ({
-            id: i.id,
-            title: i.title,
-            artist: i.artist,
-            tags: i.tags,
-            favorited: favoritedIds.has(i.id),
-          }))}
-          grandTotal={grandTotal}
-          filteredTotal={total}
-          isFiltered={isFiltered}
-          tagCounts={tagCounts}
-          page={page}
-          pageCount={pageCount}
-          loggedIn={!!session}
-        />
+        <HomeScreen ssr={ssr} />
       </div>
-
-      <div className="hidden flex-col gap-6 sm:flex">
-      <SearchBar defaultValue={q} tags={tags} />
-
-      <div className="flex flex-col gap-1.5">
-        <span className="text-sm font-medium text-neutral-700">تصفية حسب الوسوم</span>
-        <TagFilterBar selected={tags} q={q} />
-      </div>
-
-      <p className="text-sm text-neutral-600" aria-live="polite">
-        <span className="font-medium text-neutral-800">الكل : {formatCount(grandTotal)}</span>
-        {isFiltered && (
-          <span> ، نتائج البحث : {formatCount(total)}</span>
-        )}
-      </p>
-
-      {items.length === 0 ? (
-        <p className="rounded-lg border border-dashed border-neutral-300 p-8 text-center text-neutral-500">
-          {q || tags.length ? "لا توجد نتائج مطابقة لبحثك" : "لا توجد أناشيد بعد"}
-        </p>
-      ) : (
-        <ul className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
-          {cards.map((item) => (
-            <LyricsCard
-              key={item.id}
-              id={item.id}
-              title={item.title}
-              artist={item.artist}
-              album={item.album}
-              tags={item.tags}
-              createdAt={item.createdAt}
-              contentHtml={item.contentHtml}
-              action={
-                session ? (
-                  <FavoriteButton lyricsId={item.id} initialFavorited={favoritedIds.has(item.id)} variant="icon" />
-                ) : undefined
-              }
-            />
-          ))}
-        </ul>
-      )}
-
-      <Pagination page={page} pageCount={pageCount} hrefFor={(p) => `/?${queryString({ page: String(p) })}`} />
-      </div>
+      <HomeView ssr={ssr} />
     </>
   );
 }

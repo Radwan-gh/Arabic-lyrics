@@ -1,91 +1,49 @@
 "use client";
 
 import Link from "next/link";
-import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { Music, Search } from "lucide-react";
 import { FavoriteButton } from "@/components/FavoriteButton";
 import { MenuButton } from "@/components/MenuButton";
 import { SearchOverlayScreen } from "@/components/SearchOverlayScreen";
 import { Pagination } from "@/components/Pagination";
-import type { TagCount } from "@/lib/tags";
+import { OfflineBanner } from "@/components/OfflineBanner";
+import { useOfflineHome, type HomeSsrData } from "@/hooks/use-offline-home";
 import { focusRing } from "@/lib/ui";
-
-export interface HomeRow {
-  id: string;
-  title: string;
-  artist: string | null;
-  tags: string[];
-  favorited: boolean;
-}
-
-interface HomeScreenProps {
-  query: string;
-  selectedTags: string[];
-  items: HomeRow[];
-  grandTotal: number;
-  filteredTotal: number;
-  isFiltered: boolean;
-  tagCounts: TagCount[];
-  page: number;
-  pageCount: number;
-  loggedIn: boolean;
-}
 
 /** شاشة الرئيسية الغامرة على الموبايل (اتجاه 1a — قائمة هادئة): بحث دائم،
  * شريط وسوم أفقي، قائمة صفوف، وزرّ بحث عائم يفتح شاشة البحث الكاملة.
- * سطح المكتب يبقى على شبكة البطاقات الحالية. */
-export function HomeScreen({
-  query,
-  selectedTags,
-  items,
-  grandTotal,
-  filteredTotal,
-  isFiltered,
-  tagCounts,
-  page,
-  pageCount,
-  loggedIn,
-}: HomeScreenProps) {
-  const router = useRouter();
+ * سطح المكتب يبقى على شبكة البطاقات الحالية (راجع HomeView).
+ *
+ * تعمل أيضًا للقراءة دون اتصال: `ssr` يُمرَّر null حين لم تُصيَّر الصفحة على
+ * الخادم إطلاقًا (غلاف احتياطي)، فتُقرأ الأناشيد من اللقطة المخزَّنة عبر
+ * useOfflineHome — نفس المكوّن، نفس المسار "/‏". */
+export function HomeScreen({ ssr }: { ssr: HomeSsrData | null }) {
+  const { view, online, sourcedFromCache, commitSearch, commitTags, pageHref, commitPage, offlineSearchData } =
+    useOfflineHome(ssr);
+  const { query, selectedTags, items, grandTotal, filteredTotal, isFiltered, tagCounts, page, pageCount, loggedIn } =
+    view;
+
   const [search, setSearch] = useState(query);
   const [tagQuery, setTagQuery] = useState("");
   const [searchOpen, setSearchOpen] = useState(false);
 
-  function buildUrl(overrides: { q?: string; tags?: string[] }) {
-    const params = new URLSearchParams();
-    const nextQ = overrides.q ?? query;
-    const nextTags = overrides.tags ?? selectedTags;
-    if (nextQ) params.set("q", nextQ);
-    if (nextTags.length) params.set("tags", nextTags.join(","));
-    const qs = params.toString();
-    return qs ? `/?${qs}` : "/";
-  }
-
-  // بحث حيّ (مُؤخَّر) — يطابق سلوك SearchBar الحالي على سطح المكتب.
+  // بحث حيّ (مُؤخَّر) — يستدعي commitSearch الذي يتنقّل عبر الموجّه أونلاين، أو
+  // يصفّي محليًا من اللقطة المخزَّنة أوفلاين.
   useEffect(() => {
     if (search.trim() === query.trim()) return;
-    const timer = setTimeout(() => router.replace(buildUrl({ q: search })), 350);
+    const timer = setTimeout(() => commitSearch(search), 350);
     return () => clearTimeout(timer);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [search]);
 
   function toggleTag(tag: string) {
     const next = selectedTags.includes(tag) ? selectedTags.filter((t) => t !== tag) : [...selectedTags, tag];
-    router.push(buildUrl({ tags: next }));
+    commitTags(next);
   }
 
   function clearTags() {
-    router.push(buildUrl({ tags: [] }));
-  }
-
-  function pageHref(p: number) {
-    const params = new URLSearchParams();
-    if (query) params.set("q", query);
-    if (selectedTags.length) params.set("tags", selectedTags.join(","));
-    if (p > 1) params.set("page", String(p));
-    const qs = params.toString();
-    return qs ? `/?${qs}` : "/";
+    commitTags([]);
   }
 
   const visibleTagCounts = tagQuery.trim()
@@ -94,7 +52,12 @@ export function HomeScreen({
 
   if (searchOpen) {
     return (
-      <SearchOverlayScreen initialQuery={query} popularTags={tagCounts.slice(0, 8)} onClose={() => setSearchOpen(false)} />
+      <SearchOverlayScreen
+        initialQuery={query}
+        popularTags={tagCounts.slice(0, 8)}
+        onClose={() => setSearchOpen(false)}
+        offlineIndex={offlineSearchData}
+      />
     );
   }
 
@@ -107,6 +70,10 @@ export function HomeScreen({
         </div>
         <MenuButton />
       </header>
+
+      <div className="px-5 pb-3">
+        <OfflineBanner online={online} sourcedFromCache={sourcedFromCache} />
+      </div>
 
       <div className="px-5 pb-3">
         <div className="relative">
@@ -185,7 +152,7 @@ export function HomeScreen({
                   {[item.artist, item.tags[0]].filter(Boolean).join(" · ")}
                 </div>
               </Link>
-              {loggedIn && <FavoriteButton lyricsId={item.id} initialFavorited={item.favorited} variant="plain" />}
+              {loggedIn && online && <FavoriteButton lyricsId={item.id} initialFavorited={item.favorited} variant="plain" />}
             </div>
           ))
         )}
@@ -193,7 +160,7 @@ export function HomeScreen({
 
       {pageCount > 1 && (
         <div className="bg-white px-4 pb-6 pt-4">
-          <Pagination page={page} pageCount={pageCount} hrefFor={pageHref} />
+          <Pagination page={page} pageCount={pageCount} hrefFor={pageHref} onPageChange={sourcedFromCache ? commitPage : undefined} />
         </div>
       )}
 

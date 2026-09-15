@@ -1,27 +1,24 @@
 "use client";
 
 import Link from "next/link";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Plus, Eye, Settings2, Trash2 } from "lucide-react";
 import { Spinner } from "./Spinner";
+import { OfflineBanner } from "@/components/OfflineBanner";
+import { OfflineEmptyState } from "@/components/OfflineEmptyState";
+import { useOfflinePlaylists, type PlaylistSummary } from "@/hooks/use-offline-playlists";
 import { formatDate } from "@/lib/format";
 import { inputSm, btnPrimary, btnSecondary, btnDanger, focusRing } from "@/lib/ui";
 
-interface PlaylistSummary {
-  id: string;
-  title: string;
-  description: string | null;
-  isPublic: boolean;
-  createdAt: string;
-  itemCount: number;
-}
-
-export function PlaylistsView({ initial }: { initial: PlaylistSummary[] }) {
-  const [playlists, setPlaylists] = useState(initial);
+export function PlaylistsView({ initial }: { initial: PlaylistSummary[] | null }) {
+  const { items, online, loggedIn, sourcedFromCache, hrefFor, canCreate } = useOfflinePlaylists(initial);
+  const [playlists, setPlaylists] = useState(items);
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
+
+  useEffect(() => setPlaylists(items), [items]);
 
   async function createPlaylist(e: React.FormEvent) {
     e.preventDefault();
@@ -59,88 +56,108 @@ export function PlaylistsView({ initial }: { initial: PlaylistSummary[] }) {
     <div className="flex flex-col gap-6">
       <h1 className="text-2xl font-extrabold">وصلاتي</h1>
 
-      <form
-        onSubmit={createPlaylist}
-        className="flex flex-col gap-3 rounded-xl border border-neutral-200 bg-white p-4 shadow-sm"
-      >
-        <span className="text-sm font-semibold text-neutral-700">إنشاء وصلة جديدة</span>
-        <input
-          value={title}
-          onChange={(e) => setTitle(e.target.value)}
-          placeholder="اسم الوصلة"
-          aria-label="اسم الوصلة"
-          maxLength={120}
-          required
-          className={inputSm}
-        />
-        <textarea
-          value={description}
-          onChange={(e) => setDescription(e.target.value)}
-          placeholder="وصف اختياري"
-          aria-label="وصف الوصلة"
-          maxLength={500}
-          rows={2}
-          className={inputSm}
-        />
-        {error && (
-          <p role="alert" className="text-sm text-red-600">
-            {error}
-          </p>
-        )}
-        <button type="submit" disabled={busy || !title.trim()} className={`${btnPrimary} self-start`}>
-          {busy ? (
-            <Spinner label="جارٍ الإنشاء…" />
-          ) : (
-            <>
-              <Plus className="h-4 w-4" aria-hidden="true" />
-              إنشاء
-            </>
-          )}
-        </button>
-      </form>
+      <OfflineBanner online={online} sourcedFromCache={sourcedFromCache} />
 
-      {playlists.length === 0 ? (
-        <p className="rounded-lg border border-dashed border-neutral-300 p-8 text-center text-neutral-500">
-          لا توجد وصلات بعد. أنشئ وصلتك الأولى بالأعلى.
-        </p>
+      {!loggedIn ? (
+        <OfflineEmptyState>سجّل الدخول وأنت متصل بالإنترنت لحفظ قوائمك للقراءة دون اتصال.</OfflineEmptyState>
       ) : (
-        <ul className="flex flex-col gap-3">
-          {playlists.map((p) => (
-            <li
-              key={p.id}
-              className="flex flex-col gap-3 rounded-xl border border-neutral-200 bg-white p-4 shadow-sm sm:flex-row sm:items-start sm:justify-between"
+        <>
+          {canCreate && (
+            <form
+              onSubmit={createPlaylist}
+              className="flex flex-col gap-3 rounded-xl border border-neutral-200 bg-white p-4 shadow-sm"
             >
-              <div className="min-w-0">
-                <Link href={`/playlists/${p.id}`} className={`rounded-sm text-lg font-bold hover:text-emerald-700 ${focusRing}`}>
-                  {p.title}
-                </Link>
-                {p.description && <p className="mt-0.5 text-sm text-neutral-500">{p.description}</p>}
-                <p className="mt-1 text-xs text-neutral-500">
-                  {p.itemCount} نشيد · {formatDate(new Date(p.createdAt))} ·{" "}
-                  {p.isPublic ? (
-                    <span className="font-medium text-emerald-700">عامة</span>
-                  ) : (
-                    <span>خاصة</span>
-                  )}
+              <span className="text-sm font-semibold text-neutral-700">إنشاء وصلة جديدة</span>
+              <input
+                value={title}
+                onChange={(e) => setTitle(e.target.value)}
+                placeholder="اسم الوصلة"
+                aria-label="اسم الوصلة"
+                maxLength={120}
+                required
+                className={inputSm}
+              />
+              <textarea
+                value={description}
+                onChange={(e) => setDescription(e.target.value)}
+                placeholder="وصف اختياري"
+                aria-label="وصف الوصلة"
+                maxLength={500}
+                rows={2}
+                className={inputSm}
+              />
+              {error && (
+                <p role="alert" className="text-sm text-red-600">
+                  {error}
                 </p>
-              </div>
-              <div className="flex shrink-0 flex-wrap gap-2">
-                <Link href={`/playlists/${p.id}/view`} className={`${btnPrimary} px-3 py-1.5`}>
-                  <Eye className="h-4 w-4" aria-hidden="true" />
-                  عرض
-                </Link>
-                <Link href={`/playlists/${p.id}`} className={`${btnSecondary} px-3 py-1.5`}>
-                  <Settings2 className="h-4 w-4" aria-hidden="true" />
-                  إدارة
-                </Link>
-                <button type="button" onClick={() => remove(p.id)} className={`${btnDanger} px-3 py-1.5`}>
-                  <Trash2 className="h-4 w-4" aria-hidden="true" />
-                  حذف
-                </button>
-              </div>
-            </li>
-          ))}
-        </ul>
+              )}
+              <button type="submit" disabled={busy || !title.trim()} className={`${btnPrimary} self-start`}>
+                {busy ? (
+                  <Spinner label="جارٍ الإنشاء…" />
+                ) : (
+                  <>
+                    <Plus className="h-4 w-4" aria-hidden="true" />
+                    إنشاء
+                  </>
+                )}
+              </button>
+            </form>
+          )}
+
+          {playlists.length === 0 ? (
+            <p className="rounded-lg border border-dashed border-neutral-300 p-8 text-center text-neutral-500">
+              لا توجد وصلات بعد. أنشئ وصلتك الأولى بالأعلى.
+            </p>
+          ) : (
+            <ul className="flex flex-col gap-3">
+              {playlists.map((p) => (
+                <li
+                  key={p.id}
+                  className="flex flex-col gap-3 rounded-xl border border-neutral-200 bg-white p-4 shadow-sm sm:flex-row sm:items-start sm:justify-between"
+                >
+                  <div className="min-w-0">
+                    <Link href={hrefFor(p.id)} className={`rounded-sm text-lg font-bold hover:text-emerald-700 ${focusRing}`}>
+                      {p.title}
+                    </Link>
+                    {p.description && <p className="mt-0.5 text-sm text-neutral-500">{p.description}</p>}
+                    <p className="mt-1 text-xs text-neutral-500">
+                      {p.itemCount} نشيد
+                      {online && (
+                        <>
+                          {" "}
+                          · {formatDate(new Date(p.createdAt))} ·{" "}
+                          {p.isPublic ? (
+                            <span className="font-medium text-emerald-700">عامة</span>
+                          ) : (
+                            <span>خاصة</span>
+                          )}
+                        </>
+                      )}
+                    </p>
+                  </div>
+                  <div className="flex shrink-0 flex-wrap gap-2">
+                    <Link href={`/playlists/${p.id}/view`} className={`${btnPrimary} px-3 py-1.5`}>
+                      <Eye className="h-4 w-4" aria-hidden="true" />
+                      عرض
+                    </Link>
+                    {canCreate && (
+                      <>
+                        <Link href={`/playlists/${p.id}`} className={`${btnSecondary} px-3 py-1.5`}>
+                          <Settings2 className="h-4 w-4" aria-hidden="true" />
+                          إدارة
+                        </Link>
+                        <button type="button" onClick={() => remove(p.id)} className={`${btnDanger} px-3 py-1.5`}>
+                          <Trash2 className="h-4 w-4" aria-hidden="true" />
+                          حذف
+                        </button>
+                      </>
+                    )}
+                  </div>
+                </li>
+              ))}
+            </ul>
+          )}
+        </>
       )}
     </div>
   );

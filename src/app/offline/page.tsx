@@ -1,13 +1,15 @@
 import type { Metadata } from "next";
-import { OfflineReader } from "@/components/OfflineReader";
+import { OfflineShell } from "@/components/OfflineShell";
 
+// ليست وجهة تصفّح حقيقية — لا رابط إليها في التنقّل. الـ service worker وحده
+// يخدمها (راجع public/sw.js) كغلاف احتياطي عند انقطاع الشبكة لأي مسار حقيقي
+// (/، /lyrics/[id]، /favorites، /playlists...) لم يُخزَّن بعينه؛ يبقى المسار
+// الحقيقي في شريط العنوان، وOfflineShell يقرأه ويعرض مكوّن الصفحة الحقيقية
+// نفسه. metadata محايدة عمدًا حتى لا تُفهرَس كصفحة مستقلّة.
 export const metadata: Metadata = {
-  title: "القراءة دون اتصال — أناشيد",
-  description: "تصفّح واقرأ الأناشيد ومفضّلتك وقوائمك دون اتصال بالإنترنت.",
+  robots: { index: false, follow: false },
 };
 
-// صفحة القارئ دون اتصال: هيكل خفيف يُصيَّر على الخادم، والقراءة الفعلية تتم في
-// العميل من اللقطات المخزَّنة عبر الـ service worker.
 export default function OfflinePage() {
-  return <OfflineReader />;
+  return <OfflineShell />;
 }

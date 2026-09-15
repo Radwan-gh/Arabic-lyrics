@@ -4,13 +4,9 @@ import { prisma } from "@/lib/prisma";
 import { getCurrentUser } from "@/lib/session";
 import { buildLyricsWhere } from "@/lib/lyrics-search";
 import { renderLyricsHtml } from "@/lib/render-lyrics";
-import { LyricsCard } from "@/components/LyricsCard";
-import { FavoritesSearchBar } from "@/components/FavoritesSearchBar";
-import { FavoritesSortSelect } from "@/components/FavoritesSortSelect";
-import { FavoritesReorderList } from "@/components/FavoritesReorderList";
-import { FavoriteButton } from "@/components/FavoriteButton";
-import { Pagination } from "@/components/Pagination";
 import { FavoritesScreen } from "@/components/FavoritesScreen";
+import { FavoritesView } from "@/components/FavoritesView";
+import type { FavoritesSsrData } from "@/hooks/use-offline-favorites";
 
 export const dynamic = "force-dynamic";
 
@@ -53,22 +49,6 @@ export default async function FavoritesPage({
   // العدّاد بجانب العنوان في شاشة الموبايل — إجمالي المفضّلة بلا تصفية.
   const totalCount = await prisma.favorite.count({ where: { userId: session.userId } });
 
-  const controls = (
-    <div className="flex flex-col gap-3">
-      <div className="flex flex-wrap items-center justify-between gap-3">
-        <FavoritesSortSelect value={sort} query={query} options={SORT_OPTIONS} />
-      </div>
-      <FavoritesSearchBar defaultValue={query} sort={sort} />
-    </div>
-  );
-
-  const header = (
-    <div>
-      <h1 className="text-2xl font-extrabold">المفضلة</h1>
-      <p className="mt-1 text-sm text-neutral-500">الأناشيد التي أضفتها إلى مفضّلتك.</p>
-    </div>
-  );
-
   // ── Custom order: a single-column reorderable list (no pagination). ──────────
   if (isCustom) {
     const rows = await prisma.favorite.findMany({
@@ -79,51 +59,32 @@ export default async function FavoritesPage({
       },
     });
 
-    const items = rows.map((r) => ({
-      lyricsId: r.lyrics.id,
-      title: r.lyrics.title,
-      artist: r.lyrics.artist,
-      album: r.lyrics.album,
-    }));
-
     // Reordering is only meaningful over the full, unfiltered list.
     const reorderable = query.length === 0;
+
+    const ssr: FavoritesSsrData = {
+      totalCount,
+      query,
+      sort,
+      sortOptions: SORT_OPTIONS,
+      isCustom: true,
+      reorderable,
+      items: rows.map((r) => ({
+        lyricsId: r.lyrics.id,
+        title: r.lyrics.title,
+        artist: r.lyrics.artist,
+        album: r.lyrics.album,
+      })),
+      page: 1,
+      pageCount: 1,
+    };
 
     return (
       <>
         <div className="sm:hidden">
-          <FavoritesScreen
-            totalCount={totalCount}
-            query={query}
-            sort={sort}
-            sortOptions={SORT_OPTIONS}
-            isCustom
-            reorderable={reorderable}
-            items={items}
-            page={1}
-            pageCount={1}
-          />
+          <FavoritesScreen ssr={ssr} />
         </div>
-
-        <div className="hidden flex-col gap-6 sm:flex">
-          {header}
-          {controls}
-
-          {items.length === 0 ? (
-            <p className="rounded-lg border border-dashed border-neutral-300 p-8 text-center text-neutral-500">
-              {query ? "لا توجد أناشيد مطابقة لبحثك في مفضّلتك" : "لا توجد أناشيد في مفضّلتك بعد. أضف أناشيد إليها من صفحة الأنشودة."}
-            </p>
-          ) : (
-            <>
-              <p className="text-sm text-neutral-500">
-                {reorderable
-                  ? "استخدم الأسهم ▲▼ لإعادة ترتيب مفضّلتك. يُحفظ الترتيب تلقائياً."
-                  : "امسح البحث لإعادة ترتيب مفضّلتك."}
-              </p>
-              <FavoritesReorderList initial={items} reorderable={reorderable} />
-            </>
-          )}
-        </div>
+        <FavoritesView ssr={ssr} />
       </>
     );
   }
@@ -144,62 +105,34 @@ export default async function FavoritesPage({
     prisma.favorite.count({ where }),
   ]);
 
-  const cards = rows.map((r) => ({ ...r.lyrics, contentHtml: renderLyricsHtml(r.lyrics.content) }));
   const pageCount = Math.max(1, Math.ceil(total / PAGE_SIZE));
 
-  function pageHref(p: number) {
-    const params = new URLSearchParams();
-    if (query) params.set("q", query);
-    if (sort !== "recent") params.set("sort", sort);
-    if (p > 1) params.set("page", String(p));
-    const qs = params.toString();
-    return qs ? `/favorites?${qs}` : "/favorites";
-  }
+  const ssr: FavoritesSsrData = {
+    totalCount,
+    query,
+    sort,
+    sortOptions: SORT_OPTIONS,
+    isCustom: false,
+    reorderable: false,
+    items: rows.map((r) => ({
+      lyricsId: r.lyrics.id,
+      title: r.lyrics.title,
+      artist: r.lyrics.artist,
+      album: r.lyrics.album,
+      tags: r.lyrics.tags,
+      createdAt: r.lyrics.createdAt.toISOString(),
+      contentHtml: renderLyricsHtml(r.lyrics.content),
+    })),
+    page,
+    pageCount,
+  };
 
   return (
     <>
       <div className="sm:hidden">
-        <FavoritesScreen
-          totalCount={totalCount}
-          query={query}
-          sort={sort}
-          sortOptions={SORT_OPTIONS}
-          isCustom={false}
-          reorderable={false}
-          items={cards.map((c) => ({ lyricsId: c.id, title: c.title, artist: c.artist }))}
-          page={page}
-          pageCount={pageCount}
-        />
+        <FavoritesScreen ssr={ssr} />
       </div>
-
-      <div className="hidden flex-col gap-6 sm:flex">
-        {header}
-        {controls}
-
-        {cards.length === 0 ? (
-          <p className="rounded-lg border border-dashed border-neutral-300 p-8 text-center text-neutral-500">
-            {query ? "لا توجد أناشيد مطابقة لبحثك في مفضّلتك" : "لا توجد أناشيد في مفضّلتك بعد. أضف أناشيد إليها من صفحة الأنشودة."}
-          </p>
-        ) : (
-          <ul className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
-            {cards.map((item) => (
-              <LyricsCard
-                key={item.id}
-                id={item.id}
-                title={item.title}
-                artist={item.artist}
-                album={item.album}
-                tags={item.tags}
-                createdAt={item.createdAt}
-                contentHtml={item.contentHtml}
-                action={<FavoriteButton lyricsId={item.id} initialFavorited variant="icon" refreshOnToggle />}
-              />
-            ))}
-          </ul>
-        )}
-
-        <Pagination page={page} pageCount={pageCount} hrefFor={pageHref} />
-      </div>
+      <FavoritesView ssr={ssr} />
     </>
   );
 }
