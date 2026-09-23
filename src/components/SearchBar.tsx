@@ -10,10 +10,15 @@ export function SearchBar({ defaultValue, tags, sort }: { defaultValue: string; 
   const router = useRouter();
   const [, startTransition] = useTransition();
   const inputRef = useRef<HTMLInputElement>(null);
+  // The last `q` this field itself sent to the URL, to tell the server answering
+  // its own search apart from `q` changing for some other reason (see below).
+  const sentValueRef = useRef<string | null>(null);
 
   function runSearch(nextValue: string) {
+    const trimmed = nextValue.trim();
+    sentValueRef.current = trimmed;
     const params = new URLSearchParams();
-    if (nextValue.trim()) params.set("q", nextValue.trim());
+    if (trimmed) params.set("q", trimmed);
     if (tags?.length) params.set("tags", tags.join(","));
     if (sort) params.set("sort", sort);
     const qs = params.toString();
@@ -28,7 +33,13 @@ export function SearchBar({ defaultValue, tags, sort }: { defaultValue: string; 
   // goes stale, and the effect below (seeing it no longer match the new `q`)
   // "corrects" the URL back to it a moment later, silently wiping out a
   // search made elsewhere.
+  // A `q` this field sent itself, though, is just the server answering its own
+  // search, which can land while the user is still typing. Resetting the field
+  // to it then would erase whatever was typed after the request went out, so
+  // leave the field alone (the effect below sends the newer text in turn).
   useEffect(() => {
+    if (defaultValue === sentValueRef.current) return;
+    sentValueRef.current = null;
     setValue(defaultValue);
   }, [defaultValue]);
 
