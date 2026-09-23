@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Music, Search } from "lucide-react";
 import { FavoriteButton } from "@/components/FavoriteButton";
 import { MenuButton } from "@/components/MenuButton";
@@ -46,6 +46,9 @@ export function HomeScreen({
 }: HomeScreenProps) {
   const router = useRouter();
   const [search, setSearch] = useState(query);
+  // آخر q أرسلها هذا الحقل بنفسه إلى الرابط، لنميّز ردّ الخادم على بحثه هو
+  // عن تغيّر q لسبب آخر (راجع تأثير المزامنة أدناه).
+  const sentQueryRef = useRef<string | null>(null);
   const [tagQuery, setTagQuery] = useState("");
   const [searchOpen, setSearchOpen] = useState(false);
   const { items, hasMore, loading, sentinelRef } = useLyricsFeed({
@@ -73,7 +76,12 @@ export function HomeScreen({
   // الحيّ الخاص. بدون هذا تبقى القيمة المحليّة القديمة، فتُطلق التأثير التالي
   // (حين يراها لم تعد تطابق q الجديدة) تصحيحًا للرابط يعيده إليها لاحقًا،
   // فيمحو بصمت بحثًا جرى من مكان آخر.
+  // أمّا q التي أرسلها هذا الحقل نفسه فهي مجرّد ردّ الخادم على بحثه، وقد يصل
+  // والمستخدم ما زال يكتب: استبدال الحقل بها حينئذٍ يحذف ما كُتب بعد إرسال
+  // الطلب، لذا نتركه كما هو (والتأثير التالي سيرسل النص الأحدث بدوره).
   useEffect(() => {
+    if (query === sentQueryRef.current) return;
+    sentQueryRef.current = null;
     setSearch(query);
   }, [query]);
 
@@ -82,7 +90,11 @@ export function HomeScreen({
   // مطابقة لها كلما تغيّرت لسبب غير كتابة المستخدم هنا.
   useEffect(() => {
     if (search.trim() === query.trim()) return;
-    const timer = setTimeout(() => router.replace(buildUrl({ q: search })), 350);
+    const timer = setTimeout(() => {
+      const next = search.trim();
+      sentQueryRef.current = next;
+      router.replace(buildUrl({ q: next }));
+    }, 350);
     return () => clearTimeout(timer);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [search]);
