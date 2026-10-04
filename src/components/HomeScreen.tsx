@@ -3,10 +3,9 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
-import { Music, Search } from "lucide-react";
+import { Music, Plus, Search } from "lucide-react";
 import { FavoriteButton } from "@/components/FavoriteButton";
 import { MenuButton } from "@/components/MenuButton";
-import { SearchOverlayScreen } from "@/components/SearchOverlayScreen";
 import { LyricsSortSelect } from "@/components/LyricsSortSelect";
 import { BackToTopButton } from "@/components/BackToTopButton";
 import { Spinner } from "@/components/Spinner";
@@ -30,7 +29,8 @@ interface HomeScreenProps {
 
 /** شاشة الرئيسية الغامرة على الموبايل — فهرس أناشيد: ترويسة وبحث وشريط وسوم
  * ثابتون أثناء التمرير، قائمة صفوف بتمرير لانهائي (بلا ترقيم صفحات)، مفتاح
- * ترتيب (أبجدي تصاعدي/تنازلي أو بتاريخ الإضافة)، وزرّ عودة إلى الأعلى. سطح
+ * ترتيب (أبجدي تصاعدي/تنازلي أو بتاريخ الإضافة)، وزرّ عائم لإضافة أنشودة، وزرّ
+ * عودة إلى الأعلى. سطح
  * المكتب يبقى على شبكة البطاقات (راجع HomeDesktopList). */
 export function HomeScreen({
   query,
@@ -50,7 +50,6 @@ export function HomeScreen({
   // عن تغيّر q لسبب آخر (راجع تأثير المزامنة أدناه).
   const sentQueryRef = useRef<string | null>(null);
   const [tagQuery, setTagQuery] = useState("");
-  const [searchOpen, setSearchOpen] = useState(false);
   const { items, hasMore, loading, sentinelRef } = useLyricsFeed({
     query,
     tags: selectedTags,
@@ -111,12 +110,6 @@ export function HomeScreen({
   const visibleTagCounts = tagQuery.trim()
     ? tagCounts.filter((t) => t.tag.toLowerCase().includes(tagQuery.trim().toLowerCase()))
     : tagCounts;
-
-  if (searchOpen) {
-    return (
-      <SearchOverlayScreen initialQuery={query} popularTags={tagCounts.slice(0, 8)} onClose={() => setSearchOpen(false)} />
-    );
-  }
 
   return (
     <div className="flex min-h-dvh flex-col bg-[#f7f7f4] text-[#14211c]">
@@ -225,14 +218,13 @@ export function HomeScreen({
         )}
       </div>
 
-      <button
-        type="button"
-        onClick={() => setSearchOpen(true)}
-        aria-label="بحث"
-        className="fixed bottom-7 start-5 z-30 inline-flex h-[60px] w-[60px] items-center justify-center rounded-full bg-emerald-700 text-white shadow-[0_10px_24px_rgba(4,120,87,0.35)]"
+      <Link
+        href="/lyrics/new"
+        aria-label="إضافة أنشودة"
+        className={`fixed bottom-7 start-5 z-30 inline-flex h-[60px] w-[60px] items-center justify-center rounded-full bg-emerald-700 text-white shadow-[0_10px_24px_rgba(4,120,87,0.35)] ${focusRing}`}
       >
-        <Search className="h-[26px] w-[26px]" aria-hidden="true" />
-      </button>
+        <Plus className="h-[28px] w-[28px]" aria-hidden="true" />
+      </Link>
 
       <BackToTopButton className="fixed bottom-7 end-5 z-30 h-[52px] w-[52px]" />
     </div>

@@ -227,9 +227,7 @@ function NavLinks({
       <NavItem href="/" icon={Home} label="الرئيسية" />
       <NavItem href="/discover" icon={Compass} label="الوصلات العامة" />
       <NavItem href="/offline" icon={WifiOff} label="دون اتصال" />
-      {user && (user.role === "ADMIN" || user.role === "EDITOR") && (
-        <NavItem href="/lyrics/new" icon={PlusCircle} label="إضافة أنشودة" />
-      )}
+      <NavItem href="/lyrics/new" icon={PlusCircle} label="إضافة أنشودة" />
       {user && <NavItem href="/favorites" icon={Heart} label="المفضلة" />}
       {user && <NavItem href="/playlists" icon={ListMusic} label="وصلاتي" />}
       {user?.role === "ADMIN" && <NavItem href="/admin/users" icon={Users} label="إدارة المستخدمين" />}

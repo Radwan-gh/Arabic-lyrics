@@ -1,5 +1,4 @@
 import { NextResponse } from "next/server";
-import { getCurrentUser } from "@/lib/session";
 import { findDuplicateLyrics, findLyricsSuggestions } from "@/lib/lyrics";
 
 // GET /api/lyrics/check?title=...&excludeId=...
@@ -7,12 +6,8 @@ import { findDuplicateLyrics, findLyricsSuggestions } from "@/lib/lyrics";
 //   matches: الأناشيد المطابقة تماماً للعنوان (بعد التطبيع) — لمنع التكرار.
 //   suggestions: أناشيد موجودة يحتوي نصّها الكامل على الكلمة المكتوبة — لعرض
 //     قائمة اقتراحات حيّة أسفل حقل العنوان (باستثناء المطابقات التامة).
+// متاح للجميع لأن إضافة الأناشيد مفتوحة دون تسجيل دخول.
 export async function GET(req: Request) {
-  const session = await getCurrentUser();
-  if (!session || (session.role !== "ADMIN" && session.role !== "EDITOR")) {
-    return NextResponse.json({ error: "غير مصرح" }, { status: 403 });
-  }
-
   const { searchParams } = new URL(req.url);
   const title = searchParams.get("title")?.trim() || "";
   const excludeId = searchParams.get("excludeId")?.trim() || undefined;

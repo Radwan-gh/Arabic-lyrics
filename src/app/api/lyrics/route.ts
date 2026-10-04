@@ -75,11 +75,10 @@ const lyricsSchema = z.object({
   allowDuplicate: z.boolean().optional(),
 });
 
+// الإضافة مفتوحة للجميع، حتى دون تسجيل دخول. أنشودة الزائر تُحفظ بلا
+// createdById، فلا يعدّلها أو يحذفها لاحقًا إلا المدير.
 export async function POST(req: Request) {
   const session = await getCurrentUser();
-  if (!session || (session.role !== "ADMIN" && session.role !== "EDITOR")) {
-    return NextResponse.json({ error: "غير مصرح لك بإضافة أناشيد" }, { status: 403 });
-  }
 
   const body = await req.json().catch(() => null);
   const parsed = lyricsSchema.safeParse(body);
@@ -115,7 +114,7 @@ export async function POST(req: Request) {
       content: cleanedContent,
       tags: tags ?? [],
       searchText: buildSearchText({ title, artist, album, content: cleanedContent }),
-      createdById: session.userId,
+      createdById: session?.userId ?? null,
     },
   });
 
