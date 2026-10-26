@@ -23,6 +23,7 @@ import {
 import type { SessionPayload } from "@/lib/jwt";
 import { focusRing } from "@/lib/ui";
 import { PWAInstallButton } from "@/components/PWAInstallButton";
+import { OfflineStatusLine } from "@/components/OfflineStatusLine";
 import { useMenu } from "@/lib/menu-context";
 
 /**
@@ -261,6 +262,7 @@ function NavLinks({
       ) : (
         <NavItem href="/login" icon={LogIn} label="تسجيل الدخول" />
       )}
+      {mobile && <OfflineStatusLine />}
     </>
   );
 }

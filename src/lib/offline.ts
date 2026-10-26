@@ -16,6 +16,9 @@ export const OFFLINE_ME_URL = "/api/offline/me";
 /** رسالة إلى الـ SW: خزّن هذه الصفحات (ما لم تكن نسختها المخزَّنة مطابقة). */
 export const WARM_PAGES_MESSAGE = "WARM_PAGES";
 
+/** سؤال الـ SW عن حالة الحفظ، وردّه وبثّه للتقدّم (راجع useOfflineStatus). */
+export const WARM_STATUS_MESSAGE = "WARM_STATUS";
+
 /** رسالة من الـ SW: تغيّرت بيانات على الخادم (طلب تعديل نجح) — أعِد التهيئة. */
 export const DATA_CHANGED_MESSAGE = "DATA_CHANGED";
 
@@ -72,6 +75,18 @@ export interface OfflineMe {
   /** معرّفات المفضّلة بالترتيب الخاص للمستخدم. */
   favorites: string[];
   playlists: OfflinePlaylist[];
+}
+
+/** حالة حفظ صفحات التطبيق للاستخدام دون اتصال، كما يبثّها الـ SW. */
+export interface OfflineStatus {
+  /** عدد الصفحات المطلوب حفظها لهذه الجلسة. */
+  total: number;
+  /** عدد ما حُفظ منها بنسخته الحالية. */
+  done: number;
+  /** جولة حفظ جارية الآن. */
+  running: boolean;
+  /** كل الصفحات المطلوبة محفوظة بنسختها الحالية. */
+  complete: boolean;
 }
 
 export interface WarmPage {
@@ -203,8 +218,11 @@ async function fetchJson<T>(url: string): Promise<T | null> {
 /**
  * يجلب اللقطات (فيخزّنها الـ SW) ثم يطلب منه تخزين صفحات التطبيق التي تغيّرت.
  * يعمل بصمت في الخلفية؛ أي فشل يُهمَل ويُستكمل في التهيئة التالية.
+ * `sessionKey` يعرّف الجلسة (فارغ للزائر): الصفحات تعكس المستخدم، فإن تغيّرت
+ * الجلسة بأي طريقة (دخول عبر Google، انتهاء الجلسة…) يُعيد الـ SW حفظها كلها.
  */
-export async function warmOfflineCache(authenticated: boolean): Promise<void> {
+export async function warmOfflineCache(sessionKey: string | null): Promise<void> {
+  const authenticated = !!sessionKey;
   if (!navigator.onLine) return;
   const registration = await navigator.serviceWorker.ready;
   const worker = registration.active;
@@ -221,5 +239,10 @@ export async function warmOfflineCache(authenticated: boolean): Promise<void> {
   ]);
   if (!collection) return;
 
-  worker.postMessage({ type: WARM_PAGES_MESSAGE, pages: buildWarmPages(collection, me) });
+  worker.postMessage({
+    type: WARM_PAGES_MESSAGE,
+    session: hashString(sessionKey ?? ""),
+    authenticated,
+    pages: buildWarmPages(collection, me),
+  });
 }

@@ -191,11 +191,16 @@ connection):
   via the History API (`src/lib/use-app-router.ts`) and the list is computed from
   the cached collection snapshot (`src/lib/use-lyrics-feed.ts`).
 - Successful edits through `/api/*` trigger a background refresh of affected
-  pages. A successful sign-in or sign-out clears all cached pages and private
-  data, so one user's pages never leak to the next on a shared device.
+  pages. Cached pages are tied to the current session: a sign-in or sign-out
+  (including Google sign-in or an expired session) clears them and re-saves
+  them for the new session, so one user's pages never leak to the next on a
+  shared device.
+- The menu shows the save status (`src/components/OfflineStatusLine.tsx`):
+  progress while saving, «متاح دون إنترنت» only once every page is saved, or
+  "incomplete" if the connection dropped (it resumes automatically).
 
-Note: the first online visit is what enables offline use (the first full cache
-of ~600 lyric pages takes a few seconds in the background).
+Note: the first online visit is what enables offline use — wait until the menu
+shows «متاح دون إنترنت» before relying on it.
 
 ## Project structure
 

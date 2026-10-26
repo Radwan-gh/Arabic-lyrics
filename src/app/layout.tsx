@@ -59,7 +59,8 @@ export default async function RootLayout({ children }: { children: React.ReactNo
           تخطَّ إلى المحتوى
         </a>
         <AppChrome user={session} pendingUsers={pendingUsers}>{children}</AppChrome>
-        <ServiceWorkerRegister authenticated={!!session} />
+        {/* الصفحات المخزَّنة تعكس المستخدم (اسمه ودوره في الواجهة)، فتُعرَّف الجلسة بها. */}
+        <ServiceWorkerRegister sessionKey={session ? `${session.userId}:${session.role}:${session.name}` : null} />
       </body>
     </html>
   );
