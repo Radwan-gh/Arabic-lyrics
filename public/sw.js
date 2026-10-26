@@ -10,7 +10,10 @@
 // - التخزين المسبق: يرسل العميل قائمة الصفحات مع «نسخة» لكل منها (WARM_PAGES —
 //   راجع src/lib/offline.ts)، فيجلب الـ SW ما تغيّر فقط مع أصوله.
 // - صفحات HTML تعكس جلسة المستخدم (مفضّلته، أزرار التعديل…)، فيُمسح كاشها مع
-//   بياناته الخاصة عند نجاح تسجيل الدخول أو الخروج.
+//   بياناته الخاصة عند نجاح تسجيل الدخول أو الخروج، أو حين تصل تهيئة بجلسة غير
+//   التي خُزِّنت بها الصفحات (دخول عبر Google، انتهاء الجلسة…).
+// - حالة الحفظ (WARM_STATUS): يبثّ الـ SW تقدّم التخزين إلى الصفحات المفتوحة
+//   ويُجيب عند السؤال، ويحفظ آخر حالة في الكاش لتبقى معروفة بعد إعادة تشغيله.
 // - لا يُخزَّن: الطلبات عبر-الأصل، وطلبات التعديل، ومسارات /api/* عدا لقطات القراءة.
 
 const VERSION = "v6";
@@ -26,12 +29,16 @@ const AUTH_PATHS = ["/api/auth/login", "/api/auth/logout"];
 
 // يطابق الثوابت في src/lib/offline.ts.
 const WARM_PAGES_MESSAGE = "WARM_PAGES";
+const WARM_STATUS_MESSAGE = "WARM_STATUS";
 const DATA_CHANGED_MESSAGE = "DATA_CHANGED";
 const PRECACHE_HEADER = "x-sw-precache";
 
 // نسخة الصفحة المخزَّنة تُحفظ في ترويسة على الاستجابة نفسها.
 const PAGE_VERSION_HEADER = "x-sw-page-version";
+// سجلّ حالة الحفظ (الجلسة والتقدّم) داخل كاش الصفحات نفسه، فيُمسح معها.
+const STATUS_KEY = "/__sw/offline-status";
 const WARM_CONCURRENCY = 3;
+const STATUS_BROADCAST_MS = 250;
 const DATA_CHANGED_DELAY_MS = 1500;
 
 self.addEventListener("install", (event) => {
@@ -53,7 +60,11 @@ self.addEventListener("activate", (event) => {
 self.addEventListener("message", (event) => {
   const data = event.data;
   if (data && data.type === WARM_PAGES_MESSAGE && Array.isArray(data.pages)) {
-    event.waitUntil(enqueueWarm(data.pages));
+    event.waitUntil(enqueueWarm(data.pages, String(data.session ?? ""), data.authenticated === true));
+  } else if (data && data.type === WARM_STATUS_MESSAGE && event.source) {
+    event.waitUntil(
+      readStatus().then((status) => event.source.postMessage({ type: WARM_STATUS_MESSAGE, status }))
+    );
   }
 });
 
@@ -182,42 +193,67 @@ let warmQueue = Promise.resolve();
 // يزداد مع كل تغيّر للجلسة، فتتوقّف أي جولة تهيئة بدأت للجلسة السابقة.
 let sessionGeneration = 0;
 
-function enqueueWarm(pages) {
-  warmQueue = warmQueue.then(() => warmPages(pages)).catch(() => {});
+function enqueueWarm(pages, session, authenticated) {
+  warmQueue = warmQueue.then(() => warmPages(pages, session, authenticated)).catch(() => {});
   return warmQueue;
 }
 
-async function warmPages(pages) {
+async function warmPages(pages, session, authenticated) {
+  // صفحات مخزَّنة بجلسة أخرى (أو بلا سجلّ يثبت جلستها) لا تصحّ لهذه الجلسة.
+  // بيانات المستخدم الخاصة جلبها العميل للتوّ لهذه الجلسة إن كان مسجّلًا، فتبقى.
+  const previous = await readStatus();
+  if (!previous || previous.session !== session) await clearSessionCaches({ keepPrivateData: authenticated });
+
   const generation = sessionGeneration;
   const cache = await caches.open(PAGES_CACHE);
   const stale = [];
+  let total = 0;
   for (const page of pages) {
     if (!page || typeof page.url !== "string") continue;
+    total++;
     const href = new URL(page.url, self.location.origin).href;
     const cached = await cache.match(href, { ignoreVary: true });
     if (!cached || cached.headers.get(PAGE_VERSION_HEADER) !== String(page.version)) {
       stale.push({ href, version: String(page.version) });
     }
   }
-  if (!stale.length) return;
+
+  const status = { session, total, done: total - stale.length, running: stale.length > 0, complete: false };
+  setStatus(status);
+  if (stale.length) await writeStatus(cache, status);
 
   const seenAssets = new Set();
   let index = 0;
+  let offline = false;
   const worker = async () => {
-    while (index < stale.length && generation === sessionGeneration) {
+    while (!offline && index < stale.length && generation === sessionGeneration) {
       const page = stale[index++];
+      let result;
       try {
-        // بلا اتصال: أوقف الجولة؛ تُستكمل في التهيئة التالية.
-        if (!(await warmPage(cache, page, seenAssets))) return;
+        result = await warmPage(cache, page, seenAssets);
       } catch {
-        return;
+        result = "failed";
+      }
+      // بلا اتصال: أوقف الجولة؛ تُستكمل في التهيئة التالية.
+      if (result === "offline") offline = true;
+      else if (result === "saved") {
+        status.done++;
+        setStatus(status);
       }
     }
   };
   await Promise.all(Array.from({ length: WARM_CONCURRENCY }, worker));
+  if (generation !== sessionGeneration) return;
+
+  status.running = false;
+  // «مكتمل» فقط حين تكون كل الصفحات المطلوبة مخزَّنة بنسختها الحالية.
+  status.complete = status.done === status.total;
+  setStatus(status, true);
+  await writeStatus(cache, status);
 }
 
-// يُرجِع false عند فشل الشبكة (لا اتصال)، وtrue فيما عدا ذلك.
+// "saved": خُزِّنت، أو لا محتوى لتخزينه (صفحة حُذفت أو تحوّل مسارها)؛
+// "failed": خطأ من الخادم؛ "offline": فشل الشبكة.
 async function warmPage(cache, page, seenAssets) {
   let response;
   try {
@@ -226,12 +262,65 @@ async function warmPage(cache, page, seenAssets) {
       headers: { [PRECACHE_HEADER]: "1" },
     });
   } catch {
-    return false;
+    return "offline";
   }
-  if (!isCacheablePage(response)) return true;
+  if (!isCacheablePage(response)) {
+    return response.status >= 500 ? "failed" : "saved";
+  }
   const html = await putPage(cache, page.href, response, page.version);
   await cacheAssets(html, seenAssets);
-  return true;
+  return "saved";
+}
+
+// ─── حالة الحفظ ──────────────────────────────────────────────────────────────
+
+let currentStatus = null;
+let lastBroadcast = 0;
+let broadcastTimer = null;
+
+// يحدّث الحالة ويبثّها للصفحات المفتوحة (بحدّ أقصى مرة كل STATUS_BROADCAST_MS).
+function setStatus(status, immediate = false) {
+  currentStatus = { ...status };
+  const wait = STATUS_BROADCAST_MS - (Date.now() - lastBroadcast);
+  if (!immediate && wait > 0) {
+    if (!broadcastTimer) {
+      broadcastTimer = setTimeout(() => {
+        broadcastTimer = null;
+        broadcastStatus();
+      }, wait);
+    }
+    return;
+  }
+  if (broadcastTimer) {
+    clearTimeout(broadcastTimer);
+    broadcastTimer = null;
+  }
+  broadcastStatus();
+}
+
+async function broadcastStatus() {
+  lastBroadcast = Date.now();
+  const windows = await self.clients.matchAll({ type: "window" });
+  windows.forEach((client) => client.postMessage({ type: WARM_STATUS_MESSAGE, status: currentStatus }));
+}
+
+// الحالة الحالية، أو آخر حالة محفوظة إن أُعيد تشغيل الـ SW (فلا جولة جارية).
+async function readStatus() {
+  if (currentStatus) return currentStatus;
+  try {
+    const cache = await caches.open(PAGES_CACHE);
+    const saved = await cache.match(STATUS_KEY);
+    if (!saved) return null;
+    return { ...(await saved.json()), running: false };
+  } catch {
+    return null;
+  }
+}
+
+async function writeStatus(cache, status) {
+  await cache
+    .put(STATUS_KEY, new Response(JSON.stringify(status), { headers: { "Content-Type": "application/json" } }))
+    .catch(() => {});
 }
 
 // يخزّن أصول Next الثابتة المذكورة في HTML الصفحة (JS/CSS) وخطوط ملفات CSS، حتى
@@ -304,9 +393,11 @@ async function handleMutation(event, url) {
   return response;
 }
 
-async function clearSessionCaches() {
+async function clearSessionCaches({ keepPrivateData = false } = {}) {
   sessionGeneration++;
+  currentStatus = null;
   await caches.delete(PAGES_CACHE);
+  if (keepPrivateData) return;
   const data = await caches.open(DATA_CACHE);
   await data.delete(PRIVATE_DATA_PATH, { ignoreSearch: true });
 }

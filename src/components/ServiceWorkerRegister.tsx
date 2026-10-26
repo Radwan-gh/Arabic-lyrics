@@ -9,14 +9,14 @@ import { DATA_CHANGED_MESSAGE, warmOfflineCache } from "@/lib/offline";
  * تغيّرت، لتعمل هي نفسها عند انقطاع الشبكة. تُعاد التهيئة عند عودة الاتصال، وعند
  * إبلاغ الـ SW بتعديل بيانات على الخادم. لا يعرض أي واجهة.
  */
-export function ServiceWorkerRegister({ authenticated = false }: { authenticated?: boolean }) {
+export function ServiceWorkerRegister({ sessionKey = null }: { sessionKey?: string | null }) {
   useEffect(() => {
     if (typeof window === "undefined" || !("serviceWorker" in navigator)) {
       return;
     }
 
     const warm = () => {
-      warmOfflineCache(authenticated).catch(() => {});
+      warmOfflineCache(sessionKey).catch(() => {});
     };
     const onMessage = (event: MessageEvent) => {
       if (event.data?.type === DATA_CHANGED_MESSAGE) warm();
@@ -44,7 +44,7 @@ export function ServiceWorkerRegister({ authenticated = false }: { authenticated
       window.removeEventListener("online", warm);
       window.removeEventListener("load", register);
     };
-  }, [authenticated]);
+  }, [sessionKey]);
 
   return null;
 }
