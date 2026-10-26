@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { LyricsCard } from "@/components/LyricsCard";
 import { OfflineHubScreen } from "@/components/OfflineHubScreen";
 import { ReadingControlsBar } from "@/components/ReadingControlsBar";
@@ -19,6 +19,7 @@ import {
   type OfflinePlaylist,
 } from "@/lib/offline";
 
+// يطابق LYRICS_PAGE_SIZE في الرئيسية المتصلة: عدد ما يُكشف في كل دفعة تمرير.
 const PAGE_SIZE = 50;
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -231,7 +232,8 @@ function OfflineNotice({ online, onReload }: { online: boolean; onReload: () => 
   );
 }
 
-// مرآة الصفحة الرئيسية: بحث حيّ + تصفية بالوسوم (من المسار) + ترقيم في العميل.
+// مرآة الصفحة الرئيسية: بحث حيّ + تصفية بالوسوم (من المسار) + تمرير لانهائي في العميل
+// (يطابق الرئيسية المتصلة؛ كل البيانات محلية فيُكشف منها PAGE_SIZE إضافية عند كل تقاطع).
 function HomeMirror({
   route,
   lyrics,
@@ -242,7 +244,8 @@ function HomeMirror({
   filterBySearch: (list: OfflineLyric[], q: string) => OfflineLyric[];
 }) {
   const [query, setQuery] = useState(route.q);
-  const [page, setPage] = useState(1);
+  const [visible, setVisible] = useState(PAGE_SIZE);
+  const sentinelRef = useRef<HTMLDivElement | null>(null);
 
   const byTags = useMemo(() => {
     if (route.tags.length === 0) return lyrics;
@@ -252,12 +255,25 @@ function HomeMirror({
 
   const filtered = useMemo(() => filterBySearch(byTags, query), [byTags, query, filterBySearch]);
 
-  // أعِد الترقيم للصفحة الأولى عند تغيّر البحث.
-  useEffect(() => setPage(1), [query, route.tags]);
+  // ابدأ من أول القائمة عند تغيّر البحث أو الوسوم.
+  useEffect(() => setVisible(PAGE_SIZE), [query, route.tags]);
 
-  const pageCount = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
-  const current = Math.min(page, pageCount);
-  const slice = filtered.slice((current - 1) * PAGE_SIZE, current * PAGE_SIZE);
+  const slice = filtered.slice(0, visible);
+  const hasMore = visible < filtered.length;
+
+  useEffect(() => {
+    const el = sentinelRef.current;
+    if (!el || !hasMore) return;
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries[0]?.isIntersecting) setVisible((v) => v + PAGE_SIZE);
+      },
+      { rootMargin: "600px 0px" },
+    );
+    observer.observe(el);
+    return () => observer.disconnect();
+    // visible: يُعاد الربط بعد كل كشف، فإن بقي الحارس ظاهرًا يُكشف المزيد.
+  }, [hasMore, visible]);
 
   return (
     <div className="flex flex-col gap-6">
@@ -292,7 +308,7 @@ function HomeMirror({
 
       <LyricsGrid items={slice} emptyText={query || route.tags.length ? "لا توجد نتائج مطابقة" : "لا توجد أناشيد محفوظة"} />
 
-      <ClientPagination page={current} pageCount={pageCount} onChange={setPage} />
+      {hasMore && <div ref={sentinelRef} aria-hidden="true" className="h-px" />}
     </div>
   );
 }
@@ -485,33 +501,6 @@ function PlaylistMirror({
 
       <PlaylistCollapsibleBody items={bodyItems} />
     </div>
-  );
-}
-
-// ترقيم في العميل بمظهر مطابق لشريط الترقيم في الصفحات المتصلة.
-function ClientPagination({
-  page,
-  pageCount,
-  onChange,
-}: {
-  page: number;
-  pageCount: number;
-  onChange: (p: number) => void;
-}) {
-  if (pageCount <= 1) return null;
-  const cls = `rounded-md border border-neutral-300 px-3 py-1.5 text-sm font-medium text-neutral-700 hover:bg-neutral-100 disabled:cursor-not-allowed disabled:opacity-50 ${focusRing}`;
-  return (
-    <nav className="flex items-center justify-center gap-3" aria-label="ترقيم الصفحات">
-      <button type="button" className={cls} onClick={() => onChange(page - 1)} disabled={page <= 1}>
-        السابق
-      </button>
-      <span className="text-sm text-neutral-600">
-        صفحة {page.toLocaleString("en-US")} من {pageCount.toLocaleString("en-US")}
-      </span>
-      <button type="button" className={cls} onClick={() => onChange(page + 1)} disabled={page >= pageCount}>
-        التالي
-      </button>
-    </nav>
   );
 }
 
