@@ -1,7 +1,6 @@
 "use client";
 
 import Link from "next/link";
-import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 import { Music, Plus, Search } from "lucide-react";
 import { FavoriteButton } from "@/components/FavoriteButton";
@@ -10,19 +9,18 @@ import { LyricsSortSelect } from "@/components/LyricsSortSelect";
 import { BackToTopButton } from "@/components/BackToTopButton";
 import { Spinner } from "@/components/Spinner";
 import { useLyricsFeed, type LyricsFeedItem } from "@/lib/use-lyrics-feed";
+import { buildHomeUrl, useHomeFilters, type HomeFilters } from "@/lib/use-home-filters";
+import { useAppRouter } from "@/lib/use-app-router";
 import type { TagCount } from "@/lib/tags";
 import type { LyricsSort } from "@/lib/lyrics-search";
 import { focusRing } from "@/lib/ui";
 
 interface HomeScreenProps {
-  query: string;
-  selectedTags: string[];
-  sort: LyricsSort;
+  initialFilters: HomeFilters;
   initialItems: LyricsFeedItem[];
   initialHasMore: boolean;
+  initialTotal: number;
   grandTotal: number;
-  filteredTotal: number;
-  isFiltered: boolean;
   tagCounts: TagCount[];
   loggedIn: boolean;
 }
@@ -33,41 +31,37 @@ interface HomeScreenProps {
  * عودة إلى الأعلى. سطح
  * المكتب يبقى على شبكة البطاقات (راجع HomeDesktopList). */
 export function HomeScreen({
-  query,
-  selectedTags,
-  sort,
+  initialFilters,
   initialItems,
   initialHasMore,
+  initialTotal,
   grandTotal,
-  filteredTotal,
-  isFiltered,
   tagCounts,
   loggedIn,
 }: HomeScreenProps) {
-  const router = useRouter();
+  const router = useAppRouter();
+  const filters = useHomeFilters(initialFilters);
+  const { query, tags: selectedTags, sort } = filters;
+  const isFiltered = Boolean(query) || selectedTags.length > 0;
   const [search, setSearch] = useState(query);
   // آخر q أرسلها هذا الحقل بنفسه إلى الرابط، لنميّز ردّ الخادم على بحثه هو
   // عن تغيّر q لسبب آخر (راجع تأثير المزامنة أدناه).
   const sentQueryRef = useRef<string | null>(null);
   const [tagQuery, setTagQuery] = useState("");
-  const { items, hasMore, loading, error, retry, sentinelRef } = useLyricsFeed({
-    query,
-    tags: selectedTags,
-    sort,
+  const { items, hasMore, total, loading, error, retry, sentinelRef } = useLyricsFeed({
+    filters,
+    initialFilters,
     initialItems,
     initialHasMore,
+    initialTotal,
   });
 
   function buildUrl(overrides: { q?: string; tags?: string[]; sort?: LyricsSort }) {
-    const params = new URLSearchParams();
-    const nextQ = overrides.q ?? query;
-    const nextTags = overrides.tags ?? selectedTags;
-    const nextSort = overrides.sort ?? sort;
-    if (nextQ) params.set("q", nextQ);
-    if (nextTags.length) params.set("tags", nextTags.join(","));
-    if (nextSort !== "title_asc") params.set("sort", nextSort);
-    const qs = params.toString();
-    return qs ? `/?${qs}` : "/";
+    return buildHomeUrl({
+      query: overrides.q ?? query,
+      tags: overrides.tags ?? selectedTags,
+      sort: overrides.sort ?? sort,
+    });
   }
 
   // مزامنة الحقل حين تتغيّر q من خارج هذا المكوّن — مثلاً SearchBar لسطح
@@ -188,11 +182,11 @@ export function HomeScreen({
           <LyricsSortSelect sort={sort} query={query} tags={selectedTags} className="text-[13px] text-[#3c4a44]" />
           <span className="text-[13px] text-[#6b7670]">
             {isFiltered ? "نتائج البحث · " : ""}
-            {filteredTotal.toLocaleString("ar-EG")} نشيداً
+            {total.toLocaleString("ar-EG")} نشيداً
           </span>
         </div>
 
-        {items.length === 0 ? (
+        {items.length === 0 && !hasMore ? (
           <p className="p-8 text-center text-sm text-[#6b7670]">{isFiltered ? "لا توجد نتائج مطابقة" : "لا توجد أناشيد بعد"}</p>
         ) : (
           items.map((item) => (

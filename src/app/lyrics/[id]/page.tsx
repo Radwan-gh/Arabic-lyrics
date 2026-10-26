@@ -8,6 +8,7 @@ import { isFavorited } from "@/lib/favorites";
 import { getPlaylistNavContext } from "@/lib/playlists";
 import { renderLyricsHtml } from "@/lib/render-lyrics";
 import { buildWhatsAppLyrics } from "@/lib/whatsapp-lyrics";
+import { PRECACHE_HEADER } from "@/lib/offline";
 import { formatDate } from "@/lib/format";
 import { DeleteLyricsButton } from "@/components/DeleteLyricsButton";
 import { AddToPlaylist } from "@/components/AddToPlaylist";
@@ -29,7 +30,9 @@ export default async function LyricsPage({
 }) {
   const { id } = await params;
   const { playlist: playlistId } = await searchParams;
-  const [lyrics, session] = await Promise.all([getLyricsAndIncrementViews(id), getCurrentUser()]);
+  const hdrs = await headers();
+  const countView = hdrs.get(PRECACHE_HEADER) !== "1";
+  const [lyrics, session] = await Promise.all([getLyricsAndIncrementViews(id, { countView }), getCurrentUser()]);
 
   if (!lyrics) notFound();
 
@@ -41,7 +44,6 @@ export default async function LyricsPage({
   const canModify =
     !!session && (session.role === "ADMIN" || (session.role === "EDITOR" && session.userId === lyrics.createdById));
 
-  const hdrs = await headers();
   const host = hdrs.get("x-forwarded-host") ?? hdrs.get("host") ?? "";
   const proto = hdrs.get("x-forwarded-proto") ?? "https";
   const shareUrl = host ? `${proto}://${host}/lyrics/${lyrics.id}` : `/lyrics/${lyrics.id}`;

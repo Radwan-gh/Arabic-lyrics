@@ -143,41 +143,36 @@ please flag anything that doesn't match Railway's current UI/CLI.
 
 ## Offline reading (PWA)
 
-The app is an installable PWA that supports **reading offline**. After you open
-it once while online, the whole public **أناشيد** collection — and, if you are
-signed in, your **favorites** and **playlists** — are cached on the device and
-readable with no internet.
+The app is an installable PWA that **works offline with the very same pages** —
+there is no separate offline page or offline UI. After you open it once while
+online, the app's own pages are cached on the device in the background: the home
+page, every lyric page (`/lyrics/[id]`), public playlists (`/discover`) and, if
+you are signed in, your favorites (`/favorites`) and playlists
+(`/playlists`, `/playlists/[id]`, `/playlists/[id]/view`). With no connection
+those pages open exactly as they do online.
 
-When there is no connection, **the same interfaces keep working**: navigating to
-the home page (`/`), a single lyric (`/lyrics/[id]`), your favorites
-(`/favorites`), or your playlists (`/playlists`/`/playlists/[id]`) renders that
-very screen from the cached snapshot, with a banner noting it is a saved copy.
-The dedicated **«دون اتصال»** page (`/offline`) remains available as a full
-reader (collection / favorites / playlists tabs with search and cache status).
-
-How it works (all read-only; creating/editing and sign-in still need a
+How it works (reading only; creating/editing and sign-in still need a
 connection):
 
-- `GET /api/public/lyrics` returns the full collection as JSON (used as the
-  offline snapshot), and `GET /api/offline/me` returns the signed-in user's
-  favorites/playlists as lightweight ID references.
-- `public/sw.js` (service worker) caches the app shell, the collection
-  snapshot (stale-while-revalidate), and the private user snapshot
-  (network-first). It never caches auth or other `/api/*` mutations. For page
-  navigations it tries the network first, then the exact cached page, then the
-  `/offline` shell — so an offline visit to any route above still loads the app.
-- `src/components/OfflineReader.tsx` powers both modes: when served for `/offline`
-  it shows the full reader; when the service worker serves it in place of another
-  route, it reads `location.pathname` and mirrors that page (home / detail /
-  favorites / playlists) from the cache — reusing the same `LyricsCard` and
-  client-side Arabic search (`src/lib/arabic-search.ts`). Card and tag links stay
-  functional offline because each click loads the shell again for the new route.
-- On sign-out the private snapshot is purged from the cache so favorites and
-  playlists don't leak to the next user on a shared device.
+- `public/sw.js` (service worker) caches real page HTML plus its static assets.
+  Navigations go network-first and fall back to the cached page. In-app (RSC)
+  navigations that fail offline make Next.js fall back to a full navigation,
+  which the service worker answers from the cache. Pages with no cached copy
+  (e.g. `/lyrics/new`, admin) show a short "needs a connection" notice.
+- `src/lib/offline.ts` builds the list of pages to cache, each with a version
+  derived from `GET /api/public/lyrics` (full collection snapshot) and
+  `GET /api/offline/me` (the signed-in user's favorites/playlists). The service
+  worker only re-fetches pages whose version changed. Precache requests carry
+  an `x-sw-precache` header so they don't count as lyric views.
+- Home search, tag filtering and sorting run locally offline: the URL is updated
+  via the History API (`src/lib/use-app-router.ts`) and the list is computed from
+  the cached collection snapshot (`src/lib/use-lyrics-feed.ts`).
+- Successful edits through `/api/*` trigger a background refresh of affected
+  pages. A successful sign-in or sign-out clears all cached pages and private
+  data, so one user's pages never leak to the next on a shared device.
 
-Note: open the app (and ideally the `/offline` page) once while connected so the
-assets and data are cached — that first online visit is what enables offline
-use.
+Note: the first online visit is what enables offline use (the first full cache
+of ~600 lyric pages takes a few seconds in the background).
 
 ## Project structure
 

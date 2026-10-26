@@ -1,6 +1,6 @@
 "use client";
 
-import { useRouter } from "next/navigation";
+import { useAppRouter } from "@/lib/use-app-router";
 import { inputSm, focusRing } from "@/lib/ui";
 import type { LyricsSort } from "@/lib/lyrics-search";
 
@@ -24,7 +24,7 @@ export function LyricsSortSelect({
   tags: string[];
   className?: string;
 }) {
-  const router = useRouter();
+  const router = useAppRouter();
 
   function onChange(e: React.ChangeEvent<HTMLSelectElement>) {
     const next = e.target.value as LyricsSort;

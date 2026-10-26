@@ -4,8 +4,9 @@ import { getCurrentUser } from "@/lib/session";
 import type { OfflineMe } from "@/lib/offline";
 
 // بيانات المستخدم الخفيفة للقراءة دون اتصال: معرّفات المفضّلة (بالترتيب الخاص)
-// وقوائمه (بمعرّفات عناصرها فقط، دون محتوى). يحلّ القارئ المحتوى من لقطة
-// /api/public/lyrics. البيانات خاصة — يخزّنها الـ SW على الجهاز ويمسحها عند الخروج.
+// وقوائمه (بمعرّفات عناصرها فقط، دون محتوى). يستعملها العميل لتحديد صفحات
+// المستخدم المطلوب تخزينها ونسخها (راجع buildWarmPages)، ولإكمال حالة التفضيل في
+// قائمة الرئيسية دون اتصال. البيانات خاصة — يمسحها الـ SW عند الدخول/الخروج.
 export const dynamic = "force-dynamic";
 
 export async function GET() {
@@ -27,6 +28,7 @@ export async function GET() {
         id: true,
         title: true,
         description: true,
+        isPublic: true,
         items: { orderBy: { position: "asc" }, select: { lyricsId: true } },
       },
     }),
@@ -39,6 +41,7 @@ export async function GET() {
       id: p.id,
       title: p.title,
       description: p.description,
+      isPublic: p.isPublic,
       itemIds: p.items.map((i) => i.lyricsId),
     })),
   };
