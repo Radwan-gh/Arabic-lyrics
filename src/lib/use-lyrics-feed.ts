@@ -3,7 +3,14 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { LYRICS_PAGE_SIZE, type LyricsSort } from "@/lib/lyrics-search";
 import { buildSearchText, normalizeArabic } from "@/lib/arabic-search";
-import { OFFLINE_LYRICS_URL, OFFLINE_ME_URL, type OfflineCollection, type OfflineLyric, type OfflineMe } from "@/lib/offline";
+import {
+  OFFLINE_LYRICS_URL,
+  OFFLINE_ME_URL,
+  compareOfflineLyrics,
+  type OfflineCollection,
+  type OfflineLyric,
+  type OfflineMe,
+} from "@/lib/offline";
 
 export interface LyricsFeedItem {
   id: string;
@@ -28,7 +35,7 @@ interface UseLyricsFeedArgs {
 interface OfflineEntry {
   lyric: OfflineLyric;
   searchText: string;
-  /** العنوان مُطبَّعًا — مفتاح الترتيب الأبجدي (يقابل titleNormalized في قاعدة البيانات). */
+  /** العنوان مُطبَّعًا — مفتاح ترتيب احتياطي للقطات القديمة التي لا تحمل titleRank. */
   titleKey: string;
 }
 
@@ -86,8 +93,8 @@ export function useLyricsFeed({ query, tags, sort, initialItems, initialHasMore 
   }, []);
 
   // الصفحة التالية من اللقطة المحفوظة: كل ما يطابق البحث والوسوم ولم يُعرض بعد،
-  // بالترتيب المطلوب. الاستبعاد بالمعرّف (لا بالإزاحة) يضمن ألّا يتكرّر ولا يسقط
-  // نشيد حتى لو اختلف ترتيب العميل قليلًا عن ترتيب قاعدة البيانات.
+  // بالترتيب المطلوب (مطابق لترتيب قاعدة البيانات — راجع compareOfflineLyrics).
+  // الاستبعاد بالمعرّف (لا بالإزاحة) يضمن ألّا يتكرّر ولا يسقط نشيد.
   const loadFromOffline = useCallback(
     (source: OfflineSource) => {
       const nq = normalizeArabic(query);
@@ -98,7 +105,7 @@ export function useLyricsFeed({ query, tags, sort, initialItems, initialHasMore 
           if (tagList.length && !lyric.tags.some((t) => tagList.includes(t))) return false;
           return !nq || searchText.includes(nq);
         })
-        .sort(compareBy(sort));
+        .sort(compareOfflineLyrics(sort, (e: OfflineEntry) => e.lyric, (e) => e.titleKey));
       const page = remaining
         .slice(0, LYRICS_PAGE_SIZE)
         .map(({ lyric }) => ({ ...lyric, favorited: source.favorites.has(lyric.id) }));
@@ -218,24 +225,4 @@ async function fetchOfflineSource(signal: AbortSignal): Promise<OfflineSource | 
     })),
     favorites,
   };
-}
-
-// يحاكي buildLyricsOrderBy في العميل: الترتيب الأبجدي على العنوان المُطبَّع ثم
-// الأصلي، والزمني على تاريخ الإضافة (سلاسل ISO تُقارَن نصيًّا)، والمعرّف فاصل تعادل أخير.
-function compareBy(sort: LyricsSort): (a: OfflineEntry, b: OfflineEntry) => number {
-  const cmp = (x: string, y: string) => (x < y ? -1 : x > y ? 1 : 0);
-  const byId = (a: OfflineEntry, b: OfflineEntry) => cmp(a.lyric.id, b.lyric.id);
-  const byTitle = (a: OfflineEntry, b: OfflineEntry) =>
-    a.titleKey.localeCompare(b.titleKey, "ar") || a.lyric.title.localeCompare(b.lyric.title, "ar");
-  const byDate = (a: OfflineEntry, b: OfflineEntry) => cmp(a.lyric.createdAt, b.lyric.createdAt);
-  switch (sort) {
-    case "title_asc":
-      return (a, b) => byTitle(a, b) || byId(a, b);
-    case "title_desc":
-      return (a, b) => byTitle(b, a) || byId(a, b);
-    case "date_asc":
-      return (a, b) => byDate(a, b) || byId(a, b);
-    case "date_desc":
-      return (a, b) => byDate(b, a) || byId(a, b);
-  }
 }

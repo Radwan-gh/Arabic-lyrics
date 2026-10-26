@@ -9,10 +9,12 @@ import { PlaylistCollapsibleBody, type PlaylistBodyItem } from "@/components/Pla
 import { LyricsProse } from "@/components/LyricsProse";
 import { buildSearchText, normalizeArabic } from "@/lib/arabic-search";
 import { formatDate } from "@/lib/format";
+import { parseLyricsSort, type LyricsSort } from "@/lib/lyrics-search";
 import { focusRing } from "@/lib/ui";
 import {
   OFFLINE_LYRICS_URL,
   OFFLINE_ME_URL,
+  compareOfflineLyrics,
   type OfflineCollection,
   type OfflineLyric,
   type OfflineMe,
@@ -104,7 +106,7 @@ export function useOfflineData(): OfflineData {
 // ─────────────────────────────────────────────────────────────────────────────
 type Route =
   | { kind: "hub" }
-  | { kind: "home"; q: string; tags: string[] }
+  | { kind: "home"; q: string; tags: string[]; sort: LyricsSort }
   | { kind: "detail"; id: string }
   | { kind: "favorites"; q: string }
   | { kind: "playlists" }
@@ -117,7 +119,7 @@ function parseRoute(pathname: string, search: string): Route {
       .split(",")
       .map((t) => t.trim())
       .filter(Boolean);
-    return { kind: "home", q: params.get("q") ?? "", tags };
+    return { kind: "home", q: params.get("q") ?? "", tags, sort: parseLyricsSort(params.get("sort"), "title_asc") };
   }
   if (pathname === "/favorites") return { kind: "favorites", q: params.get("q") ?? "" };
   if (pathname === "/playlists") return { kind: "playlists" };
@@ -232,7 +234,7 @@ function OfflineNotice({ online, onReload }: { online: boolean; onReload: () => 
   );
 }
 
-// مرآة الصفحة الرئيسية: بحث حيّ + تصفية بالوسوم (من المسار) + تمرير لانهائي في العميل
+// مرآة الصفحة الرئيسية: بحث حيّ + تصفية بالوسوم وترتيب (من المسار) + تمرير لانهائي في العميل
 // (يطابق الرئيسية المتصلة؛ كل البيانات محلية فيُكشف منها PAGE_SIZE إضافية عند كل تقاطع).
 function HomeMirror({
   route,
@@ -248,10 +250,12 @@ function HomeMirror({
   const sentinelRef = useRef<HTMLDivElement | null>(null);
 
   const byTags = useMemo(() => {
-    if (route.tags.length === 0) return lyrics;
-    // مطابقة دلالة الخادم: يُعرض النشيد إن حمل أيًّا من الوسوم المحدَّدة (hasSome).
-    return lyrics.filter((l) => l.tags.some((t) => route.tags.includes(t)));
-  }, [lyrics, route.tags]);
+    // مطابقة دلالة الخادم: يُعرض النشيد إن حمل أيًّا من الوسوم المحدَّدة (hasSome)،
+    // وبترتيب الرئيسية المتصلة نفسه (الافتراضي أبجدي تصاعدي).
+    const list = route.tags.length === 0 ? [...lyrics] : lyrics.filter((l) => l.tags.some((t) => route.tags.includes(t)));
+    const titleKeys = new Map(list.map((l) => [l.id, normalizeArabic(l.title)]));
+    return list.sort(compareOfflineLyrics(route.sort, (l: OfflineLyric) => l, (l) => titleKeys.get(l.id) ?? ""));
+  }, [lyrics, route.tags, route.sort]);
 
   const filtered = useMemo(() => filterBySearch(byTags, query), [byTags, query, filterBySearch]);
 
