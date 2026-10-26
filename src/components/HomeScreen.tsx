@@ -50,7 +50,7 @@ export function HomeScreen({
   // عن تغيّر q لسبب آخر (راجع تأثير المزامنة أدناه).
   const sentQueryRef = useRef<string | null>(null);
   const [tagQuery, setTagQuery] = useState("");
-  const { items, hasMore, loading, sentinelRef } = useLyricsFeed({
+  const { items, hasMore, loading, error, retry, sentinelRef } = useLyricsFeed({
     query,
     tags: selectedTags,
     sort,
@@ -210,7 +210,16 @@ export function HomeScreen({
 
         {hasMore && (
           <div ref={sentinelRef} className="flex items-center justify-center py-6">
-            <Spinner label="جارٍ تحميل المزيد…" className="text-sm text-[#6b7670]" />
+            {error ? (
+              <div className="flex flex-col items-center gap-2 text-sm text-[#6b7670]" role="alert">
+                <span>تعذّر تحميل المزيد. تحقّق من اتصالك ثم أعد المحاولة.</span>
+                <button type="button" onClick={retry} className={`rounded-full border border-[#e6e6e1] bg-white px-4 py-1.5 text-sm font-medium text-emerald-700 ${focusRing}`}>
+                  إعادة المحاولة
+                </button>
+              </div>
+            ) : (
+              <Spinner label="جارٍ تحميل المزيد…" className="text-sm text-[#6b7670]" />
+            )}
           </div>
         )}
         {!hasMore && !loading && items.length > 0 && (

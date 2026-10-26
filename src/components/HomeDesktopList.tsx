@@ -9,6 +9,7 @@ import { BackToTopButton } from "@/components/BackToTopButton";
 import { Spinner } from "@/components/Spinner";
 import { useLyricsFeed, type LyricsFeedItem } from "@/lib/use-lyrics-feed";
 import type { LyricsSort } from "@/lib/lyrics-search";
+import { focusRing } from "@/lib/ui";
 
 interface HomeDesktopListProps {
   query: string;
@@ -38,7 +39,7 @@ export function HomeDesktopList({
   isFiltered,
   loggedIn,
 }: HomeDesktopListProps) {
-  const { items, hasMore, loading, sentinelRef } = useLyricsFeed({
+  const { items, hasMore, loading, error, retry, sentinelRef } = useLyricsFeed({
     query,
     tags: selectedTags,
     sort,
@@ -95,7 +96,16 @@ export function HomeDesktopList({
 
       {hasMore && (
         <div ref={sentinelRef} className="flex items-center justify-center py-6">
-          <Spinner label="جارٍ تحميل المزيد…" className="text-sm text-neutral-500" />
+          {error ? (
+            <div className="flex flex-col items-center gap-2 text-sm text-neutral-500" role="alert">
+              <span>تعذّر تحميل المزيد. تحقّق من اتصالك ثم أعد المحاولة.</span>
+              <button type="button" onClick={retry} className={`rounded-md border border-neutral-300 px-3 py-1 text-sm font-medium text-neutral-700 hover:bg-neutral-100 ${focusRing}`}>
+                إعادة المحاولة
+              </button>
+            </div>
+          ) : (
+            <Spinner label="جارٍ تحميل المزيد…" className="text-sm text-neutral-500" />
+          )}
         </div>
       )}
       {!hasMore && !loading && items.length > 0 && (

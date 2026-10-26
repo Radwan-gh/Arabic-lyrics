@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { renderLyricsHtml } from "@/lib/render-lyrics";
+import { buildLyricsOrderBy } from "@/lib/lyrics-search";
 import type { OfflineCollection } from "@/lib/offline";
 
 // نقطة بيانات عامة للقراءة دون اتصال: تُرجع كامل مجموعة الأناشيد كـ JSON مع
@@ -9,7 +10,8 @@ import type { OfflineCollection } from "@/lib/offline";
 export const dynamic = "force-dynamic";
 
 export async function GET() {
-  const rows = await prisma.lyrics.findMany({
+  const [rows, titleOrder] = await Promise.all([
+    prisma.lyrics.findMany({
     orderBy: { createdAt: "desc" },
     select: {
       id: true,
@@ -20,6 +22,21 @@ export async function GET() {
       createdAt: true,
       content: true,
     },
+    }),
+    // الترتيب الأبجدي كما تُرجعه القاعدة نفسها، ليرتّب العميل اللقطة دون اتصال
+    // بنفس ترتيب الرئيسية المتصلة تمامًا (راجع titleRank في lib/offline).
+    prisma.lyrics.findMany({
+      orderBy: buildLyricsOrderBy("title_asc"),
+      select: { id: true, title: true, titleNormalized: true },
+    }),
+  ]);
+
+  const titleRanks = new Map<string, { titleRank: number; titleGroup: number }>();
+  let group = -1;
+  titleOrder.forEach((r, i) => {
+    const prev = titleOrder[i - 1];
+    if (!prev || prev.titleNormalized !== r.titleNormalized || prev.title !== r.title) group++;
+    titleRanks.set(r.id, { titleRank: i, titleGroup: group });
   });
 
   const payload: OfflineCollection = {
@@ -32,6 +49,7 @@ export async function GET() {
       tags: r.tags,
       createdAt: r.createdAt.toISOString(),
       contentHtml: renderLyricsHtml(r.content),
+      ...titleRanks.get(r.id),
     })),
   };
 
