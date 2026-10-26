@@ -16,6 +16,8 @@ export default async function AdminUsersPage() {
       email: true,
       role: true,
       isActive: true,
+      isApproved: true,
+      googleId: true,
       createdAt: true,
       _count: { select: { lyrics: true } },
     },

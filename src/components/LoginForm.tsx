@@ -3,17 +3,32 @@
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useState } from "react";
-import { Eye, EyeOff, LogIn, Music } from "lucide-react";
+import { Clock, Eye, EyeOff, LogIn, Music } from "lucide-react";
 import { Spinner } from "./Spinner";
 import { inputCls, btnPrimary, focusRing } from "@/lib/ui";
 
-export function LoginForm() {
+// رسائل العودة من تدفّق Google (راجع api/auth/google/callback).
+const GOOGLE_ERRORS: Record<string, string> = {
+  google_cancelled: "تم إلغاء الدخول عبر Google.",
+  google_failed: "تعذّر الدخول عبر Google، يرجى المحاولة مرة أخرى.",
+  google_unverified: "البريد الإلكتروني لحساب Google غير مُتحقَّق منه.",
+  google_disabled: "الدخول عبر Google غير مُفعَّل حالياً.",
+  disabled: "تم تعطيل هذا الحساب، يرجى التواصل مع الإدارة",
+};
+
+const PENDING_MESSAGE = "تم استلام طلب إنشاء حسابك عبر Google، وسيُفعَّل بعد موافقة الإدارة.";
+
+export function LoginForm({ googleEnabled }: { googleEnabled: boolean }) {
   const router = useRouter();
   const searchParams = useSearchParams();
+  const next = searchParams.get("next") || "/";
+  const googleHref = `/api/auth/google?next=${encodeURIComponent(next)}`;
+  const pending = searchParams.get("status") === "pending";
+  const redirectError = GOOGLE_ERRORS[searchParams.get("error") ?? ""] ?? null;
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(redirectError);
   const [loading, setLoading] = useState(false);
 
   async function handleSubmit(e: React.FormEvent) {
@@ -35,7 +50,7 @@ export function LoginForm() {
       return;
     }
 
-    router.push(searchParams.get("next") || "/");
+    router.push(next);
     router.refresh();
   }
 
@@ -49,9 +64,21 @@ export function LoginForm() {
           </span>
           <h1 className="mt-2 text-[28px] font-extrabold">أهلاً بك</h1>
           <p className="text-[15px] leading-[1.8] text-[#6b7670]">
-            سجّل الدخول للوصول إلى مفضلتك ووصلاتك. الحسابات يُنشئها مدير النظام.
+            سجّل الدخول للوصول إلى مفضلتك ووصلاتك.{" "}
+            {googleEnabled
+              ? "ليس لديك حساب؟ أنشئه عبر Google ويُفعَّل بعد موافقة الإدارة."
+              : "الحسابات يُنشئها مدير النظام."}
           </p>
         </div>
+
+        {pending && <PendingNotice className="rounded-xl" />}
+
+        {googleEnabled && (
+          <>
+            <GoogleButton href={googleHref} className="h-[54px] rounded-2xl border-[#e6e6e1] text-base" />
+            <OrDivider />
+          </>
+        )}
 
         <form onSubmit={handleSubmit} className="flex flex-col gap-3">
           {error && (
@@ -106,6 +133,7 @@ export function LoginForm() {
       {/* سطح المكتب: النموذج الحالي دون تغيير. */}
       <div className="mx-auto hidden max-w-sm sm:block">
         <h1 className="mb-4 text-xl font-bold">تسجيل الدخول</h1>
+        {pending && <PendingNotice className="mb-4 rounded-md" />}
         <form onSubmit={handleSubmit} className="flex flex-col gap-4 rounded-xl border border-neutral-200 bg-white p-6 shadow-sm">
           {error && (
             <p role="alert" className="rounded-md bg-red-50 px-3 py-2 text-sm text-red-700">
@@ -145,8 +173,61 @@ export function LoginForm() {
               </>
             )}
           </button>
+
+          {googleEnabled && (
+            <>
+              <OrDivider />
+              <GoogleButton href={googleHref} className="h-11 rounded-lg border-neutral-300 text-sm" />
+              <p className="text-center text-xs leading-6 text-neutral-500">
+                ليس لديك حساب؟ أنشئه عبر Google ويُفعَّل بعد موافقة الإدارة.
+              </p>
+            </>
+          )}
         </form>
       </div>
     </>
+  );
+}
+
+function PendingNotice({ className }: { className: string }) {
+  return (
+    <p role="status" className={`flex items-start gap-2 bg-amber-50 px-3 py-2 text-sm leading-6 text-amber-800 ${className}`}>
+      <Clock className="mt-0.5 h-4 w-4 shrink-0" aria-hidden="true" />
+      {PENDING_MESSAGE}
+    </p>
+  );
+}
+
+function OrDivider() {
+  return (
+    <div className="flex items-center gap-3 text-xs text-neutral-400" aria-hidden="true">
+      <span className="h-px flex-1 bg-neutral-200" />
+      أو
+      <span className="h-px flex-1 bg-neutral-200" />
+    </div>
+  );
+}
+
+/** رابط تنقّل كامل (لا Link) لأن الوجهة مسار API يحوّل إلى Google. */
+function GoogleButton({ href, className }: { href: string; className: string }) {
+  return (
+    <a
+      href={href}
+      className={`inline-flex items-center justify-center gap-2.5 border bg-white font-semibold text-neutral-800 transition-colors hover:bg-neutral-50 ${focusRing} ${className}`}
+    >
+      <GoogleLogo />
+      المتابعة باستخدام Google
+    </a>
+  );
+}
+
+function GoogleLogo() {
+  return (
+    <svg viewBox="0 0 48 48" className="h-5 w-5" aria-hidden="true">
+      <path fill="#FFC107" d="M43.6 20.5H42V20H24v8h11.3C33.7 32.7 29.2 36 24 36c-6.6 0-12-5.4-12-12s5.4-12 12-12c3.1 0 5.8 1.2 7.9 3.1l5.7-5.7C34 6.1 29.3 4 24 4 12.9 4 4 12.9 4 24s8.9 20 20 20 20-8.9 20-20c0-1.3-.1-2.4-.4-3.5z" />
+      <path fill="#FF3D00" d="M6.3 14.7l6.6 4.8C14.7 15.1 19 12 24 12c3.1 0 5.8 1.2 7.9 3.1l5.7-5.7C34 6.1 29.3 4 24 4 16.3 4 9.7 8.3 6.3 14.7z" />
+      <path fill="#4CAF50" d="M24 44c5.2 0 9.9-2 13.4-5.2l-6.2-5.2C29.2 35.1 26.7 36 24 36c-5.2 0-9.6-3.3-11.3-8l-6.5 5C9.5 39.6 16.2 44 24 44z" />
+      <path fill="#1976D2" d="M43.6 20.5H42V20H24v8h11.3c-.8 2.2-2.2 4.2-4.1 5.6l6.2 5.2C37 39.2 44 34 44 24c0-1.3-.1-2.4-.4-3.5z" />
+    </svg>
   );
 }

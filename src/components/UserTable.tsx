@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { KeyRound, Trash2, UserPlus } from "lucide-react";
 import { Spinner } from "./Spinner";
+import { PendingUsers } from "./PendingUsers";
 import { inputCls, inputSm, btnPrimary, focusRing } from "@/lib/ui";
 
 export type Role = "ADMIN" | "EDITOR" | "VIEWER";
@@ -13,6 +14,8 @@ export interface UserRow {
   email: string;
   role: Role;
   isActive: boolean;
+  isApproved: boolean;
+  googleId: string | null;
   createdAt: Date;
   _count: { lyrics: number };
 }
@@ -78,8 +81,18 @@ export function UserTable({ initialUsers, currentUserId }: { initialUsers: UserR
     setUsers((prev) => [...prev, user]);
   }
 
+  const pendingUsers = users.filter((u) => !u.isApproved);
+  const activeUsers = users.filter((u) => u.isApproved);
+
   return (
     <div className="flex flex-col gap-6">
+      <PendingUsers
+        users={pendingUsers}
+        roleLabels={ROLE_LABELS}
+        onApproved={(id, updated) => setUsers((prev) => prev.map((u) => (u.id === id ? { ...u, ...updated } : u)))}
+        onRejected={(id) => setUsers((prev) => prev.filter((u) => u.id !== id))}
+      />
+
       <CreateUserForm onCreated={handleCreated} />
 
       <div className="overflow-x-auto rounded-xl border border-neutral-200 bg-white shadow-sm">
@@ -95,9 +108,12 @@ export function UserTable({ initialUsers, currentUserId }: { initialUsers: UserR
             </tr>
           </thead>
           <tbody className="divide-y divide-neutral-100">
-            {users.map((u) => (
+            {activeUsers.map((u) => (
               <tr key={u.id} className={busyId === u.id ? "opacity-50" : ""}>
-                <td className="px-4 py-3">{u.name}</td>
+                <td className="px-4 py-3">
+                  {u.name}
+                  {u.googleId && <span className="ms-2 rounded-full bg-neutral-100 px-2 py-0.5 text-xs text-neutral-500">Google</span>}
+                </td>
                 <td className="px-4 py-3 text-neutral-500">{u.email}</td>
                 <td className="px-4 py-3">
                   {u.id === currentUserId ? (
