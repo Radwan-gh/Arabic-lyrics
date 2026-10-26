@@ -30,7 +30,15 @@ import { useMenu } from "@/lib/menu-context";
  * نفسه هناك — تبقى هذه الترويسة مُركَّبة (لهذا يُخفى الشريط بـ CSS لا بعدم
  * التركيب) حتى يبقى درج القائمة صالحًا للفتح من MenuButton في شاشة كل مسار.
  */
-export function Navbar({ user, compact = false }: { user: SessionPayload | null; compact?: boolean }) {
+export function Navbar({
+  user,
+  pendingUsers = 0,
+  compact = false,
+}: {
+  user: SessionPayload | null;
+  pendingUsers?: number;
+  compact?: boolean;
+}) {
   const { open, setOpen } = useMenu();
   const headerRef = useRef<HTMLDivElement>(null);
   const router = useRouter();
@@ -126,7 +134,7 @@ export function Navbar({ user, compact = false }: { user: SessionPayload | null;
                 id="desktop-nav"
                 className="absolute end-0 top-full z-30 mt-2 flex w-60 origin-top animate-nav-drop flex-col gap-1 rounded-lg border border-neutral-200 bg-white p-2 shadow-lg"
               >
-                <NavLinks user={user} onLogout={handleLogout} mobile onNavigate={() => setOpen(false)} />
+                <NavLinks user={user} pendingUsers={pendingUsers} onLogout={handleLogout} mobile onNavigate={() => setOpen(false)} />
               </nav>
             )}
           </div>
@@ -176,7 +184,7 @@ export function Navbar({ user, compact = false }: { user: SessionPayload | null;
               </button>
             </div>
             <div className="flex flex-1 flex-col gap-1 overflow-y-auto pt-2">
-              <NavLinks user={user} onLogout={handleLogout} mobile onNavigate={() => setOpen(false)} />
+              <NavLinks user={user} pendingUsers={pendingUsers} onLogout={handleLogout} mobile onNavigate={() => setOpen(false)} />
             </div>
           </nav>
         </div>
@@ -193,11 +201,13 @@ const ROLE_LABELS: Record<SessionPayload["role"], string> = {
 
 function NavLinks({
   user,
+  pendingUsers,
   onLogout,
   mobile,
   onNavigate,
 }: {
   user: SessionPayload | null;
+  pendingUsers: number;
   onLogout: () => void;
   mobile?: boolean;
   onNavigate?: () => void;
@@ -208,10 +218,16 @@ function NavLinks({
 
   const iconCls = mobile ? "h-5 w-5 text-neutral-500" : "h-4 w-4";
 
-  const NavItem = ({ href, icon: Icon, label }: { href: string; icon: LucideIcon; label: string }) => (
+  const NavItem = ({ href, icon: Icon, label, badge }: { href: string; icon: LucideIcon; label: string; badge?: number }) => (
     <Link href={href} className={linkCls} onClick={onNavigate}>
       <Icon className={iconCls} aria-hidden="true" />
       {label}
+      {!!badge && (
+        <span className="ms-auto rounded-full bg-amber-500 px-2 text-xs font-bold leading-5 text-white">
+          {badge}
+          <span className="sr-only"> طلبات بانتظار الموافقة</span>
+        </span>
+      )}
     </Link>
   );
 
@@ -222,7 +238,7 @@ function NavLinks({
       <NavItem href="/lyrics/new" icon={PlusCircle} label="إضافة أنشودة" />
       {user && <NavItem href="/favorites" icon={Heart} label="المفضلة" />}
       {user && <NavItem href="/playlists" icon={ListMusic} label="وصلاتي" />}
-      {user?.role === "ADMIN" && <NavItem href="/admin/users" icon={Users} label="إدارة المستخدمين" />}
+      {user?.role === "ADMIN" && <NavItem href="/admin/users" icon={Users} label="إدارة المستخدمين" badge={pendingUsers} />}
       {user?.role === "ADMIN" && <NavItem href="/admin/tags" icon={Tags} label="إدارة الوسوم" />}
       {user ? (
         <>

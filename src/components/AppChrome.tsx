@@ -17,6 +17,7 @@ const IMMERSIVE_MOBILE_ROUTES = [
   /^\/discover$/,
   /^\/p\/[^/]+$/,
   /^\/login$/,
+  /^\/signup\/complete$/,
   /^\/admin\/users$/,
   /^\/admin\/tags$/,
 ];
@@ -25,13 +26,21 @@ function isImmersive(pathname: string): boolean {
   return IMMERSIVE_MOBILE_ROUTES.some((re) => re.test(pathname));
 }
 
-export function AppChrome({ user, children }: { user: SessionPayload | null; children: React.ReactNode }) {
+export function AppChrome({
+  user,
+  pendingUsers = 0,
+  children,
+}: {
+  user: SessionPayload | null;
+  pendingUsers?: number;
+  children: React.ReactNode;
+}) {
   const pathname = usePathname();
   const immersive = isImmersive(pathname);
 
   return (
     <MenuProvider>
-      <Navbar user={user} compact={immersive} />
+      <Navbar user={user} pendingUsers={pendingUsers} compact={immersive} />
       <main
         id="main"
         className={immersive ? "sm:mx-auto sm:max-w-5xl sm:px-4 sm:py-6" : "mx-auto max-w-5xl px-2 py-6 sm:px-4"}

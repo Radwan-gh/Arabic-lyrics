@@ -19,8 +19,13 @@ export async function POST(req: Request) {
   const { email, password } = parsed.data;
 
   const user = await prisma.user.findUnique({ where: { email } });
-  if (!user || !(await verifyPassword(password, user.passwordHash))) {
+  // حسابات Google دون كلمة مرور لا يمكنها الدخول بكلمة مرور.
+  if (!user || !user.passwordHash || !(await verifyPassword(password, user.passwordHash))) {
     return NextResponse.json({ error: "البريد الإلكتروني أو كلمة المرور غير صحيحة" }, { status: 401 });
+  }
+
+  if (!user.isApproved) {
+    return NextResponse.json({ error: "حسابك بانتظار موافقة الإدارة" }, { status: 403 });
   }
 
   if (!user.isActive) {

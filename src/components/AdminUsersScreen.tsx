@@ -5,6 +5,7 @@ import { useState } from "react";
 import { ChevronRight, Plus, X } from "lucide-react";
 import { CreateUserForm, type Role, type UserRow } from "./UserTable";
 import { MenuButton } from "@/components/MenuButton";
+import { PendingUsers } from "@/components/PendingUsers";
 import { focusRing } from "@/lib/ui";
 
 // تسميات الأدوار في التصميم تطابق شارات "مدير / محرر / قارئ" هنا؛ الجدول على
@@ -64,9 +65,15 @@ export function AdminUsersScreen({ initialUsers, currentUserId }: { initialUsers
         <MenuButton />
       </header>
 
-      <div className="flex-1 px-5 pb-24">
+      <div className="flex flex-1 flex-col gap-4 px-5 pb-24">
+        <PendingUsers
+          users={users.filter((u) => !u.isApproved)}
+          roleLabels={MOBILE_ROLE_LABELS}
+          onApproved={(id, updated) => setUsers((prev) => prev.map((u) => (u.id === id ? { ...u, ...updated } : u)))}
+          onRejected={(id) => setUsers((prev) => prev.filter((u) => u.id !== id))}
+        />
         <ul className="flex flex-col gap-3">
-          {users.map((u) => {
+          {users.filter((u) => u.isApproved).map((u) => {
             const isSelf = u.id === currentUserId;
             const busy = busyId === u.id;
             return (

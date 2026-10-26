@@ -5,6 +5,7 @@ import { AppChrome } from "@/components/AppChrome";
 import { RouteProgress } from "@/components/RouteProgress";
 import { ServiceWorkerRegister } from "@/components/ServiceWorkerRegister";
 import { getCurrentUser } from "@/lib/session";
+import { prisma } from "@/lib/prisma";
 import { LYRICS_SCALE_NO_FLASH_SCRIPT } from "@/lib/lyrics-font";
 
 const tajawal = Tajawal({
@@ -39,6 +40,9 @@ export const viewport: Viewport = {
 
 export default async function RootLayout({ children }: { children: React.ReactNode }) {
   const session = await getCurrentUser();
+  // عدد طلبات Google بانتظار الموافقة — للمدير فقط، ليظهر كشارة في القائمة.
+  const pendingUsers =
+    session?.role === "ADMIN" ? await prisma.user.count({ where: { isApproved: false } }).catch(() => 0) : 0;
 
   return (
     <html lang="ar" dir="rtl" className={`${tajawal.variable} ${scheherazade.variable}`}>
@@ -54,7 +58,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
         >
           تخطَّ إلى المحتوى
         </a>
-        <AppChrome user={session}>{children}</AppChrome>
+        <AppChrome user={session} pendingUsers={pendingUsers}>{children}</AppChrome>
         <ServiceWorkerRegister authenticated={!!session} />
       </body>
     </html>

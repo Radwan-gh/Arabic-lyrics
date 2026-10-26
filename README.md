@@ -20,10 +20,33 @@ user accounts and role-based permissions.
 | Editor | Everything a Viewer can, plus create lyrics and edit/delete their own |
 | Admin  | Everything, plus edit/delete any lyrics and manage users — create accounts, set/change passwords, change roles, activate/deactivate, and delete |
 
-There is **no public self-registration**. Only an Admin can create new
-accounts, and they do so from **إدارة المستخدمين** (Admin → Users), where
-they set the new user's name, email, password, and role. Admins can also
-change any user's password from the same screen.
+Admins create accounts from **إدارة المستخدمين** (Admin → Users), where they
+set the new user's name, email, password, and role. Admins can also change any
+user's password from the same screen.
+
+### Sign up with Google (admin approval)
+
+When `GOOGLE_CLIENT_ID` and `GOOGLE_CLIENT_SECRET` are set, the login page
+shows **المتابعة باستخدام Google**:
+
+- A Google account with no matching user is sent to **إكمال إنشاء الحساب**
+  (`/signup/complete`), where the user must type their **full name** (at least
+  first and last name, letters only). Only then is a **Viewer** account created,
+  **pending approval** — it cannot sign in yet, and the login page tells the
+  user their request was received. The verified Google identity is kept in a
+  signed, 30-minute cookie between the two steps.
+- Pending requests appear at the top of **إدارة المستخدمين** (with a count
+  badge on the menu link). The Admin picks a role and approves, or rejects
+  (which deletes the request).
+- A Google account whose verified email matches an existing user is linked to
+  that user and signs straight in (subject to the usual active check).
+- Google-only accounts have no password; an Admin can set one later from the
+  same screen if needed.
+
+Setup: in Google Cloud Console → APIs & Services → Credentials, create an OAuth
+client ID of type **Web application**, add
+`<APP_URL>/api/auth/google/callback` as an authorized redirect URI, then set
+`GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET`, and `APP_URL` (see `.env.example`).
 
 The first Admin is bootstrapped with the seed script (see below) — there is
 no self-service sign-up to create it through the UI.

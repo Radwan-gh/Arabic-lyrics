@@ -7,6 +7,8 @@ import { hashPassword } from "@/lib/password";
 const schema = z.object({
   role: z.enum(["ADMIN", "EDITOR", "VIEWER"]).optional(),
   isActive: z.boolean().optional(),
+  // الموافقة على حساب أُنشئ ذاتياً عبر Google (الرفض يتمّ بالحذف).
+  isApproved: z.literal(true).optional(),
   password: z.string().min(8, "كلمة المرور يجب أن تكون 8 أحرف على الأقل").max(72).optional(),
 });
 
@@ -24,27 +26,28 @@ export async function PATCH(req: Request, { params }: { params: Promise<{ id: st
     return NextResponse.json({ error: parsed.error.issues[0]?.message ?? "بيانات غير صالحة" }, { status: 400 });
   }
 
-  const { role, isActive, password } = parsed.data;
-  if (role === undefined && isActive === undefined && password === undefined) {
+  const { role, isActive, isApproved, password } = parsed.data;
+  if (role === undefined && isActive === undefined && isApproved === undefined && password === undefined) {
     return NextResponse.json({ error: "بيانات غير صالحة" }, { status: 400 });
   }
 
   // Guard changes to the admin's own account: they may reset their own
   // password here, but not change their own role or deactivate themselves.
-  if (id === session.userId && (role !== undefined || isActive !== undefined)) {
+  if (id === session.userId && (role !== undefined || isActive !== undefined || isApproved !== undefined)) {
     return NextResponse.json({ error: "لا يمكنك تعديل صلاحيات حسابك الخاص من هنا" }, { status: 400 });
   }
 
-  const data: { role?: typeof role; isActive?: boolean; passwordHash?: string } = {};
+  const data: { role?: typeof role; isActive?: boolean; isApproved?: boolean; passwordHash?: string } = {};
   if (role !== undefined) data.role = role;
   if (isActive !== undefined) data.isActive = isActive;
+  if (isApproved !== undefined) data.isApproved = isApproved;
   if (password !== undefined) data.passwordHash = await hashPassword(password);
 
   const user = await prisma.user
     .update({
       where: { id },
       data,
-      select: { id: true, name: true, email: true, role: true, isActive: true },
+      select: { id: true, name: true, email: true, role: true, isActive: true, isApproved: true },
     })
     .catch(() => null);
 
