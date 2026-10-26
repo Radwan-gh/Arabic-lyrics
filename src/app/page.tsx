@@ -20,7 +20,7 @@ export default async function HomePage({
   const sort = parseLyricsSort(sortParam, "title_asc");
 
   const where = buildLyricsWhere(q, tags);
-  const isFiltered = Boolean(q) || tags.length > 0;
+  const initialFilters = { query: q, tags, sort };
 
   const [items, total, grandTotal, session, tagCounts] = await Promise.all([
     prisma.lyrics.findMany({
@@ -56,14 +56,11 @@ export default async function HomePage({
     <>
       <div className="sm:hidden">
         <HomeScreen
-          query={q}
-          selectedTags={tags}
-          sort={sort}
+          initialFilters={initialFilters}
           initialItems={cards}
           initialHasMore={hasMore}
+          initialTotal={total}
           grandTotal={grandTotal}
-          filteredTotal={total}
-          isFiltered={isFiltered}
           tagCounts={tagCounts}
           loggedIn={!!session}
         />
@@ -71,14 +68,11 @@ export default async function HomePage({
 
       <div className="hidden sm:block">
         <HomeDesktopList
-          query={q}
-          selectedTags={tags}
-          sort={sort}
+          initialFilters={initialFilters}
           initialItems={cards}
           initialHasMore={hasMore}
+          initialTotal={total}
           grandTotal={grandTotal}
-          filteredTotal={total}
-          isFiltered={isFiltered}
           loggedIn={!!session}
         />
       </div>

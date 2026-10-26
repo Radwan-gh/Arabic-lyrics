@@ -55,7 +55,14 @@ export async function findLyricsSuggestions(
   });
 }
 
-export async function getLyricsAndIncrementViews(id: string) {
+/**
+ * يجلب النشيد لصفحته ويحتسب المشاهدة. `countView: false` للجلب الآلي (تخزين
+ * الـ service worker المسبق للقراءة دون اتصال) حتى لا يضخّم عدّاد المشاهدات.
+ */
+export async function getLyricsAndIncrementViews(id: string, { countView = true } = {}) {
+  if (!countView) {
+    return prisma.lyrics.findUnique({ where: { id }, include: { createdBy: { select: { name: true } } } });
+  }
   return prisma.lyrics
     .update({
       where: { id },

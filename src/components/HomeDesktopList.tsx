@@ -8,18 +8,15 @@ import { LyricsSortSelect } from "@/components/LyricsSortSelect";
 import { BackToTopButton } from "@/components/BackToTopButton";
 import { Spinner } from "@/components/Spinner";
 import { useLyricsFeed, type LyricsFeedItem } from "@/lib/use-lyrics-feed";
-import type { LyricsSort } from "@/lib/lyrics-search";
+import { useHomeFilters, type HomeFilters } from "@/lib/use-home-filters";
 import { focusRing } from "@/lib/ui";
 
 interface HomeDesktopListProps {
-  query: string;
-  selectedTags: string[];
-  sort: LyricsSort;
+  initialFilters: HomeFilters;
   initialItems: LyricsFeedItem[];
   initialHasMore: boolean;
+  initialTotal: number;
   grandTotal: number;
-  filteredTotal: number;
-  isFiltered: boolean;
   loggedIn: boolean;
 }
 
@@ -29,22 +26,22 @@ const formatCount = (n: number) => n.toLocaleString("en-US");
  * لانهائي (بلا ترقيم صفحات)، مع مفتاح ترتيب وزرّ عودة إلى الأعلى. النسخة
  * الغامرة على الموبايل في HomeScreen. */
 export function HomeDesktopList({
-  query,
-  selectedTags,
-  sort,
+  initialFilters,
   initialItems,
   initialHasMore,
+  initialTotal,
   grandTotal,
-  filteredTotal,
-  isFiltered,
   loggedIn,
 }: HomeDesktopListProps) {
-  const { items, hasMore, loading, error, retry, sentinelRef } = useLyricsFeed({
-    query,
-    tags: selectedTags,
-    sort,
+  const filters = useHomeFilters(initialFilters);
+  const { query, tags: selectedTags, sort } = filters;
+  const isFiltered = Boolean(query) || selectedTags.length > 0;
+  const { items, hasMore, total, loading, error, retry, sentinelRef } = useLyricsFeed({
+    filters,
+    initialFilters,
     initialItems,
     initialHasMore,
+    initialTotal,
   });
 
   // نُبقي الرابط نظيفًا حين يكون الترتيب الافتراضي (أبجدي تصاعدي) — يطابق سلوك
@@ -63,12 +60,12 @@ export function HomeDesktopList({
       <div className="flex flex-wrap items-center justify-between gap-3">
         <p className="text-sm text-neutral-600" aria-live="polite">
           <span className="font-medium text-neutral-800">الكل : {formatCount(grandTotal)}</span>
-          {isFiltered && <span> ، نتائج البحث : {formatCount(filteredTotal)}</span>}
+          {isFiltered && <span> ، نتائج البحث : {formatCount(total)}</span>}
         </p>
         <LyricsSortSelect sort={sort} query={query} tags={selectedTags} className="text-neutral-600" />
       </div>
 
-      {items.length === 0 ? (
+      {items.length === 0 && !hasMore ? (
         <p className="rounded-lg border border-dashed border-neutral-300 p-8 text-center text-neutral-500">
           {isFiltered ? "لا توجد نتائج مطابقة لبحثك" : "لا توجد أناشيد بعد"}
         </p>

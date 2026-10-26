@@ -1,12 +1,13 @@
 "use client";
 
 import { useEffect } from "react";
-import { OFFLINE_LYRICS_URL, OFFLINE_ME_URL } from "@/lib/offline";
+import { DATA_CHANGED_MESSAGE, warmOfflineCache } from "@/lib/offline";
 
 /**
- * يسجّل الـ service worker (لتفعيل قابلية التثبيت PWA) ثم «يُهيّئ» لقطات القراءة
- * دون اتصال في الخلفية: يجلب المجموعة العامة، وبيانات المستخدم إن كان مسجّلًا،
- * فيخزّنها الـ SW لتتوفّر عند انقطاع الشبكة. لا يعرض أي واجهة.
+ * يسجّل الـ service worker (لتفعيل قابلية التثبيت PWA والعمل دون اتصال) ثم «يُهيّئ»
+ * كاش الصفحات في الخلفية: يجلب اللقطات ويطلب من الـ SW تخزين صفحات التطبيق التي
+ * تغيّرت، لتعمل هي نفسها عند انقطاع الشبكة. تُعاد التهيئة عند عودة الاتصال، وعند
+ * إبلاغ الـ SW بتعديل بيانات على الخادم. لا يعرض أي واجهة.
  */
 export function ServiceWorkerRegister({ authenticated = false }: { authenticated?: boolean }) {
   useEffect(() => {
@@ -14,33 +15,35 @@ export function ServiceWorkerRegister({ authenticated = false }: { authenticated
       return;
     }
 
-    // يجلب لقطات القراءة دون اتصال ليخزّنها الـ SW (يُهمَل الفشل بهدوء).
-    const prime = () => {
-      if (!navigator.onLine) return;
-      fetch(OFFLINE_LYRICS_URL, { cache: "no-store" }).catch(() => {});
-      if (authenticated) {
-        fetch(OFFLINE_ME_URL, { cache: "no-store" }).catch(() => {});
-      }
+    const warm = () => {
+      warmOfflineCache(authenticated).catch(() => {});
+    };
+    const onMessage = (event: MessageEvent) => {
+      if (event.data?.type === DATA_CHANGED_MESSAGE) warm();
     };
 
     const register = () => {
       navigator.serviceWorker
         .register("/sw.js")
-        .then(() => navigator.serviceWorker.ready)
-        // بعد أن يتحكّم الـ SW في الصفحة، هيّئ الكاش عبره.
-        .then(() => prime())
+        .then(() => warm())
         .catch((error) => {
           // تسجيل الفشل بهدوء دون كسر التطبيق.
           console.error("Service worker registration failed:", error);
         });
     };
 
+    navigator.serviceWorker.addEventListener("message", onMessage);
+    window.addEventListener("online", warm);
     if (document.readyState === "complete") {
       register();
     } else {
       window.addEventListener("load", register);
-      return () => window.removeEventListener("load", register);
     }
+    return () => {
+      navigator.serviceWorker.removeEventListener("message", onMessage);
+      window.removeEventListener("online", warm);
+      window.removeEventListener("load", register);
+    };
   }, [authenticated]);
 
   return null;
