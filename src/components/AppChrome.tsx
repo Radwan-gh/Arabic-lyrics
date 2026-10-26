@@ -18,6 +18,7 @@ const IMMERSIVE_MOBILE_ROUTES = [
   /^\/offline$/,
   /^\/p\/[^/]+$/,
   /^\/login$/,
+  /^\/signup\/complete$/,
   /^\/admin\/users$/,
   /^\/admin\/tags$/,
 ];

@@ -28,6 +28,36 @@ export async function createSessionToken(payload: SessionPayload): Promise<strin
     .sign(secretKey());
 }
 
+/** هوية Google مُتحقَّق منها لمستخدم جديد، تُحفظ بين العودة من Google وإدخال الاسم الكامل. */
+export const GOOGLE_SIGNUP_COOKIE = "google_signup";
+export const GOOGLE_SIGNUP_MAX_AGE_SECONDS = 60 * 30;
+
+export interface GoogleSignupPayload {
+  googleId: string;
+  email: string;
+}
+
+export async function createGoogleSignupToken(payload: GoogleSignupPayload): Promise<string> {
+  return new SignJWT({ ...payload, purpose: "google_signup" })
+    .setProtectedHeader({ alg: "HS256" })
+    .setIssuedAt()
+    .setExpirationTime(`${GOOGLE_SIGNUP_MAX_AGE_SECONDS}s`)
+    .sign(secretKey());
+}
+
+export async function verifyGoogleSignupToken(token: string | undefined): Promise<GoogleSignupPayload | null> {
+  if (!token) return null;
+  try {
+    const { payload } = await jwtVerify(token, secretKey());
+    if (payload.purpose !== "google_signup" || typeof payload.googleId !== "string" || typeof payload.email !== "string") {
+      return null;
+    }
+    return { googleId: payload.googleId, email: payload.email };
+  } catch {
+    return null;
+  }
+}
+
 export async function verifySessionToken(token: string): Promise<SessionPayload | null> {
   try {
     const { payload } = await jwtVerify(token, secretKey());

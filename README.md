@@ -29,9 +29,12 @@ user's password from the same screen.
 When `GOOGLE_CLIENT_ID` and `GOOGLE_CLIENT_SECRET` are set, the login page
 shows **المتابعة باستخدام Google**:
 
-- A Google account with no matching user creates a new **Viewer** account that
-  is **pending approval** — it cannot sign in yet, and the login page tells the
-  user their request was received.
+- A Google account with no matching user is sent to **إكمال إنشاء الحساب**
+  (`/signup/complete`), where the user must type their **full name** (at least
+  first and last name, letters only). Only then is a **Viewer** account created,
+  **pending approval** — it cannot sign in yet, and the login page tells the
+  user their request was received. The verified Google identity is kept in a
+  signed, 30-minute cookie between the two steps.
 - Pending requests appear at the top of **إدارة المستخدمين** (with a count
   badge on the menu link). The Admin picks a role and approves, or rejects
   (which deletes the request).

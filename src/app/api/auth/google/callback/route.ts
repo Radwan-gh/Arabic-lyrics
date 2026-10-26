@@ -1,7 +1,14 @@
 import { NextResponse } from "next/server";
 import { cookies } from "next/headers";
 import { prisma } from "@/lib/prisma";
-import { createSessionToken, SESSION_COOKIE, SESSION_MAX_AGE_SECONDS } from "@/lib/jwt";
+import {
+  createGoogleSignupToken,
+  createSessionToken,
+  GOOGLE_SIGNUP_COOKIE,
+  GOOGLE_SIGNUP_MAX_AGE_SECONDS,
+  SESSION_COOKIE,
+  SESSION_MAX_AGE_SECONDS,
+} from "@/lib/jwt";
 import {
   CALLBACK_PATH,
   GOOGLE_OAUTH_COOKIE,
@@ -12,13 +19,12 @@ import {
   type GoogleProfile,
 } from "@/lib/google-oauth";
 
-const NAME_MAX = 80;
-
 /**
  * عودة Google بعد اختيار الحساب:
  * 1. حساب مربوط بـ Google مسبقاً → يُستخدم.
  * 2. حساب موجود بنفس البريد (مُتحقَّق منه لدى Google) → يُربط بـ Google.
- * 3. لا حساب → يُنشأ حساب «قارئ» بانتظار موافقة الأدمن (isApproved=false).
+ * 3. لا حساب → تُحفظ الهوية في كعكة موقّعة ويُحوَّل المستخدم إلى /signup/complete
+ *    ليكتب اسمه الكامل؛ هناك يُنشأ حساب «قارئ» بانتظار موافقة الأدمن.
  * لا تُنشأ جلسة إلا لحساب مفعّل ومُوافَق عليه.
  */
 export async function GET(req: Request) {
@@ -72,10 +78,16 @@ export async function GET(req: Request) {
       if (byEmail.googleId && byEmail.googleId !== profile.sub) return loginRedirect("error=google_failed");
       user = await prisma.user.update({ where: { id: byEmail.id }, data: { googleId: profile.sub } });
     } else {
-      const name = (profile.name ?? profile.email.split("@")[0]).slice(0, NAME_MAX);
-      user = await prisma.user.create({
-        data: { name, email: profile.email, googleId: profile.sub, role: "VIEWER", isApproved: false },
+      const res = NextResponse.redirect(new URL("/signup/complete", origin));
+      res.cookies.set(GOOGLE_OAUTH_COOKIE, "", { path: "/api/auth/google", maxAge: 0 });
+      res.cookies.set(GOOGLE_SIGNUP_COOKIE, await createGoogleSignupToken({ googleId: profile.sub, email: profile.email }), {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === "production",
+        sameSite: "lax",
+        path: "/",
+        maxAge: GOOGLE_SIGNUP_MAX_AGE_SECONDS,
       });
+      return res;
     }
   }
 

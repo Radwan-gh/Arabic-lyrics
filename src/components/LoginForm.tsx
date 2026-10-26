@@ -13,6 +13,7 @@ const GOOGLE_ERRORS: Record<string, string> = {
   google_failed: "تعذّر الدخول عبر Google، يرجى المحاولة مرة أخرى.",
   google_unverified: "البريد الإلكتروني لحساب Google غير مُتحقَّق منه.",
   google_disabled: "الدخول عبر Google غير مُفعَّل حالياً.",
+  signup_expired: "انتهت صلاحية طلب إنشاء الحساب، يرجى المتابعة باستخدام Google من جديد.",
   disabled: "تم تعطيل هذا الحساب، يرجى التواصل مع الإدارة",
 };
 

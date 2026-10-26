@@ -69,7 +69,6 @@ export interface GoogleProfile {
   sub: string;
   email: string;
   emailVerified: boolean;
-  name: string | null;
 }
 
 /** Exchanges the authorization code and returns the verified identity from the ID token. */
@@ -112,6 +111,5 @@ export async function exchangeCodeForProfile({
     sub: payload.sub,
     email: payload.email.trim().toLowerCase(),
     emailVerified: payload.email_verified === true || payload.email_verified === "true",
-    name: typeof payload.name === "string" && payload.name.trim() ? payload.name.trim() : null,
   };
 }
