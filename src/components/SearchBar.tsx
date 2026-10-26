@@ -1,6 +1,6 @@
 "use client";
 
-import { useRouter } from "next/navigation";
+import { useAppRouter } from "@/lib/use-app-router";
 import { useEffect, useRef, useState, useTransition } from "react";
 import { Search, X } from "lucide-react";
 import { inputCls, btnPrimary, focusRing } from "@/lib/ui";
@@ -9,7 +9,7 @@ import { useRecentSearches } from "@/lib/recent-searches";
 
 export function SearchBar({ defaultValue, tags, sort }: { defaultValue: string; tags?: string[]; sort?: string }) {
   const [value, setValue] = useState(defaultValue);
-  const router = useRouter();
+  const router = useAppRouter();
   const [, startTransition] = useTransition();
   const inputRef = useRef<HTMLInputElement>(null);
   // The last `q` this field itself sent to the URL, to tell the server answering

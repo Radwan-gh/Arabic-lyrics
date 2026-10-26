@@ -1,10 +1,10 @@
 "use client";
 
-import { useRouter } from "next/navigation";
+import { useAppRouter } from "@/lib/use-app-router";
 import { TagPicker } from "./TagPicker";
 
 export function TagFilterBar({ selected, q, sort }: { selected: string[]; q: string; sort?: string }) {
-  const router = useRouter();
+  const router = useAppRouter();
 
   function handleChange(tags: string[]) {
     const params = new URLSearchParams();

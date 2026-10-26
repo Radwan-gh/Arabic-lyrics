@@ -1,8 +1,9 @@
-// أنواع ومعرّفات مشتركة لوضع القراءة دون اتصال (Offline PWA).
+// القراءة دون اتصال (Offline PWA): أنواع اللقطات ومعرّفاتها، وتهيئة كاش الصفحات.
 //
-// الفكرة: التطبيق يجلب هذه اللقطات عبر fetch العادي، ويتولّى الـ service worker
-// (public/sw.js) إرجاعها من الكاش عند انقطاع الشبكة — فلا يحتاج العميل لمعرفة
-// أسماء الكاش الداخلية.
+// الفكرة: لا توجد صفحات خاصة بوضع «دون اتصال». يخزّن الـ service worker
+// (public/sw.js) صفحات التطبيق نفسها (HTML الحقيقي لكل مسار) ويخدمها عند انقطاع
+// الشبكة، فيرى المستخدم الواجهة ذاتها. يبني العميل هنا قائمة الصفحات المطلوب
+// تخزينها مع «نسخة» لكل منها مشتقّة من اللقطات، فيعيد الـ SW جلب ما تغيّر فقط.
 
 import type { LyricsSort } from "@/lib/lyrics-search";
 
@@ -12,8 +13,20 @@ export const OFFLINE_LYRICS_URL = "/api/public/lyrics";
 /** بيانات المستخدم الخفيفة (مفضّلته وقوائمه) — خاصة، تُمسح عند تسجيل الخروج. */
 export const OFFLINE_ME_URL = "/api/offline/me";
 
-/** رسالة تُرسَل إلى الـ service worker لمسح البيانات الخاصة عند الخروج. */
-export const CLEAR_PRIVATE_MESSAGE = "CLEAR_PRIVATE";
+/** رسالة إلى الـ SW: خزّن هذه الصفحات (ما لم تكن نسختها المخزَّنة مطابقة). */
+export const WARM_PAGES_MESSAGE = "WARM_PAGES";
+
+/** رسالة من الـ SW: تغيّرت بيانات على الخادم (طلب تعديل نجح) — أعِد التهيئة. */
+export const DATA_CHANGED_MESSAGE = "DATA_CHANGED";
+
+/** ترويسة يُرسلها الـ SW عند التخزين المسبق، لئلّا يُحتسب الجلب مشاهدةً. */
+export const PRECACHE_HEADER = "x-sw-precache";
+
+/** خيارات ترتيب المفضّلة كما تظهر في الرابط (الافتراضي «recent» بلا معامل). */
+const FAVORITES_SORT_PARAMS = ["", "oldest", "title", "artist", "custom"];
+
+/** كل كم تُحدَّث صفحة «الوصلات العامة» المخزَّنة (لا لقطة لها نشتقّ منها نسخة). */
+const DISCOVER_REFRESH_MS = 60 * 60 * 1000;
 
 export interface OfflineLyric {
   id: string;
@@ -49,6 +62,7 @@ export interface OfflinePlaylist {
   id: string;
   title: string;
   description: string | null;
+  isPublic: boolean;
   /** معرّفات الأناشيد بالترتيب — يُحلّ محتواها من لقطة المجموعة. */
   itemIds: string[];
 }
@@ -58,6 +72,12 @@ export interface OfflineMe {
   /** معرّفات المفضّلة بالترتيب الخاص للمستخدم. */
   favorites: string[];
   playlists: OfflinePlaylist[];
+}
+
+export interface WarmPage {
+  url: string;
+  /** نسخة المحتوى المتوقَّع: يُعاد الجلب فقط إن اختلفت عن المخزَّنة. */
+  version: string;
 }
 
 /**
@@ -96,4 +116,110 @@ export function compareOfflineLyrics<T>(
     case "date_desc":
       return (a, b) => byDate(b, a) || byId(a, b);
   }
+}
+
+/** بصمة نصية قصيرة (FNV-1a بـ 32 بت) — تكفي لكشف التغيّر، لا للأمان. */
+function hashString(input: string): string {
+  let hash = 0x811c9dc5;
+  for (let i = 0; i < input.length; i++) {
+    hash ^= input.charCodeAt(i);
+    hash = Math.imul(hash, 0x01000193);
+  }
+  return (hash >>> 0).toString(36);
+}
+
+/**
+ * قائمة صفحات التطبيق المطلوب تخزينها للقراءة دون اتصال، مع نسخة كل صفحة.
+ * النسخة تُشتقّ من البيانات التي تعرضها الصفحة: نص النشيد وحالة تفضيله لصفحته،
+ * ومجمل المجموعة وبيانات المستخدم لصفحات القوائم. الأهم أولًا (القوائم ثم الأناشيد).
+ */
+export function buildWarmPages(collection: OfflineCollection, me: OfflineMe | null): WarmPage[] {
+  const favorites = new Set(me?.favorites ?? []);
+  const lyricVersions = new Map<string, string>();
+  for (const l of collection.lyrics) {
+    const fields = [l.title, l.artist ?? "", l.album ?? "", l.tags.join(","), l.createdAt, l.contentHtml];
+    lyricVersions.set(l.id, hashString(fields.join("\u0001")));
+  }
+  const lyricVersion = (id: string) => `${lyricVersions.get(id) ?? ""}${favorites.has(id) ? ".f" : ""}`;
+
+  const collectionVersion = hashString([...lyricVersions.values()].join("."));
+  const meVersion = me ? hashString(JSON.stringify({ favorites: me.favorites, playlists: me.playlists })) : "";
+  const listsVersion = `${collectionVersion}.${meVersion}`;
+
+  const pages: WarmPage[] = [
+    { url: "/", version: listsVersion },
+    { url: "/discover", version: String(Math.floor(Date.now() / DISCOVER_REFRESH_MS)) },
+  ];
+
+  if (me) {
+    for (const sort of FAVORITES_SORT_PARAMS) {
+      pages.push({ url: sort ? `/favorites?sort=${sort}` : "/favorites", version: listsVersion });
+    }
+    pages.push({ url: "/playlists", version: meVersion });
+    for (const p of me.playlists) {
+      const id = encodeURIComponent(p.id);
+      pages.push({ url: `/playlists/${id}`, version: listsVersion });
+      pages.push({ url: `/playlists/${id}/view`, version: listsVersion });
+      // صفحة النشيد ضمن الوصلة (التنقّل بين عناصرها) تختلف عن صفحته المفردة.
+      const itemsVersion = hashString(p.itemIds.join(","));
+      for (const itemId of p.itemIds) {
+        pages.push({
+          url: `/lyrics/${encodeURIComponent(itemId)}?playlist=${id}`,
+          version: `${lyricVersion(itemId)}.${itemsVersion}`,
+        });
+      }
+    }
+  }
+
+  for (const l of collection.lyrics) {
+    pages.push({ url: `/lyrics/${encodeURIComponent(l.id)}`, version: lyricVersion(l.id) });
+  }
+  return pages;
+}
+
+function waitForController(timeoutMs = 10_000): Promise<boolean> {
+  if (navigator.serviceWorker.controller) return Promise.resolve(true);
+  return new Promise((resolve) => {
+    const done = (ok: boolean) => {
+      clearTimeout(timer);
+      navigator.serviceWorker.removeEventListener("controllerchange", onChange);
+      resolve(ok);
+    };
+    const onChange = () => done(true);
+    const timer = setTimeout(() => done(!!navigator.serviceWorker.controller), timeoutMs);
+    navigator.serviceWorker.addEventListener("controllerchange", onChange);
+  });
+}
+
+async function fetchJson<T>(url: string): Promise<T | null> {
+  try {
+    const res = await fetch(url, { cache: "no-store" });
+    return res.ok ? ((await res.json()) as T) : null;
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * يجلب اللقطات (فيخزّنها الـ SW) ثم يطلب منه تخزين صفحات التطبيق التي تغيّرت.
+ * يعمل بصمت في الخلفية؛ أي فشل يُهمَل ويُستكمل في التهيئة التالية.
+ */
+export async function warmOfflineCache(authenticated: boolean): Promise<void> {
+  if (!navigator.onLine) return;
+  const registration = await navigator.serviceWorker.ready;
+  const worker = registration.active;
+  if (!worker) return;
+  // في الزيارة الأولى لا يتحكّم الـ SW بالصفحة فور تفعيله؛ ننتظره كي تمرّ طلبات
+  // اللقطات عبره فيخزّنها.
+  if (!(await waitForController())) return;
+
+  const [collection, me] = await Promise.all([
+    fetchJson<OfflineCollection>(OFFLINE_LYRICS_URL),
+    authenticated ? fetchJson<OfflineMe>(OFFLINE_ME_URL) : Promise.resolve(null),
+    // اقتراحات الوسوم في شريط التصفية — تُخزَّن لتعمل دون اتصال.
+    fetch("/api/tags", { cache: "no-store" }).catch(() => undefined),
+  ]);
+  if (!collection) return;
+
+  worker.postMessage({ type: WARM_PAGES_MESSAGE, pages: buildWarmPages(collection, me) });
 }

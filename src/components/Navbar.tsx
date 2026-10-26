@@ -17,13 +17,11 @@ import {
   X,
   Music,
   User,
-  WifiOff,
   ChevronDown,
   type LucideIcon,
 } from "lucide-react";
 import type { SessionPayload } from "@/lib/jwt";
 import { focusRing } from "@/lib/ui";
-import { CLEAR_PRIVATE_MESSAGE } from "@/lib/offline";
 import { PWAInstallButton } from "@/components/PWAInstallButton";
 import { useMenu } from "@/lib/menu-context";
 
@@ -68,14 +66,9 @@ export function Navbar({ user, compact = false }: { user: SessionPayload | null;
   }, [open]);
 
   async function handleLogout() {
+    // يمسح الـ service worker صفحات وبيانات الجلسة المخزَّنة عند نجاح هذا الطلب
+    // (راجع public/sw.js) حتى لا تتسرّب إلى المستخدم التالي على جهاز مشترك.
     await fetch("/api/auth/logout", { method: "POST" });
-    // امسح البيانات الخاصة المخزَّنة للقراءة دون اتصال (المفضّلة/القوائم) حتى لا
-    // تتسرّب إلى المستخدم التالي على جهاز مشترك.
-    if ("serviceWorker" in navigator) {
-      navigator.serviceWorker.ready
-        .then((reg) => reg.active?.postMessage({ type: CLEAR_PRIVATE_MESSAGE }))
-        .catch(() => {});
-    }
     setOpen(false);
     router.push("/");
     router.refresh();
@@ -226,7 +219,6 @@ function NavLinks({
     <>
       <NavItem href="/" icon={Home} label="الرئيسية" />
       <NavItem href="/discover" icon={Compass} label="الوصلات العامة" />
-      <NavItem href="/offline" icon={WifiOff} label="دون اتصال" />
       <NavItem href="/lyrics/new" icon={PlusCircle} label="إضافة أنشودة" />
       {user && <NavItem href="/favorites" icon={Heart} label="المفضلة" />}
       {user && <NavItem href="/playlists" icon={ListMusic} label="وصلاتي" />}
