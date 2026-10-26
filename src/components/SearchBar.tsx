@@ -4,6 +4,8 @@ import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState, useTransition } from "react";
 import { Search, X } from "lucide-react";
 import { inputCls, btnPrimary, focusRing } from "@/lib/ui";
+import { RecentSearches } from "@/components/RecentSearches";
+import { useRecentSearches } from "@/lib/recent-searches";
 
 export function SearchBar({ defaultValue, tags, sort }: { defaultValue: string; tags?: string[]; sort?: string }) {
   const [value, setValue] = useState(defaultValue);
@@ -13,6 +15,10 @@ export function SearchBar({ defaultValue, tags, sort }: { defaultValue: string; 
   // The last `q` this field itself sent to the URL, to tell the server answering
   // its own search apart from `q` changing for some other reason (see below).
   const sentValueRef = useRef<string | null>(null);
+  const recent = useRecentSearches();
+  // قائمة آخر عمليات البحث تظهر ما دام الحقل مُركَّزًا وفارغًا.
+  const [recentOpen, setRecentOpen] = useState(false);
+  const showRecent = recentOpen && !value.trim() && recent.items.length > 0;
 
   function runSearch(nextValue: string) {
     const trimmed = nextValue.trim();
@@ -59,6 +65,20 @@ export function SearchBar({ defaultValue, tags, sort }: { defaultValue: string; 
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     runSearch(value);
+    recent.add(value);
+  }
+
+  // تُحفظ الكلمة حين يغادر المستخدم الحقل (لفتح نتيجة أو التمرير فيها) أو يضغط
+  // Enter — لا مع كل بحث حيّ، وإلا امتلأت القائمة بأجزاء الكلمات أثناء الكتابة.
+  function handleBlur() {
+    setRecentOpen(false);
+    recent.add(value);
+  }
+
+  function handleSelectRecent(term: string) {
+    setValue(term);
+    runSearch(term);
+    recent.add(term);
   }
 
   function handleClear() {
@@ -79,7 +99,17 @@ export function SearchBar({ defaultValue, tags, sort }: { defaultValue: string; 
           ref={inputRef}
           type="search"
           value={value}
-          onChange={(e) => setValue(e.target.value)}
+          onChange={(e) => {
+            setValue(e.target.value);
+            setRecentOpen(true);
+          }}
+          onFocus={() => setRecentOpen(true)}
+          onBlur={handleBlur}
+          onKeyDown={(e) => {
+            if (e.key === "Escape" && showRecent) setRecentOpen(false);
+          }}
+          aria-controls={showRecent ? "recent-searches-desktop" : undefined}
+          aria-expanded={showRecent}
           placeholder="ابحث في العنوان أو الفنان أو الأنشودة..."
           aria-label="ابحث في العنوان أو الفنان أو الأنشودة"
           className={`${inputCls} ps-10 pe-10 [&::-webkit-search-cancel-button]:appearance-none`}
@@ -96,6 +126,15 @@ export function SearchBar({ defaultValue, tags, sort }: { defaultValue: string; 
           >
             <X className="h-4 w-4" aria-hidden="true" />
           </button>
+        )}
+        {showRecent && (
+          <RecentSearches
+            id="recent-searches-desktop"
+            items={recent.items}
+            onSelect={handleSelectRecent}
+            onRemove={recent.remove}
+            onClear={recent.clear}
+          />
         )}
       </div>
       <button type="submit" className={`${btnPrimary} shrink-0`}>

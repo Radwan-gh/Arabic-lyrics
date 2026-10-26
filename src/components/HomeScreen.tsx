@@ -9,6 +9,8 @@ import { MenuButton } from "@/components/MenuButton";
 import { LyricsSortSelect } from "@/components/LyricsSortSelect";
 import { BackToTopButton } from "@/components/BackToTopButton";
 import { Spinner } from "@/components/Spinner";
+import { RecentSearches } from "@/components/RecentSearches";
+import { useRecentSearches } from "@/lib/recent-searches";
 import { useLyricsFeed, type LyricsFeedItem } from "@/lib/use-lyrics-feed";
 import type { TagCount } from "@/lib/tags";
 import type { LyricsSort } from "@/lib/lyrics-search";
@@ -50,6 +52,11 @@ export function HomeScreen({
   // عن تغيّر q لسبب آخر (راجع تأثير المزامنة أدناه).
   const sentQueryRef = useRef<string | null>(null);
   const [tagQuery, setTagQuery] = useState("");
+  const searchInputRef = useRef<HTMLInputElement>(null);
+  const recent = useRecentSearches();
+  // قائمة آخر عمليات البحث تظهر ما دام الحقل مُركَّزًا وفارغًا.
+  const [recentOpen, setRecentOpen] = useState(false);
+  const showRecent = recentOpen && !search.trim() && recent.items.length > 0;
   const { items, hasMore, loading, error, retry, sentinelRef } = useLyricsFeed({
     query,
     tags: selectedTags,
@@ -98,6 +105,23 @@ export function HomeScreen({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [search]);
 
+  // تُحفظ الكلمة حين يغادر المستخدم الحقل (لفتح نتيجة أو التمرير فيها) أو يضغط
+  // «بحث» في لوحة المفاتيح — لا مع كل بحث حيّ، وإلا امتلأت القائمة بأجزاء
+  // الكلمات أثناء الكتابة.
+  function handleSearchBlur() {
+    setRecentOpen(false);
+    recent.add(search);
+  }
+
+  function handleSelectRecent(term: string) {
+    setSearch(term);
+    sentQueryRef.current = term;
+    router.replace(buildUrl({ q: term }));
+    recent.add(term);
+    // إغلاق لوحة المفاتيح لكشف النتائج.
+    searchInputRef.current?.blur();
+  }
+
   function toggleTag(tag: string) {
     const next = selectedTags.includes(tag) ? selectedTags.filter((t) => t !== tag) : [...selectedTags, tag];
     router.push(buildUrl({ tags: next }));
@@ -123,17 +147,46 @@ export function HomeScreen({
         </header>
 
         <div className="px-5 pb-3">
-          <div className="relative">
+          <form
+            role="search"
+            className="relative"
+            onSubmit={(e) => {
+              e.preventDefault();
+              searchInputRef.current?.blur();
+            }}
+          >
             <Search className="pointer-events-none absolute inset-y-0 start-3.5 my-auto h-5 w-5 text-[#9aa39d]" aria-hidden="true" />
             <input
+              ref={searchInputRef}
               type="search"
+              enterKeyHint="search"
               value={search}
-              onChange={(e) => setSearch(e.target.value)}
+              onChange={(e) => {
+                setSearch(e.target.value);
+                setRecentOpen(true);
+              }}
+              onFocus={() => setRecentOpen(true)}
+              onBlur={handleSearchBlur}
+              onKeyDown={(e) => {
+                if (e.key === "Escape" && showRecent) setRecentOpen(false);
+              }}
+              aria-controls={showRecent ? "recent-searches-mobile" : undefined}
+              aria-expanded={showRecent}
               placeholder="ابحث عن نشيد أو منشد أو كلمة..."
               aria-label="ابحث عن نشيد أو منشد أو كلمة"
               className="h-12 w-full rounded-2xl border border-[#e6e6e1] bg-white ps-11 pe-3.5 text-base text-[#14211c] placeholder:text-[#9aa39d] focus:outline-none focus:ring-2 focus:ring-emerald-100"
             />
-          </div>
+            {showRecent && (
+              <RecentSearches
+                id="recent-searches-mobile"
+                variant="mobile"
+                items={recent.items}
+                onSelect={handleSelectRecent}
+                onRemove={recent.remove}
+                onClear={recent.clear}
+              />
+            )}
+          </form>
         </div>
 
         <div className="flex items-center gap-2 overflow-x-auto px-5 pb-3.5">
