@@ -25,6 +25,7 @@ import { focusRing } from "@/lib/ui";
 import { PWAInstallButton } from "@/components/PWAInstallButton";
 import { OfflineStatusLine } from "@/components/OfflineStatusLine";
 import { useMenu } from "@/lib/menu-context";
+import { clearOfflineSession } from "@/lib/offline-sync";
 
 /**
  * `compact`: الشاشات الغامرة على الموبايل (راجع AppChrome) تُخفي شريط Navbar
@@ -78,6 +79,7 @@ export function Navbar({
     // يمسح الـ service worker صفحات وبيانات الجلسة المخزَّنة عند نجاح هذا الطلب
     // (راجع public/sw.js) حتى لا تتسرّب إلى المستخدم التالي على جهاز مشترك.
     await fetch("/api/auth/logout", { method: "POST" });
+    await clearOfflineSession();
     setOpen(false);
     router.push("/");
     router.refresh();

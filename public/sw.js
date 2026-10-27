@@ -1,37 +1,48 @@
 // Service worker لتطبيق «أناشيد» — يدعم التثبيت (PWA) والعمل دون اتصال.
 //
-// المبدأ: لا صفحات خاصة بوضع «دون اتصال». يخزّن الـ SW صفحات التطبيق نفسها (HTML
-// الحقيقي لكل مسار، مع أصولها الثابتة) ويخدمها عند انقطاع الشبكة، فيرى المستخدم
-// الواجهة ذاتها دون أي فرق.
+// المبدأ: لا صفحات خاصة بوضع «دون اتصال». بيانات القراءة محفوظة على الجهاز في
+// IndexedDB (يزامنها العميل — راجع src/lib/offline-sync.ts)، ويخزّن الـ SW «هيكلًا»
+// واحدًا لكل نوع صفحة: HTML الصفحة نفسها بلا بيانات (يُجلب بترويسة x-sw-shell)
+// مع أصولها الثابتة. دون اتصال يُخدَم الهيكل لأي مسار من نوعه، فتملأ الصفحة نفسها
+// بياناتها من الجهاز حسب الرابط.
 //
-// - التنقّلات: الشبكة أولًا (وتُحدَّث النسخة المخزَّنة)، ثم الصفحة المخزَّنة.
+// - التنقّلات: الشبكة أولًا؛ عند فشلها هيكل نوع الصفحة، وإلا الصفحة المخزَّنة (لما لا
+//   هيكل له، مثل «الوصلات العامة» والصفحات المُزارة).
 // - التنقّل داخل التطبيق (حمولات RSC): الشبكة فقط؛ عند فشلها يُرجَع خطأ شبكة فيتراجع
-//   Next.js إلى تنقّل كامل للمسار نفسه، يُخدَم من الصفحة المخزَّنة.
-// - التخزين المسبق: يرسل العميل قائمة الصفحات مع «نسخة» لكل منها (WARM_PAGES —
-//   راجع src/lib/offline.ts)، فيجلب الـ SW ما تغيّر فقط مع أصوله.
-// - صفحات HTML تعكس جلسة المستخدم (مفضّلته، أزرار التعديل…)، فيُمسح كاشها مع
-//   بياناته الخاصة عند نجاح تسجيل الدخول أو الخروج، أو حين تصل تهيئة بجلسة غير
-//   التي خُزِّنت بها الصفحات (دخول عبر Google، انتهاء الجلسة…).
+//   Next.js إلى تنقّل كامل للمسار نفسه، يُخدَم كما سبق.
+// - التخزين المسبق: يرسل العميل قائمة الهياكل مع «نسخة» لكل منها (WARM_SHELLS)،
+//   فيجلب الـ SW ما تغيّر فقط مع أصوله.
+// - الهياكل تعكس جلسة المستخدم (اسمه، أزرار الدخول/التعديل…)، فيُمسح كاشها عند نجاح
+//   تسجيل الدخول أو الخروج، أو حين تصل تهيئة بجلسة غير التي خُزِّنت بها.
 // - حالة الحفظ (WARM_STATUS): يبثّ الـ SW تقدّم التخزين إلى الصفحات المفتوحة
 //   ويُجيب عند السؤال، ويحفظ آخر حالة في الكاش لتبقى معروفة بعد إعادة تشغيله.
-// - لا يُخزَّن: الطلبات عبر-الأصل، وطلبات التعديل، ومسارات /api/* عدا لقطات القراءة.
+// - لا يُخزَّن: الطلبات عبر-الأصل، وطلبات التعديل، ومسارات /api/* عدا الوسوم.
 
-const VERSION = "v6";
+const VERSION = "v7";
 const STATIC_CACHE = `anaasheed-static-${VERSION}`; // أصول ثابتة (JS/CSS/خطوط/أيقونات)
-const PAGES_CACHE = `anaasheed-pages-${VERSION}`; // صفحات HTML (خاصة بالجلسة)
-const DATA_CACHE = `anaasheed-data-${VERSION}`; // لقطات JSON
+const PAGES_CACHE = `anaasheed-pages-${VERSION}`; // هياكل وصفحات HTML (خاصة بالجلسة)
+const DATA_CACHE = `anaasheed-data-${VERSION}`; // استجابات JSON
 const KNOWN_CACHES = [STATIC_CACHE, PAGES_CACHE, DATA_CACHE];
 
-// لقطات JSON تُخزَّن (الشبكة أولًا) لتعمل دون اتصال.
-const DATA_PATHS = ["/api/public/lyrics", "/api/offline/me", "/api/tags"];
-const PRIVATE_DATA_PATH = "/api/offline/me";
+// استجابات JSON تُخزَّن (الشبكة أولًا) لتعمل دون اتصال: اقتراحات الوسوم في التصفية.
+const DATA_PATHS = ["/api/tags"];
 const AUTH_PATHS = ["/api/auth/login", "/api/auth/logout"];
 
 // يطابق الثوابت في src/lib/offline.ts.
-const WARM_PAGES_MESSAGE = "WARM_PAGES";
+const WARM_SHELLS_MESSAGE = "WARM_SHELLS";
 const WARM_STATUS_MESSAGE = "WARM_STATUS";
 const DATA_CHANGED_MESSAGE = "DATA_CHANGED";
-const PRECACHE_HEADER = "x-sw-precache";
+const SHELL_HEADER = "x-sw-shell";
+
+// المسارات التي تُخدَم دون اتصال من هيكل نوعها: [نمط المسار، رابط الهيكل].
+const SHELL_ROUTES = [
+  [/^\/$/, "/"],
+  [/^\/lyrics\/(?!new$)[^/]+$/, "/lyrics/_"],
+  [/^\/favorites$/, "/favorites"],
+  [/^\/playlists$/, "/playlists"],
+  [/^\/playlists\/[^/]+$/, "/playlists/_"],
+  [/^\/playlists\/[^/]+\/view$/, "/playlists/_/view"],
+];
 
 // نسخة الصفحة المخزَّنة تُحفظ في ترويسة على الاستجابة نفسها.
 const PAGE_VERSION_HEADER = "x-sw-page-version";
@@ -59,8 +70,8 @@ self.addEventListener("activate", (event) => {
 
 self.addEventListener("message", (event) => {
   const data = event.data;
-  if (data && data.type === WARM_PAGES_MESSAGE && Array.isArray(data.pages)) {
-    event.waitUntil(enqueueWarm(data.pages, String(data.session ?? ""), data.authenticated === true));
+  if (data && data.type === WARM_SHELLS_MESSAGE && Array.isArray(data.pages)) {
+    event.waitUntil(enqueueWarm(data.pages, String(data.session ?? "")));
   } else if (data && data.type === WARM_STATUS_MESSAGE && event.source) {
     event.waitUntil(
       readStatus().then((status) => event.source.postMessage({ type: WARM_STATUS_MESSAGE, status }))
@@ -119,29 +130,39 @@ function isRscRequest(request, url) {
 
 async function handleNavigation(event) {
   const { request } = event;
+  const url = new URL(request.url);
+  const shell = shellFor(url.pathname);
   try {
     const response = await fetch(request);
-    if (isCacheablePage(response)) {
+    // صفحات الأنواع ذات الهيكل لا تُخزَّن: دون اتصال تُعرض من بيانات الجهاز.
+    if (!shell && isCacheablePage(response)) {
       const copy = response.clone();
       event.waitUntil(
-        (async () => {
-          const cache = await caches.open(PAGES_CACHE);
-          // زيارة حيّة = محتوى حديث؛ نُبقي نسخته المعروفة إن وُجدت ليتجنّب
-          // التخزين المسبق إعادة جلبه بلا داعٍ.
-          const previous = await cache.match(request.url, { ignoreVary: true });
-          await putPage(cache, request.url, copy, previous?.headers.get(PAGE_VERSION_HEADER) ?? "");
-        })().catch(() => {})
+        caches
+          .open(PAGES_CACHE)
+          .then((cache) => putPage(cache, request.url, copy, ""))
+          .catch(() => {})
       );
     }
     return response;
   } catch (error) {
-    const cached = await matchPage(request.url);
+    const cache = await caches.open(PAGES_CACHE);
+    const cached = (shell && (await cache.match(shellKey(shell)))) || (await matchPage(request.url));
     return cached || unavailableResponse();
   }
 }
 
-// الصفحة المخزَّنة للرابط تمامًا، وإلا للمسار نفسه بلا معاملات (مثلًا ‎/?q=…‎ تُخدَم
-// من الرئيسية، فتطبّق الصفحة معاملات الرابط من لقطة الأناشيد).
+function shellFor(pathname) {
+  const route = SHELL_ROUTES.find(([pattern]) => pattern.test(pathname));
+  return route ? route[1] : null;
+}
+
+// مفتاح الهيكل في الكاش — مسار لا يطابق أي صفحة حقيقية.
+function shellKey(shellUrl) {
+  return `${self.location.origin}/__shell__${shellUrl}`;
+}
+
+// الصفحة المخزَّنة للرابط تمامًا، وإلا للمسار نفسه بلا معاملات.
 async function matchPage(href) {
   const cache = await caches.open(PAGES_CACHE);
   const url = new URL(href);
@@ -186,23 +207,22 @@ color:#fff;text-decoration:none}</style></head><body><div><p>هذه الصفحة
   return new Response(html, { status: 503, headers: { "Content-Type": "text/html; charset=utf-8" } });
 }
 
-// ─── التخزين المسبق للصفحات ──────────────────────────────────────────────────
+// ─── التخزين المسبق للهياكل ──────────────────────────────────────────────────
 
 // تُنفَّذ طلبات التهيئة واحدًا تلو الآخر؛ الطلب اللاحق يتخطّى ما خزّنه السابق.
 let warmQueue = Promise.resolve();
 // يزداد مع كل تغيّر للجلسة، فتتوقّف أي جولة تهيئة بدأت للجلسة السابقة.
 let sessionGeneration = 0;
 
-function enqueueWarm(pages, session, authenticated) {
-  warmQueue = warmQueue.then(() => warmPages(pages, session, authenticated)).catch(() => {});
+function enqueueWarm(pages, session) {
+  warmQueue = warmQueue.then(() => warmPages(pages, session)).catch(() => {});
   return warmQueue;
 }
 
-async function warmPages(pages, session, authenticated) {
-  // صفحات مخزَّنة بجلسة أخرى (أو بلا سجلّ يثبت جلستها) لا تصحّ لهذه الجلسة.
-  // بيانات المستخدم الخاصة جلبها العميل للتوّ لهذه الجلسة إن كان مسجّلًا، فتبقى.
+async function warmPages(pages, session) {
+  // هياكل مخزَّنة بجلسة أخرى (أو بلا سجلّ يثبت جلستها) لا تصحّ لهذه الجلسة.
   const previous = await readStatus();
-  if (!previous || previous.session !== session) await clearSessionCaches({ keepPrivateData: authenticated });
+  if (!previous || previous.session !== session) await clearSessionCaches();
 
   const generation = sessionGeneration;
   const cache = await caches.open(PAGES_CACHE);
@@ -212,9 +232,10 @@ async function warmPages(pages, session, authenticated) {
     if (!page || typeof page.url !== "string") continue;
     total++;
     const href = new URL(page.url, self.location.origin).href;
-    const cached = await cache.match(href, { ignoreVary: true });
+    const key = page.shell ? shellKey(page.url) : href;
+    const cached = await cache.match(key, { ignoreVary: true });
     if (!cached || cached.headers.get(PAGE_VERSION_HEADER) !== String(page.version)) {
-      stale.push({ href, version: String(page.version) });
+      stale.push({ href, key, shell: page.shell === true, version: String(page.version) });
     }
   }
 
@@ -259,7 +280,7 @@ async function warmPage(cache, page, seenAssets) {
   try {
     response = await fetch(page.href, {
       credentials: "same-origin",
-      headers: { [PRECACHE_HEADER]: "1" },
+      headers: page.shell ? { [SHELL_HEADER]: "1" } : {},
     });
   } catch {
     return "offline";
@@ -267,7 +288,7 @@ async function warmPage(cache, page, seenAssets) {
   if (!isCacheablePage(response)) {
     return response.status >= 500 ? "failed" : "saved";
   }
-  const html = await putPage(cache, page.href, response, page.version);
+  const html = await putPage(cache, page.key, response, page.version);
   await cacheAssets(html, seenAssets);
   return "saved";
 }
@@ -383,7 +404,7 @@ async function handleMutation(event, url) {
   const response = await fetch(event.request);
   if (response.ok) {
     if (AUTH_PATHS.includes(url.pathname)) {
-      // تغيّرت الجلسة: الصفحات المخزَّنة تعكس المستخدم السابق. يُمسح كاشها قبل
+      // تغيّرت الجلسة: الهياكل المخزَّنة تعكس المستخدم السابق. يُمسح كاشها قبل
       // إرجاع الاستجابة، فتبدأ تهيئة الجلسة الجديدة من كاش نظيف.
       await clearSessionCaches();
     } else {
@@ -393,13 +414,11 @@ async function handleMutation(event, url) {
   return response;
 }
 
-async function clearSessionCaches({ keepPrivateData = false } = {}) {
+// بيانات المستخدم الخاصة في IndexedDB يمسحها العميل (راجع offline-sync).
+async function clearSessionCaches() {
   sessionGeneration++;
   currentStatus = null;
   await caches.delete(PAGES_CACHE);
-  if (keepPrivateData) return;
-  const data = await caches.open(DATA_CACHE);
-  await data.delete(PRIVATE_DATA_PATH, { ignoreSearch: true });
 }
 
 // يُبلغ الصفحات المفتوحة بتغيّر البيانات لتعيد التهيئة فتُحدَّث الصفحات المتأثّرة.

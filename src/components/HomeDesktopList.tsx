@@ -8,6 +8,7 @@ import { LyricsSortSelect } from "@/components/LyricsSortSelect";
 import { BackToTopButton } from "@/components/BackToTopButton";
 import { Spinner } from "@/components/Spinner";
 import { useLyricsFeed, type LyricsFeedItem } from "@/lib/use-lyrics-feed";
+import { useHomeStats } from "@/lib/offline-data";
 import { useHomeFilters, type HomeFilters } from "@/lib/use-home-filters";
 import { focusRing } from "@/lib/ui";
 
@@ -17,6 +18,8 @@ interface HomeDesktopListProps {
   initialHasMore: boolean;
   initialTotal: number;
   grandTotal: number;
+  /** فُتحت من هيكل دون اتصال: البيانات كلها من الجهاز. */
+  shell?: boolean;
   loggedIn: boolean;
 }
 
@@ -30,9 +33,11 @@ export function HomeDesktopList({
   initialItems,
   initialHasMore,
   initialTotal,
-  grandTotal,
+  grandTotal: serverGrandTotal,
   loggedIn,
+  shell = false,
 }: HomeDesktopListProps) {
+  const { grandTotal } = useHomeStats(shell, serverGrandTotal, []);
   const filters = useHomeFilters(initialFilters);
   const { query, tags: selectedTags, sort } = filters;
   const isFiltered = Boolean(query) || selectedTags.length > 0;
@@ -42,6 +47,7 @@ export function HomeDesktopList({
     initialItems,
     initialHasMore,
     initialTotal,
+    shell,
   });
 
   // نُبقي الرابط نظيفًا حين يكون الترتيب الافتراضي (أبجدي تصاعدي) — يطابق سلوك

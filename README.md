@@ -167,40 +167,43 @@ please flag anything that doesn't match Railway's current UI/CLI.
 ## Offline reading (PWA)
 
 The app is an installable PWA that **works offline with the very same pages** —
-there is no separate offline page or offline UI. After you open it once while
-online, the app's own pages are cached on the device in the background: the home
-page, every lyric page (`/lyrics/[id]`), public playlists (`/discover`) and, if
-you are signed in, your favorites (`/favorites`) and playlists
-(`/playlists`, `/playlists/[id]`, `/playlists/[id]/view`). With no connection
-those pages open exactly as they do online.
+there is no separate offline page or offline UI. Reading data lives in an
+on-device database, and each page renders from it when there is no connection.
 
 How it works (reading only; creating/editing and sign-in still need a
 connection):
 
-- `public/sw.js` (service worker) caches real page HTML plus its static assets.
-  Navigations go network-first and fall back to the cached page. In-app (RSC)
-  navigations that fail offline make Next.js fall back to a full navigation,
-  which the service worker answers from the cache. Pages with no cached copy
-  (e.g. `/lyrics/new`, admin) show a short "needs a connection" notice.
-- `src/lib/offline.ts` builds the list of pages to cache, each with a version
-  derived from `GET /api/public/lyrics` (full collection snapshot) and
-  `GET /api/offline/me` (the signed-in user's favorites/playlists). The service
-  worker only re-fetches pages whose version changed. Precache requests carry
-  an `x-sw-precache` header so they don't count as lyric views.
-- Home search, tag filtering and sorting run locally offline: the URL is updated
-  via the History API (`src/lib/use-app-router.ts`) and the list is computed from
-  the cached collection snapshot (`src/lib/use-lyrics-feed.ts`).
-- Successful edits through `/api/*` trigger a background refresh of affected
-  pages. Cached pages are tied to the current session: a sign-in or sign-out
-  (including Google sign-in or an expired session) clears them and re-saves
-  them for the new session, so one user's pages never leak to the next on a
-  shared device.
+- **On-device database** (`src/lib/offline-db.ts`, IndexedDB): all lyrics, plus
+  the signed-in user's favorites and playlists.
+- **Incremental sync** (`src/lib/offline-sync.ts`): `GET /api/public/lyrics`
+  returns everything on first sync and only lyrics changed since the last sync
+  afterwards (`?since=`, based on `updatedAt`). Its `order` field (all current
+  ids in alphabetical order) drives sorting and removes deleted lyrics.
+  `GET /api/offline/me` returns the user's favorites/playlists. Sync runs on
+  each app open, when the connection returns, and after any successful edit.
+- **One page shell per page type** (`public/sw.js`): the service worker caches
+  the HTML of `/`, `/lyrics/[id]`, `/favorites`, `/playlists`,
+  `/playlists/[id]` and `/playlists/[id]/view` *without data* (fetched with an
+  `x-sw-shell` header, which makes the page skip the database). Offline, any
+  URL of that type gets its shell, and the page loads the content for the
+  actual URL from the device (`useOfflinePageData` in `src/lib/offline-data.ts`).
+  `/discover` is cached as a normal page. Online, every page is still fully
+  server-rendered, so search engines and link previews are unaffected.
+- Home search, tags, sort and favorites search/sort run locally offline: the URL
+  is updated via the History API (`src/lib/use-app-router.ts`) and results are
+  computed from the device database.
+- Cached shells and private data are tied to the session: sign-in/sign-out
+  (including Google sign-in or an expired session) clears and re-saves them.
 - The menu shows the save status (`src/components/OfflineStatusLine.tsx`):
-  progress while saving, «متاح دون إنترنت» only once every page is saved, or
-  "incomplete" if the connection dropped (it resumes automatically).
+  progress, «متاح دون إنترنت» once data and shells are saved, or "incomplete".
 
-Note: the first online visit is what enables offline use — wait until the menu
-shows «متاح دون إنترنت» before relying on it.
+Storage, measured locally with 599 lyrics: about 1.9 MB (0.83 MB database +
+0.1 MB shells + 0.93 MB static assets), versus about 24 MB when every page was
+cached. A full first sync is one request of about 0.2 MB over the network (the
+sync responses are compressed with brotli/gzip in `src/lib/compressed-json.ts`,
+since Next.js does not compress API route responses; 0.89 MB uncompressed);
+later syncs only transfer changed lyrics. Note: viewing a lyric bumps its `updatedAt` (view
+counter), so viewed lyrics are included in the next incremental sync.
 
 ## Project structure
 
