@@ -55,8 +55,20 @@ export async function findLyricsSuggestions(
   });
 }
 
+/** يجلب النشيد لصفحته دون احتساب مشاهدة (تُحتسب بعد إرسال الصفحة عبر `incrementLyricsViews`). */
+export async function getLyrics(id: string) {
+  return prisma.lyrics.findUnique({ where: { id }, include: { createdBy: { select: { name: true } } } });
+}
+
+/** يزيد عدّاد مشاهدات النشيد؛ يتجاهل الفشل (نشيد محذوف مثلاً) لأنه لا يخصّ القارئ. */
+export async function incrementLyricsViews(id: string): Promise<void> {
+  await prisma.lyrics
+    .update({ where: { id }, data: { viewCount: { increment: 1 } }, select: { id: true } })
+    .catch(() => undefined);
+}
+
 /**
- * يجلب النشيد لصفحته ويحتسب المشاهدة. `countView: false` للجلب الآلي (تخزين
+ * يجلب النشيد ويحتسب المشاهدة. `countView: false` للجلب الآلي (تخزين
  * الـ service worker المسبق للقراءة دون اتصال) حتى لا يضخّم عدّاد المشاهدات.
  */
 export async function getLyricsAndIncrementViews(id: string, { countView = true } = {}) {

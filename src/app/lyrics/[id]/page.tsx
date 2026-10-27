@@ -1,9 +1,10 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { headers } from "next/headers";
+import { after } from "next/server";
 import { Pencil } from "lucide-react";
 import { getCurrentUser } from "@/lib/session";
-import { getLyricsAndIncrementViews } from "@/lib/lyrics";
+import { getLyrics, incrementLyricsViews } from "@/lib/lyrics";
 import { isFavorited } from "@/lib/favorites";
 import { getPlaylistNavContext } from "@/lib/playlists";
 import { renderLyricsHtml } from "@/lib/render-lyrics";
@@ -28,18 +29,26 @@ export default async function LyricsPage({
   params: Promise<{ id: string }>;
   searchParams: Promise<{ playlist?: string }>;
 }) {
-  const { id } = await params;
-  const { playlist: playlistId } = await searchParams;
-  const hdrs = await headers();
+  const [{ id }, { playlist: playlistId }, hdrs, session] = await Promise.all([
+    params,
+    searchParams,
+    headers(),
+    getCurrentUser(),
+  ]);
   const countView = hdrs.get(PRECACHE_HEADER) !== "1";
-  const [lyrics, session] = await Promise.all([getLyricsAndIncrementViews(id, { countView }), getCurrentUser()]);
+  // كل الاستعلامات تحتاج المعرّف فقط، فتُنفَّذ معاً في رحلة واحدة إلى قاعدة البيانات.
+  const [lyrics, favorited, playlistNav] = await Promise.all([
+    getLyrics(id),
+    session ? isFavorited(session.userId, id) : Promise.resolve(false),
+    playlistId ? getPlaylistNavContext(playlistId, id, session?.userId ?? null) : Promise.resolve(null),
+  ]);
 
   if (!lyrics) notFound();
 
-  const [favorited, playlistNav] = await Promise.all([
-    session ? isFavorited(session.userId, lyrics.id) : Promise.resolve(false),
-    playlistId ? getPlaylistNavContext(playlistId, lyrics.id, session?.userId ?? null) : Promise.resolve(null),
-  ]);
+  // تُحتسب المشاهدة بعد إرسال الصفحة حتى لا ينتظر القارئ عملية الكتابة، ويُعرض
+  // العدد شاملاً لها كما كان. الجلب الآلي (تخزين الـ SW المسبق) لا يُحتسب.
+  if (countView) after(() => incrementLyricsViews(lyrics.id));
+  const viewCount = lyrics.viewCount + (countView ? 1 : 0);
 
   const canModify =
     !!session && (session.role === "ADMIN" || (session.role === "EDITOR" && session.userId === lyrics.createdById));
@@ -64,7 +73,7 @@ export default async function LyricsPage({
           title={lyrics.title}
           artist={lyrics.artist}
           album={lyrics.album}
-          viewCount={lyrics.viewCount}
+          viewCount={viewCount}
           tags={lyrics.tags}
           contentHtml={contentHtml}
           favorited={favorited}
@@ -84,7 +93,7 @@ export default async function LyricsPage({
           {lyrics.artist && <p className="text-emerald-700">{lyrics.artist}</p>}
           {lyrics.album && <p className="text-sm text-neutral-500">{lyrics.album}</p>}
           <p className="text-xs text-neutral-500">
-            أضافها {lyrics.createdBy?.name ?? "مستخدم محذوف"} · {formatDate(lyrics.createdAt)} · {lyrics.viewCount} مشاهدة
+            أضافها {lyrics.createdBy?.name ?? "مستخدم محذوف"} · {formatDate(lyrics.createdAt)} · {viewCount} مشاهدة
           </p>
         </div>
         <div className="flex flex-shrink-0 flex-wrap items-center gap-2">
