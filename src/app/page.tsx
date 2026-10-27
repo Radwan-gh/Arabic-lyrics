@@ -6,6 +6,11 @@ import { getFavoritedLyricsIds } from "@/lib/favorites";
 import { getTagCounts } from "@/lib/tags";
 import { HomeScreen } from "@/components/HomeScreen";
 import { HomeDesktopList } from "@/components/HomeDesktopList";
+import { headers } from "next/headers";
+import { isShellRequest } from "@/lib/offline";
+import type { LyricsFeedItem } from "@/lib/use-lyrics-feed";
+import type { TagCount } from "@/lib/tags";
+import type { HomeFilters } from "@/lib/use-home-filters";
 
 export default async function HomePage({
   searchParams,
@@ -19,9 +24,15 @@ export default async function HomePage({
     .filter(Boolean);
   const sort = parseLyricsSort(sortParam, "title_asc");
 
-  const where = buildLyricsWhere(q, tags);
   const initialFilters = { query: q, tags, sort };
 
+  // هيكل للقراءة دون اتصال: الواجهة نفسها بلا بيانات، تملؤها بيانات الجهاز.
+  if (isShellRequest(await headers())) {
+    const session = await getCurrentUser();
+    return <HomeView shell initialFilters={initialFilters} cards={[]} hasMore={false} total={0} grandTotal={0} tagCounts={[]} loggedIn={!!session} />;
+  }
+
+  const where = buildLyricsWhere(q, tags);
   const [items, total, grandTotal, session, tagCounts] = await Promise.all([
     prisma.lyrics.findMany({
       where,
@@ -53,6 +64,38 @@ export default async function HomePage({
   const hasMore = items.length < total;
 
   return (
+    <HomeView
+      initialFilters={initialFilters}
+      cards={cards}
+      hasMore={hasMore}
+      total={total}
+      grandTotal={grandTotal}
+      tagCounts={tagCounts}
+      loggedIn={!!session}
+    />
+  );
+}
+
+function HomeView({
+  shell = false,
+  initialFilters,
+  cards,
+  hasMore,
+  total,
+  grandTotal,
+  tagCounts,
+  loggedIn,
+}: {
+  shell?: boolean;
+  initialFilters: HomeFilters;
+  cards: LyricsFeedItem[];
+  hasMore: boolean;
+  total: number;
+  grandTotal: number;
+  tagCounts: TagCount[];
+  loggedIn: boolean;
+}) {
+  return (
     <>
       <div className="sm:hidden">
         <HomeScreen
@@ -62,7 +105,8 @@ export default async function HomePage({
           initialTotal={total}
           grandTotal={grandTotal}
           tagCounts={tagCounts}
-          loggedIn={!!session}
+          loggedIn={loggedIn}
+          shell={shell}
         />
       </div>
 
@@ -73,7 +117,8 @@ export default async function HomePage({
           initialHasMore={hasMore}
           initialTotal={total}
           grandTotal={grandTotal}
-          loggedIn={!!session}
+          loggedIn={loggedIn}
+          shell={shell}
         />
       </div>
     </>

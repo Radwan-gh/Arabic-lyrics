@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { useAppRouter } from "@/lib/use-app-router";
 import { useState } from "react";
 import { ChevronRight, Search, GripVertical } from "lucide-react";
 import { FavoriteButton } from "@/components/FavoriteButton";
@@ -46,7 +46,7 @@ export function FavoritesScreen({
   page,
   pageCount,
 }: FavoritesScreenProps) {
-  const router = useRouter();
+  const router = useAppRouter();
   const [search, setSearch] = useState(query);
   const { items, move } = useReorderableList(initialItems, (i) => i.lyricsId, persistFavoritesOrder);
   const { draggingIndex, offsetY, startDrag, onDragMove, endDrag, onKeyDown } = useDragReorder(items.length, move);

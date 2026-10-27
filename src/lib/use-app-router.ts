@@ -21,6 +21,9 @@ export function useAppRouter() {
         if (navigator.onLine) router.replace(url);
         else window.history.replaceState(null, "", url);
       },
+      back() {
+        router.back();
+      },
     }),
     [router],
   );

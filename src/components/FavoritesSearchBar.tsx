@@ -1,13 +1,13 @@
 "use client";
 
-import { useRouter } from "next/navigation";
+import { useAppRouter } from "@/lib/use-app-router";
 import { useState } from "react";
 import { Search } from "lucide-react";
 import { inputCls, btnPrimary } from "@/lib/ui";
 
 export function FavoritesSearchBar({ defaultValue, sort }: { defaultValue: string; sort?: string }) {
   const [value, setValue] = useState(defaultValue);
-  const router = useRouter();
+  const router = useAppRouter();
 
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault();

@@ -11,6 +11,7 @@ import { Spinner } from "@/components/Spinner";
 import { RecentSearches } from "@/components/RecentSearches";
 import { useRecentSearches } from "@/lib/recent-searches";
 import { useLyricsFeed, type LyricsFeedItem } from "@/lib/use-lyrics-feed";
+import { useHomeStats } from "@/lib/offline-data";
 import { buildHomeUrl, useHomeFilters, type HomeFilters } from "@/lib/use-home-filters";
 import { useAppRouter } from "@/lib/use-app-router";
 import type { TagCount } from "@/lib/tags";
@@ -23,6 +24,8 @@ interface HomeScreenProps {
   initialHasMore: boolean;
   initialTotal: number;
   grandTotal: number;
+  /** فُتحت من هيكل دون اتصال: البيانات كلها من الجهاز. */
+  shell?: boolean;
   tagCounts: TagCount[];
   loggedIn: boolean;
 }
@@ -37,10 +40,12 @@ export function HomeScreen({
   initialItems,
   initialHasMore,
   initialTotal,
-  grandTotal,
-  tagCounts,
+  grandTotal: serverGrandTotal,
+  tagCounts: serverTagCounts,
   loggedIn,
+  shell = false,
 }: HomeScreenProps) {
+  const { grandTotal, tagCounts } = useHomeStats(shell, serverGrandTotal, serverTagCounts);
   const router = useAppRouter();
   const filters = useHomeFilters(initialFilters);
   const { query, tags: selectedTags, sort } = filters;
@@ -61,6 +66,7 @@ export function HomeScreen({
     initialItems,
     initialHasMore,
     initialTotal,
+    shell,
   });
 
   function buildUrl(overrides: { q?: string; tags?: string[]; sort?: LyricsSort }) {
