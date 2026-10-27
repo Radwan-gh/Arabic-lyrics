@@ -1,7 +1,8 @@
 import { notFound } from "next/navigation";
 import { headers } from "next/headers";
+import { after } from "next/server";
 import { getCurrentUser } from "@/lib/session";
-import { getLyricsAndIncrementViews } from "@/lib/lyrics";
+import { getLyrics, incrementLyricsViews } from "@/lib/lyrics";
 import { isFavorited } from "@/lib/favorites";
 import { getPlaylistNavContext } from "@/lib/playlists";
 import { renderLyricsHtml } from "@/lib/render-lyrics";
@@ -17,8 +18,12 @@ export default async function LyricsPage({
   params: Promise<{ id: string }>;
   searchParams: Promise<{ playlist?: string }>;
 }) {
-  const hdrs = await headers();
-  const session = await getCurrentUser();
+  const [{ id }, { playlist: playlistId }, hdrs, session] = await Promise.all([
+    params,
+    searchParams,
+    headers(),
+    getCurrentUser(),
+  ]);
   const viewer = session ? { userId: session.userId, role: session.role } : null;
 
   // هيكل للقراءة دون اتصال: الواجهة نفسها بلا بيانات، تملؤها بيانات الجهاز.
@@ -26,16 +31,18 @@ export default async function LyricsPage({
     return <LyricsDetail data={null} loggedIn={!!session} viewer={viewer} />;
   }
 
-  const { id } = await params;
-  const { playlist: playlistId } = await searchParams;
-  const lyrics = await getLyricsAndIncrementViews(id);
+  // كل الاستعلامات تحتاج المعرّف فقط، فتُنفَّذ معاً في رحلة واحدة إلى قاعدة البيانات.
+  const [lyrics, favorited, playlistNav] = await Promise.all([
+    getLyrics(id),
+    session ? isFavorited(session.userId, id) : Promise.resolve(false),
+    playlistId ? getPlaylistNavContext(playlistId, id, session?.userId ?? null) : Promise.resolve(null),
+  ]);
 
   if (!lyrics) notFound();
 
-  const [favorited, playlistNav] = await Promise.all([
-    session ? isFavorited(session.userId, lyrics.id) : Promise.resolve(false),
-    playlistId ? getPlaylistNavContext(playlistId, lyrics.id, session?.userId ?? null) : Promise.resolve(null),
-  ]);
+  // تُحتسب المشاهدة بعد إرسال الصفحة حتى لا ينتظر القارئ عملية الكتابة، ويُعرض
+  // العدد شاملاً لها كما كان.
+  after(() => incrementLyricsViews(lyrics.id));
 
   const host = hdrs.get("x-forwarded-host") ?? hdrs.get("host") ?? "";
   const proto = hdrs.get("x-forwarded-proto") ?? "https";
@@ -49,7 +56,7 @@ export default async function LyricsPage({
         title: lyrics.title,
         artist: lyrics.artist,
         album: lyrics.album,
-        viewCount: lyrics.viewCount,
+        viewCount: lyrics.viewCount + 1,
         tags: lyrics.tags,
         contentHtml: renderLyricsHtml(lyrics.content),
         createdAt: lyrics.createdAt.toISOString(),

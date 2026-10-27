@@ -13,6 +13,7 @@ import { LyricsProse } from "@/components/LyricsProse";
 import { KeepScreenAwake } from "@/components/KeepScreenAwake";
 import { ReaderScreen } from "@/components/ReaderScreen";
 import { OfflinePageFallback } from "@/components/OfflinePageFallback";
+import { LyricsDetailSkeleton } from "@/components/LyricsDetailSkeleton";
 import { formatDate } from "@/lib/format";
 import { btnSecondary, focusRing } from "@/lib/ui";
 import { buildWhatsAppLyricsFromHtml } from "@/lib/whatsapp-text";
@@ -61,7 +62,8 @@ export function LyricsDetail({
     (dataset) => selectLyricDetail(dataset, id, playlistId, viewer),
     `${id}|${playlistId}`,
   );
-  if (state.status !== "ready") return <OfflinePageFallback status={state.status} />;
+  if (state.status === "loading") return <LyricsDetailSkeleton />;
+  if (state.status === "missing") return <OfflinePageFallback status="missing" />;
   return <LyricsDetailView key={state.data.id} data={state.data} loggedIn={loggedIn} />;
 }
 
