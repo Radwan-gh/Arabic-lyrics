@@ -1,4 +1,5 @@
-import { NextResponse, type NextRequest } from "next/server";
+import type { NextRequest } from "next/server";
+import { compressedJson } from "@/lib/compressed-json";
 import { prisma } from "@/lib/prisma";
 import { renderLyricsHtml } from "@/lib/render-lyrics";
 import { buildLyricsOrderBy } from "@/lib/lyrics-search";
@@ -72,5 +73,5 @@ export async function GET(req: NextRequest) {
     })),
   };
 
-  return NextResponse.json(payload);
+  return compressedJson(req, payload);
 }

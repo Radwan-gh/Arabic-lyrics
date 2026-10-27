@@ -199,8 +199,10 @@ connection):
 
 Storage, measured locally with 599 lyrics: about 1.9 MB (0.83 MB database +
 0.1 MB shells + 0.93 MB static assets), versus about 24 MB when every page was
-cached. A full first sync is one request of about 0.8 MB; later syncs only
-transfer changed lyrics. Note: viewing a lyric bumps its `updatedAt` (view
+cached. A full first sync is one request of about 0.2 MB over the network (the
+sync responses are compressed with brotli/gzip in `src/lib/compressed-json.ts`,
+since Next.js does not compress API route responses; 0.89 MB uncompressed);
+later syncs only transfer changed lyrics. Note: viewing a lyric bumps its `updatedAt` (view
 counter), so viewed lyrics are included in the next incremental sync.
 
 ## Project structure
