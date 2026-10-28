@@ -1,5 +1,6 @@
 "use client";
 
+import { useEffect, useRef } from "react";
 import { History, X } from "lucide-react";
 import { focusRing } from "@/lib/ui";
 
@@ -9,6 +10,8 @@ interface RecentSearchesProps {
   onSelect: (term: string) => void;
   onRemove: (term: string) => void;
   onClear: () => void;
+  /** يُستدعى عند أي لمس أو نقر أو تمرير بالعجلة خارج الحقل والقائمة. */
+  onDismiss: () => void;
   /** يضبط حجم الصفوف ونمط الحواف ليطابق حقل البحث الذي تظهر تحته. */
   variant?: "mobile" | "desktop";
 }
@@ -20,10 +23,32 @@ const keepFocus = (e: React.MouseEvent) => e.preventDefault();
 
 /** قائمة منسدلة بآخر عمليات البحث تظهر تحت حقل البحث وهو فارغ ومُركَّز عليه.
  * النقر على كلمة يعيد البحث بها، وزرّ × يحذفها، و«مسح الكل» يفرّغ القائمة. */
-export function RecentSearches({ id, items, onSelect, onRemove, onClear, variant = "desktop" }: RecentSearchesProps) {
+export function RecentSearches({ id, items, onSelect, onRemove, onClear, onDismiss, variant = "desktop" }: RecentSearchesProps) {
   const mobile = variant === "mobile";
+  const panelRef = useRef<HTMLDivElement>(null);
+
+  // الإغلاق عند التفاعل خارج القائمة: blur الحقل وحده لا يكفي، فسحب القائمة
+  // باللمس على الموبايل (أو التمرير بالعجلة على سطح المكتب) لا ينقل التركيز من
+  // الحقل، فتبقى القائمة معلّقة فوق النتائج. يُعدّ "داخلها" العنصر الأب المُموضِع
+  // (الذي يضمّ الحقل والقائمة معًا) كي لا يُغلقها النقر على الحقل نفسه أو زرّ مسحه.
+  // لا نستمع إلى حدث scroll: فتح لوحة المفاتيح قد يمرّر الصفحة فيُغلقها فور ظهورها.
+  useEffect(() => {
+    const container = panelRef.current?.parentElement;
+    if (!container) return;
+    const handle = (e: Event) => {
+      if (!container.contains(e.target as Node)) onDismiss();
+    };
+    document.addEventListener("pointerdown", handle, true);
+    document.addEventListener("wheel", handle, { capture: true, passive: true });
+    return () => {
+      document.removeEventListener("pointerdown", handle, true);
+      document.removeEventListener("wheel", handle, true);
+    };
+  }, [onDismiss]);
+
   return (
     <div
+      ref={panelRef}
       id={id}
       role="region"
       aria-label="عمليات البحث الأخيرة"
