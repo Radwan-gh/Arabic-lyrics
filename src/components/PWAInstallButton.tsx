@@ -1,5 +1,6 @@
 "use client";
 
+import { Download } from "lucide-react";
 import { useInstallPrompt } from "@/lib/use-install-prompt";
 import { focusRing } from "@/lib/ui";
 
@@ -33,6 +34,36 @@ export function PWAInstallButton() {
         <path d="m7 10 5 5 5-5" />
         <path d="M5 21h14" />
       </svg>
+      تثبيت التطبيق
+    </button>
+  );
+}
+
+/** عنصر «تثبيت التطبيق» بمظهر روابط درج القائمة — لا يظهر إن تعذّر التثبيت. */
+export function PWAInstallMenuItem({
+  className,
+  iconClassName,
+  onDone,
+}: {
+  className: string;
+  iconClassName: string;
+  onDone?: () => void;
+}) {
+  const { installable, installing, install } = useInstallPrompt();
+
+  if (!installable) return null;
+
+  return (
+    <button
+      type="button"
+      onClick={async () => {
+        await install();
+        onDone?.();
+      }}
+      disabled={installing}
+      className={`text-start font-semibold text-emerald-800 disabled:cursor-not-allowed disabled:opacity-50 ${className}`}
+    >
+      <Download className={`${iconClassName} !text-emerald-700`} aria-hidden="true" />
       تثبيت التطبيق
     </button>
   );

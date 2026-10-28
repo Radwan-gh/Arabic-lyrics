@@ -22,7 +22,7 @@ import {
 } from "lucide-react";
 import type { SessionPayload } from "@/lib/jwt";
 import { focusRing } from "@/lib/ui";
-import { PWAInstallButton } from "@/components/PWAInstallButton";
+import { PWAInstallButton, PWAInstallMenuItem } from "@/components/PWAInstallButton";
 import { OfflineStatusLine } from "@/components/OfflineStatusLine";
 import { useMenu } from "@/lib/menu-context";
 import { clearOfflineSession } from "@/lib/offline-sync";
@@ -264,6 +264,9 @@ function NavLinks({
       ) : (
         <NavItem href="/login" icon={LogIn} label="تسجيل الدخول" />
       )}
+      {/* شريط Navbar (وزرّ التثبيت فيه) مخفيّ في الشاشات الغامرة على الموبايل، فيُتاح
+          التثبيت من الدرج أيضًا. sm:hidden: القائمة المنسدلة على سطح المكتب يكفيها زرّ الشريط. */}
+      {mobile && <PWAInstallMenuItem className={`sm:hidden ${linkCls}`} iconClassName={iconCls} onDone={onNavigate} />}
       {mobile && <OfflineStatusLine />}
     </>
   );
