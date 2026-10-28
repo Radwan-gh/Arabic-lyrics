@@ -52,9 +52,9 @@ const iconBtn =
   focusRing;
 
 /**
- * شاشة القراءة الغامرة على الموبايل: كروم أدنى، تنقّل بالسحب داخل الوصلة (إن
- * وُجد سياقها)، لوح ضبط القراءة، ووضع الأداء. سطح المكتب يبقى على التخطيط
- * التقليدي في page.tsx (هذا المكوّن مخفي هناك بـ`sm:hidden`).
+ * شاشة القراءة الغامرة على الموبايل: كروم أدنى، ولوح ضبط القراءة من الشريط
+ * العلوي. التنقّل (بالسحب والأسهم) ووضع الأداء يظهران داخل الوصلة فقط. سطح
+ * المكتب يبقى على التخطيط التقليدي في page.tsx (هذا المكوّن مخفي هناك بـ`sm:hidden`).
  */
 export function ReaderScreen({
   lyricsId,
@@ -164,6 +164,15 @@ export function ReaderScreen({
         </button>
         <MenuButton className={iconBtn} />
         <div className="flex-1" />
+        <button type="button" onClick={() => setSheetOpen(true)} aria-label="ضبط القراءة" className={iconBtn}>
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+            <path d="m3 7 4-4 4 4" />
+            <path d="M7 3v18" />
+            <path d="M21 6h-7" />
+            <path d="M21 12h-9" />
+            <path d="M21 18h-5" />
+          </svg>
+        </button>
         {loggedIn && (
           <FavoriteButton lyricsId={lyricsId} initialFavorited={favorited} variant="plain" key={lyricsId} />
         )}
@@ -238,56 +247,43 @@ export function ReaderScreen({
         />
       </div>
 
-      <div className="px-3 pb-5 pt-2">
-        <div className="flex items-center justify-between gap-2 rounded-[18px] border border-[#e6e6e1] bg-white p-1.5">
-          <button
-            type="button"
-            onClick={() => goTo(playlist?.prevId ?? null)}
-            disabled={!playlist?.prevId}
-            aria-label="النشيد السابق"
-            className={`inline-flex h-11 w-11 items-center justify-center rounded-xl text-[#3c4a44] disabled:opacity-30 ${focusRing}`}
-          >
-            <ChevronRight className="h-5 w-5" aria-hidden="true" />
-          </button>
-          <button
-            type="button"
-            onClick={() => setSheetOpen(true)}
-            aria-label="ضبط القراءة"
-            className={`inline-flex h-11 w-11 items-center justify-center rounded-xl text-[#14211c] ${focusRing}`}
-          >
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-              <path d="m3 7 4-4 4 4" />
-              <path d="M7 3v18" />
-              <path d="M21 6h-7" />
-              <path d="M21 12h-9" />
-              <path d="M21 18h-5" />
-            </svg>
-          </button>
-          <button
-            type="button"
-            onClick={() => setPerformanceMode(true)}
-            className={`inline-flex h-11 items-center gap-2 whitespace-nowrap rounded-xl bg-[#ecfdf5] px-4 text-[15px] font-semibold text-emerald-700 ${focusRing}`}
-          >
-            <Moon className="h-[18px] w-[18px]" aria-hidden="true" />
-            وضع الأداء
-          </button>
-          <button
-            type="button"
-            onClick={() => goTo(playlist?.nextId ?? null)}
-            disabled={!playlist?.nextId}
-            aria-label="النشيد التالي"
-            className={`inline-flex h-11 w-11 items-center justify-center rounded-xl text-[#3c4a44] disabled:opacity-30 ${focusRing}`}
-          >
-            <ChevronLeft className="h-5 w-5" aria-hidden="true" />
-          </button>
-        </div>
-        {playlist && (
+      {/* شريط الوصلة: التنقّل ووضع الأداء يخصّان القراءة ضمن وصلة فقط. */}
+      {playlist && (
+        <div className="px-3 pb-5 pt-2">
+          <div className="flex items-center justify-between gap-2 rounded-[18px] border border-[#e6e6e1] bg-white p-1.5">
+            <button
+              type="button"
+              onClick={() => goTo(playlist.prevId)}
+              disabled={!playlist.prevId}
+              aria-label="النشيد السابق"
+              className={`inline-flex h-11 w-11 items-center justify-center rounded-xl text-[#3c4a44] disabled:opacity-30 ${focusRing}`}
+            >
+              <ChevronRight className="h-5 w-5" aria-hidden="true" />
+            </button>
+            <button
+              type="button"
+              onClick={() => setPerformanceMode(true)}
+              className={`inline-flex h-11 items-center gap-2 whitespace-nowrap rounded-xl bg-[#ecfdf5] px-4 text-[15px] font-semibold text-emerald-700 ${focusRing}`}
+            >
+              <Moon className="h-[18px] w-[18px]" aria-hidden="true" />
+              وضع الأداء
+            </button>
+            <button
+              type="button"
+              onClick={() => goTo(playlist.nextId)}
+              disabled={!playlist.nextId}
+              aria-label="النشيد التالي"
+              className={`inline-flex h-11 w-11 items-center justify-center rounded-xl text-[#3c4a44] disabled:opacity-30 ${focusRing}`}
+            >
+              <ChevronLeft className="h-5 w-5" aria-hidden="true" />
+            </button>
+          </div>
           <p className="mt-2 text-center text-xs text-[#8a938d]">
             اسحب يميناً أو يساراً للتنقل داخل الوصلة · {playlist.position.toLocaleString("ar-EG")} من{" "}
             {playlist.total.toLocaleString("ar-EG")}
           </p>
-        )}
-      </div>
+        </div>
+      )}
 
       <ReaderTypeSheet
         open={sheetOpen}
