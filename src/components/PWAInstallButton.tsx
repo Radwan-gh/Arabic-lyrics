@@ -1,6 +1,7 @@
 "use client";
 
-import { Download } from "lucide-react";
+import { useState } from "react";
+import { Download, X } from "lucide-react";
 import { useInstallPrompt } from "@/lib/use-install-prompt";
 import { focusRing } from "@/lib/ui";
 
@@ -66,5 +67,42 @@ export function PWAInstallMenuItem({
       <Download className={`${iconClassName} !text-emerald-700`} aria-hidden="true" />
       تثبيت التطبيق
     </button>
+  );
+}
+
+/**
+ * زرّ تثبيت عائم أسفل منتصف الشاشة، مع زرّ إغلاق. الإغلاق في الذاكرة فقط: يبقى
+ * مخفيًّا أثناء التنقّل داخل التطبيق ويعود مع كل فتح/تحميل جديد ما دام التثبيت ممكنًا.
+ * فوق أزرار الزوايا العائمة (bottom-7، بارتفاع ≤60px) فلا يتداخل معها، وتحت درج
+ * القائمة والألواح المنبثقة (z-20).
+ */
+export function PWAInstallFloating() {
+  const { installable, installing, install } = useInstallPrompt();
+  const [dismissed, setDismissed] = useState(false);
+
+  if (!installable || dismissed) return null;
+
+  return (
+    <div className="fixed inset-x-0 bottom-24 z-20 flex justify-center px-4 pointer-events-none">
+      <div className="pointer-events-auto inline-flex items-center gap-1 rounded-full border border-emerald-200 bg-white p-1 shadow-[0_10px_24px_rgba(4,120,87,0.25)]">
+        <button
+          type="button"
+          onClick={install}
+          disabled={installing}
+          className={`inline-flex h-11 items-center gap-2 rounded-full bg-emerald-700 px-4 text-sm font-semibold text-white transition-colors hover:bg-emerald-800 disabled:cursor-not-allowed disabled:opacity-50 ${focusRing}`}
+        >
+          <Download className="h-4 w-4" aria-hidden="true" />
+          تثبيت التطبيق
+        </button>
+        <button
+          type="button"
+          onClick={() => setDismissed(true)}
+          aria-label="إخفاء زرّ التثبيت"
+          className={`inline-flex h-11 w-11 items-center justify-center rounded-full text-neutral-500 transition-colors hover:bg-neutral-100 ${focusRing}`}
+        >
+          <X className="h-5 w-5" aria-hidden="true" />
+        </button>
+      </div>
+    </div>
   );
 }

@@ -2,6 +2,7 @@
 
 import { usePathname } from "next/navigation";
 import { Navbar } from "@/components/Navbar";
+import { PWAInstallFloating } from "@/components/PWAInstallButton";
 import { MenuProvider } from "@/lib/menu-context";
 import type { SessionPayload } from "@/lib/jwt";
 
@@ -47,6 +48,7 @@ export function AppChrome({
       >
         {children}
       </main>
+      <PWAInstallFloating />
     </MenuProvider>
   );
 }
