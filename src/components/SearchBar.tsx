@@ -1,7 +1,7 @@
 "use client";
 
 import { useAppRouter } from "@/lib/use-app-router";
-import { useEffect, useRef, useState, useTransition } from "react";
+import { useCallback, useEffect, useRef, useState, useTransition } from "react";
 import { Search, X } from "lucide-react";
 import { inputCls, btnPrimary, focusRing } from "@/lib/ui";
 import { RecentSearches } from "@/components/RecentSearches";
@@ -19,6 +19,7 @@ export function SearchBar({ defaultValue, tags, sort }: { defaultValue: string; 
   // قائمة آخر عمليات البحث تظهر ما دام الحقل مُركَّزًا وفارغًا.
   const [recentOpen, setRecentOpen] = useState(false);
   const showRecent = recentOpen && !value.trim() && recent.items.length > 0;
+  const closeRecent = useCallback(() => setRecentOpen(false), []);
 
   function runSearch(nextValue: string) {
     const trimmed = nextValue.trim();
@@ -104,6 +105,8 @@ export function SearchBar({ defaultValue, tags, sort }: { defaultValue: string; 
             setRecentOpen(true);
           }}
           onFocus={() => setRecentOpen(true)}
+          // بعد إغلاقها بلمسة خارجها يبقى الحقل مُركَّزًا، فلا يُطلق النقر عليه onFocus مجددًا.
+          onClick={() => setRecentOpen(true)}
           onBlur={handleBlur}
           onKeyDown={(e) => {
             if (e.key === "Escape" && showRecent) setRecentOpen(false);
@@ -134,6 +137,7 @@ export function SearchBar({ defaultValue, tags, sort }: { defaultValue: string; 
             onSelect={handleSelectRecent}
             onRemove={recent.remove}
             onClear={recent.clear}
+            onDismiss={closeRecent}
           />
         )}
       </div>
