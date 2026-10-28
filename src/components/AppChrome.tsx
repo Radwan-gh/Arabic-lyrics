@@ -20,6 +20,7 @@ const IMMERSIVE_MOBILE_ROUTES = [
   /^\/signup\/complete$/,
   /^\/admin\/users$/,
   /^\/admin\/tags$/,
+  /^\/admin\/guest-lyrics$/,
 ];
 
 function isImmersive(pathname: string): boolean {

@@ -11,6 +11,7 @@ import {
   ListMusic,
   Users,
   Tags,
+  Inbox,
   LogIn,
   LogOut,
   Menu,
@@ -243,6 +244,7 @@ function NavLinks({
       {user && <NavItem href="/playlists" icon={ListMusic} label="وصلاتي" />}
       {user?.role === "ADMIN" && <NavItem href="/admin/users" icon={Users} label="إدارة المستخدمين" badge={pendingUsers} />}
       {user?.role === "ADMIN" && <NavItem href="/admin/tags" icon={Tags} label="إدارة الوسوم" />}
+      {user?.role === "ADMIN" && <NavItem href="/admin/guest-lyrics" icon={Inbox} label="أناشيد الزوار" />}
       {user ? (
         <>
           {mobile && <span className="my-1 border-t border-neutral-200" aria-hidden="true" />}
