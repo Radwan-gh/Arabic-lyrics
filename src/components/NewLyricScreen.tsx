@@ -21,7 +21,7 @@ const fieldInput =
  * `form`)، بترويسة وتخطيط مطابقَين للتصميم. لا تُستخدم في وضع التعديل. */
 export function NewLyricScreen({ form }: { form: ReturnType<typeof useLyricsForm> }) {
   const router = useRouter();
-  const { values, setValues, error, loading, duplicates, submit } = form;
+  const { values, setValues, error, loading, duplicates, suggestions, checking, submit } = form;
 
   // زر «حفظ» لا يتجاوز التكرار أبداً (مثل نموذج سطح المكتب)؛ التجاوز عمداً عبر
   // زر التأكيد الصريح داخل تحذير التكرار.
@@ -83,6 +83,26 @@ export function NewLyricScreen({ form }: { form: ReturnType<typeof useLyricsForm
                   {loading ? "…" : "نشر رغم وجود المشابه"}
                 </button>
               </span>
+            </div>
+          )}
+          {checking && <span className="text-xs font-normal text-[#9aa39d]">جارٍ التحقق من التكرار…</span>}
+          {/* تطابق جزئي (العنوان أو الكلمات) — نفس اقتراحات نموذج سطح المكتب، لكشف
+              الأنشودة الموجودة حين لا يُكتب عنوانها حرفياً. */}
+          {suggestions.length > 0 && (
+            <div className="rounded-xl border border-[#e6e6e1] bg-white p-2.5 text-[13px] font-normal">
+              <p className="mb-1 text-[#6b7670]">أناشيد موجودة قد تطابق ما تكتب:</p>
+              <ul className="flex flex-col">
+                {suggestions.slice(0, 5).map((s) => (
+                  <li key={s.id}>
+                    <Link href={`/lyrics/${s.id}`} target="_blank" className={`block rounded-lg px-1.5 py-1.5 ${focusRing}`}>
+                      <span className="font-semibold text-[#14211c]">{s.title}</span>
+                      {(s.artist || s.album) && (
+                        <span className="text-[#6b7670]"> — {[s.artist, s.album].filter(Boolean).join(" · ")}</span>
+                      )}
+                    </Link>
+                  </li>
+                ))}
+              </ul>
             </div>
           )}
         </Field>

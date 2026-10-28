@@ -18,7 +18,8 @@ export async function GET(req: Request) {
 
   const matches = await findDuplicateLyrics(title, excludeId);
   const excludeIds = [...matches.map((m) => m.id), ...(excludeId ? [excludeId] : [])];
-  const suggestions = await findLyricsSuggestions(title, excludeIds);
+  // الاقتراحات ثانوية: فشلها (مهلة استعلام مثلاً) لا يُسقط كشف التكرار التامّ.
+  const suggestions = await findLyricsSuggestions(title, excludeIds).catch(() => []);
 
   return NextResponse.json({ matches, suggestions });
 }
