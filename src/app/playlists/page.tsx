@@ -1,14 +1,18 @@
 import { redirect } from "next/navigation";
 import { prisma } from "@/lib/prisma";
 import { getCurrentUser } from "@/lib/session";
-import { PlaylistsView } from "@/components/PlaylistsView";
-import { PlaylistsScreen } from "@/components/PlaylistsScreen";
+import { headers } from "next/headers";
+import { isShellRequest } from "@/lib/offline";
+import { PlaylistsPage as PlaylistsPageView } from "@/components/PlaylistPages";
 
 export const dynamic = "force-dynamic";
 
 export default async function PlaylistsPage() {
   const session = await getCurrentUser();
   if (!session) redirect("/login?next=/playlists");
+
+  // هيكل للقراءة دون اتصال: الواجهة نفسها بلا بيانات، تملؤها بيانات الجهاز.
+  if (isShellRequest(await headers())) return <PlaylistsPageView initial={null} />;
 
   const playlists = await prisma.playlist.findMany({
     where: { ownerId: session.userId },
@@ -32,14 +36,5 @@ export default async function PlaylistsPage() {
     itemCount: p._count.items,
   }));
 
-  return (
-    <>
-      <div className="sm:hidden">
-        <PlaylistsScreen initial={initial} />
-      </div>
-      <div className="hidden sm:block">
-        <PlaylistsView initial={initial} />
-      </div>
-    </>
-  );
+  return <PlaylistsPageView initial={initial} />;
 }

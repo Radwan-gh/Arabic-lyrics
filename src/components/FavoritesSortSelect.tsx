@@ -1,6 +1,6 @@
 "use client";
 
-import { useRouter } from "next/navigation";
+import { useAppRouter } from "@/lib/use-app-router";
 import { inputSm, focusRing } from "@/lib/ui";
 
 interface Option {
@@ -19,7 +19,7 @@ export function FavoritesSortSelect({
   query: string;
   options: Option[];
 }) {
-  const router = useRouter();
+  const router = useAppRouter();
 
   function onChange(e: React.ChangeEvent<HTMLSelectElement>) {
     const params = new URLSearchParams();

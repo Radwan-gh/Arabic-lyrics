@@ -2,8 +2,8 @@ import { notFound, redirect } from "next/navigation";
 import { headers } from "next/headers";
 import { getCurrentUser } from "@/lib/session";
 import { getOwnedPlaylist } from "@/lib/playlists";
-import { PlaylistDetailView } from "@/components/PlaylistDetailView";
-import { PlaylistDetailScreen } from "@/components/PlaylistDetailScreen";
+import { isShellRequest } from "@/lib/offline";
+import { PlaylistDetailPage as PlaylistDetailPageView } from "@/components/PlaylistPages";
 
 export const dynamic = "force-dynamic";
 
@@ -12,10 +12,13 @@ export default async function PlaylistDetailPage({ params }: { params: Promise<{
   const session = await getCurrentUser();
   if (!session) redirect(`/login?next=/playlists/${id}`);
 
+  const hdrs = await headers();
+  // هيكل للقراءة دون اتصال: الواجهة نفسها بلا بيانات، تملؤها بيانات الجهاز.
+  if (isShellRequest(hdrs)) return <PlaylistDetailPageView data={null} />;
+
   const playlist = await getOwnedPlaylist(id, session.userId);
   if (!playlist) notFound();
 
-  const hdrs = await headers();
   const host = hdrs.get("x-forwarded-host") ?? hdrs.get("host") ?? "";
   const proto = hdrs.get("x-forwarded-proto") ?? "https";
   const shareUrl = host ? `${proto}://${host}/p/${playlist.shareToken}` : `/p/${playlist.shareToken}`;
@@ -28,29 +31,15 @@ export default async function PlaylistDetailPage({ params }: { params: Promise<{
   }));
 
   return (
-    <>
-      <div className="sm:hidden">
-        <PlaylistDetailScreen
-          id={playlist.id}
-          title={playlist.title}
-          description={playlist.description}
-          isPublic={playlist.isPublic}
-          items={items}
-          shareUrl={shareUrl}
-        />
-      </div>
-      <div className="hidden sm:block">
-        <PlaylistDetailView
-          playlist={{
-            id: playlist.id,
-            title: playlist.title,
-            description: playlist.description,
-            isPublic: playlist.isPublic,
-            items,
-          }}
-          shareUrl={shareUrl}
-        />
-      </div>
-    </>
+    <PlaylistDetailPageView
+      data={{
+        id: playlist.id,
+        title: playlist.title,
+        description: playlist.description,
+        isPublic: playlist.isPublic,
+        items,
+        shareUrl,
+      }}
+    />
   );
 }
