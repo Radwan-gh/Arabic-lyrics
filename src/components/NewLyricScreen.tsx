@@ -23,8 +23,10 @@ export function NewLyricScreen({ form }: { form: ReturnType<typeof useLyricsForm
   const router = useRouter();
   const { values, setValues, error, loading, duplicates, submit } = form;
 
+  // زر «حفظ» لا يتجاوز التكرار أبداً (مثل نموذج سطح المكتب)؛ التجاوز عمداً عبر
+  // زر التأكيد الصريح داخل تحذير التكرار.
   function handleSave() {
-    void submit(duplicates.length > 0);
+    void submit(false);
   }
 
   return (
@@ -72,6 +74,14 @@ export function NewLyricScreen({ form }: { form: ReturnType<typeof useLyricsForm
                   {duplicates[0].artist ? ` — ${duplicates[0].artist}` : ""}
                 </Link>
                 . يمكنك المتابعة إن كان إصداراً مختلفاً.
+                <button
+                  type="button"
+                  onClick={() => void submit(true)}
+                  disabled={loading}
+                  className={`mt-2 flex h-9 items-center justify-center rounded-lg border border-amber-400 bg-amber-100 px-3 text-[13px] font-bold text-amber-900 disabled:opacity-60 ${focusRing}`}
+                >
+                  {loading ? "…" : "نشر رغم وجود المشابه"}
+                </button>
               </span>
             </div>
           )}
