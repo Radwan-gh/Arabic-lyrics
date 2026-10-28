@@ -7,6 +7,7 @@ import { ServiceWorkerRegister } from "@/components/ServiceWorkerRegister";
 import { getCurrentUser } from "@/lib/session";
 import { prisma } from "@/lib/prisma";
 import { LYRICS_SCALE_NO_FLASH_SCRIPT } from "@/lib/lyrics-font";
+import { INSTALL_PROMPT_CAPTURE_SCRIPT } from "@/lib/install-prompt-script";
 
 const tajawal = Tajawal({
   subsets: ["arabic"],
@@ -49,6 +50,8 @@ export default async function RootLayout({ children }: { children: React.ReactNo
       <head>
         {/* يطبّق حجم خط الأناشيد المحفوظ قبل الرسم لمنع وميض تغيّر الحجم. */}
         <script dangerouslySetInnerHTML={{ __html: LYRICS_SCALE_NO_FLASH_SCRIPT }} />
+        {/* يلتقط حدث «تثبيت التطبيق» مبكرًا — قد يُطلَق قبل الـ hydration فيضيع. */}
+        <script dangerouslySetInnerHTML={{ __html: INSTALL_PROMPT_CAPTURE_SCRIPT }} />
       </head>
       <body className="min-h-screen bg-neutral-50 font-sans text-neutral-900 antialiased">
         <RouteProgress />
