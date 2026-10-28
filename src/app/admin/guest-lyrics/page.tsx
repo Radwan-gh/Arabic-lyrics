@@ -7,9 +7,10 @@ export default async function AdminGuestLyricsPage() {
   const session = await getCurrentUser();
   if (!session || session.role !== "ADMIN") redirect("/");
 
-  // أناشيد الزوار تُحفظ بلا createdById (راجع POST /api/lyrics).
+  // أناشيد الزوار تُحفظ بلا createdById (راجع POST /api/lyrics)، وتخرج من
+  // القائمة عند اعتمادها (reviewedAt).
   const lyrics = await prisma.lyrics.findMany({
-    where: { createdById: null },
+    where: { createdById: null, reviewedAt: null },
     orderBy: { createdAt: "desc" },
     select: { id: true, title: true, artist: true, createdAt: true },
   });

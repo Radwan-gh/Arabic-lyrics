@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
-import { ChevronRight, Pencil, Trash2 } from "lucide-react";
+import { Check, ChevronRight, Pencil, Trash2 } from "lucide-react";
 import { MenuButton } from "@/components/MenuButton";
 import { focusRing } from "@/lib/ui";
 import { formatDate } from "@/lib/format";
@@ -16,12 +16,23 @@ export interface GuestLyricsRow {
 }
 
 /** «أناشيد الزوار»: الأناشيد المُضافة دون تسجيل دخول (بلا createdById)، ولا
- * يعدّلها أو يحذفها إلا المدير. حالة واحدة تغذّي شاشة الموبايل الغامرة وجدول
+ * يعدّلها أو يحذفها إلا المدير. «اعتماد» يُبقيها منشورة ويُخرجها من القائمة. حالة واحدة تغذّي شاشة الموبايل الغامرة وجدول
  * سطح المكتب معًا، على نمط إدارة الوسوم والمستخدمين. */
 export function AdminGuestLyrics({ initialLyrics }: { initialLyrics: GuestLyricsRow[] }) {
   const router = useRouter();
   const [lyrics, setLyrics] = useState(initialLyrics);
   const [busyId, setBusyId] = useState<string | null>(null);
+
+  async function approveLyrics(row: GuestLyricsRow) {
+    setBusyId(row.id);
+    const res = await fetch(`/api/admin/guest-lyrics/${row.id}`, { method: "POST" });
+    setBusyId(null);
+    if (!res.ok) {
+      alert("تعذر اعتماد الأنشودة");
+      return;
+    }
+    setLyrics((prev) => prev.filter((l) => l.id !== row.id));
+  }
 
   async function deleteLyrics(row: GuestLyricsRow) {
     if (!confirm(`هل أنت متأكد من حذف الأنشودة "${row.title}"؟`)) return;
@@ -36,7 +47,7 @@ export function AdminGuestLyrics({ initialLyrics }: { initialLyrics: GuestLyrics
   }
 
   const meta = (row: GuestLyricsRow) => [row.artist, formatDate(new Date(row.createdAt))].filter(Boolean).join(" · ");
-  const empty = "لا توجد أناشيد مُضافة من الزوار";
+  const empty = "لا توجد أناشيد زوار بانتظار المراجعة";
 
   return (
     <>
@@ -60,6 +71,15 @@ export function AdminGuestLyrics({ initialLyrics }: { initialLyrics: GuestLyrics
                   <div className="truncate text-[17px] font-bold">{row.title}</div>
                   <div className="mt-0.5 truncate text-[13px] text-[#6b7670]">{meta(row)}</div>
                 </Link>
+                <button
+                  type="button"
+                  disabled={busyId === row.id}
+                  onClick={() => approveLyrics(row)}
+                  aria-label={`اعتماد ${row.title}`}
+                  className={`inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-xl text-emerald-700 disabled:opacity-50 ${focusRing}`}
+                >
+                  <Check className="h-[21px] w-[21px]" aria-hidden="true" />
+                </button>
                 <Link
                   href={`/lyrics/${row.id}/edit`}
                   aria-label={`تعديل ${row.title}`}
@@ -84,7 +104,7 @@ export function AdminGuestLyrics({ initialLyrics }: { initialLyrics: GuestLyrics
 
       <div className="hidden sm:block">
         <h1 className="mb-1 text-xl font-bold">أناشيد الزوار</h1>
-        <p className="mb-4 text-sm text-neutral-600">الأناشيد المُضافة دون تسجيل دخول. يمكنك تعديلها أو حذفها من هنا.</p>
+        <p className="mb-4 text-sm text-neutral-600">الأناشيد المُضافة دون تسجيل دخول. عدّلها أو احذفها، أو اعتمدها لتخرج من القائمة وتبقى منشورة.</p>
         {lyrics.length === 0 ? (
           <p className="rounded-lg border border-dashed border-neutral-300 p-8 text-center text-neutral-500">{empty}</p>
         ) : (
@@ -110,6 +130,15 @@ export function AdminGuestLyrics({ initialLyrics }: { initialLyrics: GuestLyrics
                     <td className="px-4 py-3 text-neutral-600">{formatDate(new Date(row.createdAt))}</td>
                     <td className="px-4 py-3">
                       <div className="flex gap-3">
+                        <button
+                          type="button"
+                          disabled={busyId === row.id}
+                          onClick={() => approveLyrics(row)}
+                          className={`inline-flex items-center gap-1 rounded-sm font-medium text-emerald-700 hover:underline disabled:opacity-50 ${focusRing}`}
+                        >
+                          <Check className="h-4 w-4" aria-hidden="true" />
+                          اعتماد
+                        </button>
                         <Link href={`/lyrics/${row.id}/edit`} className={`inline-flex items-center gap-1 rounded-sm text-neutral-600 hover:underline ${focusRing}`}>
                           <Pencil className="h-4 w-4" aria-hidden="true" />
                           تعديل

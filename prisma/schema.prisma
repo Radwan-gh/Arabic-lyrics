@@ -51,6 +51,9 @@ model Lyrics {
   createdBy   User?   @relation(fields: [createdById], references: [id], onDelete: SetNull)
   createdById String?
 
+  // اعتماد المدير لأنشودة زائر (بلا createdById) — تبقى في «أناشيد الزوار» حتى يُعيَّن.
+  reviewedAt DateTime?
+
   playlistItems PlaylistItem[]
   favorites     Favorite[]
 
