@@ -2,7 +2,8 @@
 
 import Link from "next/link";
 import { useCallback, useEffect, useRef, useState } from "react";
-import { Music, Plus, Search } from "lucide-react";
+import { Plus, Search } from "lucide-react";
+import { BrandLogo } from "@/components/BrandLogo";
 import { FavoriteButton } from "@/components/FavoriteButton";
 import { MenuButton } from "@/components/MenuButton";
 import { LyricsSortSelect } from "@/components/LyricsSortSelect";
@@ -139,11 +140,8 @@ export function HomeScreen({
   return (
     <div className="flex min-h-dvh flex-col bg-[#f7f7f4] text-[#14211c]">
       <div className="sticky top-0 z-20 bg-[#f7f7f4]">
-        <header className="flex items-center justify-between gap-3 px-5 pb-3 pt-2.5">
-          <div className="flex items-center gap-2 text-xl font-extrabold text-emerald-700">
-            <Music className="h-5 w-5" aria-hidden="true" />
-            أناشيد
-          </div>
+        <header className="flex items-center justify-between gap-3 px-5 pb-3 pt-3.5">
+          <BrandLogo className="text-[28px] text-emerald-800" />
           <MenuButton />
         </header>
 

@@ -3,8 +3,9 @@
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useState } from "react";
-import { Clock, Eye, EyeOff, LogIn, Music } from "lucide-react";
+import { Clock, Eye, EyeOff, LogIn } from "lucide-react";
 import { Spinner } from "./Spinner";
+import { BrandLogo } from "./BrandLogo";
 import { inputCls, btnPrimary, focusRing } from "@/lib/ui";
 
 // رسائل العودة من تدفّق Google (راجع api/auth/google/callback).
@@ -60,9 +61,7 @@ export function LoginForm({ googleEnabled }: { googleEnabled: boolean }) {
       {/* الموبايل: شاشة غامرة تتمركز عمودياً، تطابق التصميم. */}
       <div className="flex min-h-dvh flex-col justify-center gap-[22px] bg-[#f7f7f4] px-7 text-[#14211c] sm:hidden">
         <div className="flex flex-col items-start gap-2">
-          <span className="inline-flex h-14 w-14 items-center justify-center rounded-[18px] bg-emerald-700 text-white">
-            <Music className="h-[26px] w-[26px]" aria-hidden="true" />
-          </span>
+          <BrandLogo className="text-[44px] text-emerald-800" />
           <h1 className="mt-2 text-[28px] font-extrabold">أهلاً بك</h1>
           <p className="text-[15px] leading-[1.8] text-[#6b7670]">
             سجّل الدخول للوصول إلى مفضلتك ووصلاتك.{" "}

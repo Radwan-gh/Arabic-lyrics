@@ -15,13 +15,13 @@ import {
   LogOut,
   Menu,
   X,
-  Music,
   User,
   ChevronDown,
   type LucideIcon,
 } from "lucide-react";
 import type { SessionPayload } from "@/lib/jwt";
 import { focusRing } from "@/lib/ui";
+import { BrandLogo } from "@/components/BrandLogo";
 import { PWAInstallButton, PWAInstallMenuItem } from "@/components/PWAInstallButton";
 import { OfflineStatusLine } from "@/components/OfflineStatusLine";
 import { useMenu } from "@/lib/menu-context";
@@ -93,11 +93,10 @@ export function Navbar({
       <div className="mx-auto flex max-w-5xl items-center justify-between px-4 py-3">
         <Link
           href="/"
-          className={`flex items-center gap-1.5 rounded-sm text-xl font-extrabold text-emerald-700 ${focusRing}`}
+          className={`rounded-sm text-emerald-800 ${focusRing}`}
           onClick={() => setOpen(false)}
         >
-          <Music className="h-5 w-5" aria-hidden="true" />
-          أناشيد
+          <BrandLogo className="text-[28px]" />
         </Link>
 
         <div className="flex items-center gap-2 sm:gap-4">

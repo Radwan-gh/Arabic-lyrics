@@ -1,8 +1,9 @@
 "use client";
 
 import Link from "next/link";
-import { Music, Play } from "lucide-react";
+import { Play } from "lucide-react";
 import { focusRing } from "@/lib/ui";
+import { BrandLogo } from "@/components/BrandLogo";
 
 export interface SharedPlaylistItem {
   lyricsId: string;
@@ -25,10 +26,7 @@ export function SharedPlaylistScreen({ playlistId, title, ownerName, items, logg
   return (
     <div className="flex min-h-dvh flex-col bg-[#f7f7f4] text-[#14211c]">
       <div className="bg-emerald-700 px-5 pb-4 pt-3.5 text-white">
-        <div className="flex items-center gap-2 text-xl font-extrabold">
-          <Music className="h-5 w-5" aria-hidden="true" />
-          أناشيد
-        </div>
+        <BrandLogo tone="onDark" className="text-[28px]" />
         <h1 className="mt-3.5 text-[26px] font-extrabold">{title}</h1>
         <div className="mt-1 text-sm opacity-85">
           شاركها {ownerName} · {items.length.toLocaleString("ar-EG")} نشيداً

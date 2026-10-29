@@ -7,6 +7,7 @@ const config: Config = {
       fontFamily: {
         sans: ["var(--font-tajawal)", "Tahoma", "Arial", "sans-serif"],
         naskh: ["var(--font-scheherazade)", "Amiri", "serif"],
+        ruqaa: ["var(--font-ruqaa)", "var(--font-tajawal)", "serif"],
       },
     },
   },

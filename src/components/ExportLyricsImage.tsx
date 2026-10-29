@@ -11,6 +11,7 @@ import {
   toArabicDigits,
 } from "@/lib/lyrics-pages";
 import { btnSecondary } from "@/lib/ui";
+import { BrandLogo } from "@/components/BrandLogo";
 
 // أبعاد البطاقة الملتقَطة، مُهيّأة للمشاركة على واتساب: عرض ثابت 1080 بكسل، فتظهر
 // كبيرةً وواضحة في المحادثة دون قصّ أو تصغير مفرط. أحجام الخطوط والهوامش مكبَّرة من
@@ -329,7 +330,7 @@ export function ExportLyricsImage({
                 gap: 20,
               }}
             >
-              <span style={{ fontSize: 25, fontWeight: 700, color: "#047857", flexShrink: 0 }}>أناشيد</span>
+              <BrandLogo style={{ fontSize: 34, color: "#065f46", flexShrink: 0 }} />
               <span
                 ref={footerMetaRef}
                 style={{
