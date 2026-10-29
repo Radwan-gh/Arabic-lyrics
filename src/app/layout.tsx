@@ -1,5 +1,5 @@
 import type { Metadata, Viewport } from "next";
-import { Tajawal, Scheherazade_New } from "next/font/google";
+import { Tajawal, Scheherazade_New, Aref_Ruqaa } from "next/font/google";
 import "./globals.css";
 import { AppChrome } from "@/components/AppChrome";
 import { RouteProgress } from "@/components/RouteProgress";
@@ -22,14 +22,21 @@ const scheherazade = Scheherazade_New({
   variable: "--font-scheherazade",
 });
 
+// خطّ الرقعة للشعار الكتابي «نفحات» فقط (BrandLogo). يُطبَّق عبر أداة font-ruqaa.
+const arefRuqaa = Aref_Ruqaa({
+  subsets: ["arabic"],
+  weight: ["700"],
+  variable: "--font-ruqaa",
+});
+
 export const metadata: Metadata = {
-  title: "أناشيد - إدارة الأناشيد العربية",
+  title: "نفحات - ديوان الإنشاد",
   description: "منصة لإدارة وحفظ الأناشيد العربية",
-  applicationName: "أناشيد",
+  applicationName: "نفحات",
   appleWebApp: {
     capable: true,
     statusBarStyle: "default",
-    title: "أناشيد",
+    title: "نفحات",
   },
 };
 
@@ -46,7 +53,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
     session?.role === "ADMIN" ? await prisma.user.count({ where: { isApproved: false } }).catch(() => 0) : 0;
 
   return (
-    <html lang="ar" dir="rtl" className={`${tajawal.variable} ${scheherazade.variable}`}>
+    <html lang="ar" dir="rtl" className={`${tajawal.variable} ${scheherazade.variable} ${arefRuqaa.variable}`}>
       <head>
         {/* يطبّق حجم خط الأناشيد المحفوظ قبل الرسم لمنع وميض تغيّر الحجم. */}
         <script dangerouslySetInnerHTML={{ __html: LYRICS_SCALE_NO_FLASH_SCRIPT }} />

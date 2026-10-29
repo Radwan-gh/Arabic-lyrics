@@ -2,8 +2,8 @@ import type { MetadataRoute } from "next";
 
 export default function manifest(): MetadataRoute.Manifest {
   return {
-    name: "أناشيد - إدارة الأناشيد العربية",
-    short_name: "أناشيد",
+    name: "نفحات - ديوان الإنشاد",
+    short_name: "نفحات",
     description: "منصة لإدارة وحفظ الأناشيد العربية",
     start_url: "/",
     display: "standalone",
