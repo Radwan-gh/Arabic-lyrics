@@ -3,7 +3,7 @@ import { compressedJson } from "@/lib/compressed-json";
 import { prisma } from "@/lib/prisma";
 import { renderLyricsHtml } from "@/lib/render-lyrics";
 import { buildLyricsOrderBy } from "@/lib/lyrics-search";
-import type { LyricsSyncResponse } from "@/lib/offline";
+import { hashLyricsOrder, type LyricsSyncResponse } from "@/lib/offline";
 
 // مزامنة الأناشيد لقاعدة بيانات الجهاز (القراءة دون اتصال). بلا `since` تُرجع كل
 // الأناشيد، ومعه ما تغيّر بعده فقط (حسب updatedAt). `order` يحمل دومًا كل المعرّفات
@@ -18,6 +18,7 @@ const SINCE_MARGIN_MS = 60_000;
 export async function GET(req: NextRequest) {
   const serverTime = new Date();
   const sinceParam = req.nextUrl.searchParams.get("since");
+  const orderHashParam = req.nextUrl.searchParams.get("orderHash");
   const since = sinceParam ? new Date(sinceParam) : null;
   const changedWhere =
     since && !Number.isNaN(since.getTime())
@@ -57,7 +58,8 @@ export async function GET(req: NextRequest) {
 
   const payload: LyricsSyncResponse = {
     serverTime: serverTime.toISOString(),
-    order,
+    // الترتيب على الجهاز مطابق (لا إضافة ولا حذف ولا تغيّر عناوين): لا يُعاد إرساله.
+    order: orderHashParam && orderHashParam === hashLyricsOrder(order) ? null : order,
     lyrics: rows.map((r) => ({
       id: r.id,
       title: r.title,

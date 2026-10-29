@@ -4,7 +4,7 @@
 // الخفيفة، وسجلّ المزامنة. IndexedDB لا localStorage: غير متزامنة (لا تجمّد
 // الواجهة)، وسعتها أكبر بكثير، وتحفظ الكائنات كما هي.
 
-import type { LyricsSyncResponse, OfflineLyric, OfflineMe } from "@/lib/offline";
+import { hashLyricsOrder, type LyricsSyncResponse, type OfflineLyric, type OfflineMe } from "@/lib/offline";
 
 const DB_NAME = "anaasheed-offline";
 const DB_VERSION = 1;
@@ -105,28 +105,36 @@ async function setMeta(key: string, value: unknown): Promise<void> {
   await done(tx);
 }
 
-/** وقت آخر مزامنة ناجحة للأناشيد (null: لم تُزامَن بعد). */
-export async function getLyricsSince(): Promise<string | null> {
-  return (await getMeta<LyricsSyncMeta>("lyricsSync"))?.since ?? null;
+/** موضع المزامنة التالية: وقت آخر مزامنة ناجحة وبصمة الترتيب المحفوظ (null: لم تُزامَن بعد). */
+export async function getLyricsSyncCursor(): Promise<{ since: string; orderHash: string } | null> {
+  const meta = await getMeta<LyricsSyncMeta>("lyricsSync");
+  return meta ? { since: meta.since, orderHash: hashLyricsOrder(meta.order) } : null;
 }
 
 /**
  * يطبّق استجابة مزامنة في معاملة واحدة: يستبدل المتغيّر، ويحذف ما لم يعد في
- * `order` (أُزيل من الخادم)، ويحفظ الترتيب ووقت المزامنة.
+ * `order` (أُزيل من الخادم)، ويحفظ الترتيب ووقت المزامنة. `order: null` يعني أن
+ * الترتيب المحفوظ ما زال صحيحًا (فلا حذف). لا يُبلَّغ بتغيير إن لم يتغيّر شيء.
  */
 export async function applyLyricsSync(response: LyricsSyncResponse): Promise<void> {
   const db = await openDb();
   const tx = db.transaction([LYRICS_STORE, META_STORE], "readwrite");
   const lyrics = tx.objectStore(LYRICS_STORE);
-  const current = new Set(response.order.map(([id]) => id));
-  const keys = (await result(lyrics.getAllKeys())) as string[];
-  for (const key of keys) {
-    if (!current.has(key)) lyrics.delete(key);
+  const meta = tx.objectStore(META_STORE);
+  let order = response.order;
+  if (order) {
+    const current = new Set(order.map(([id]) => id));
+    const keys = (await result(lyrics.getAllKeys())) as string[];
+    for (const key of keys) {
+      if (!current.has(key)) lyrics.delete(key);
+    }
+  } else {
+    order = ((await result(meta.get("lyricsSync"))) as LyricsSyncMeta | undefined)?.order ?? [];
   }
   for (const lyric of response.lyrics) lyrics.put(lyric);
-  tx.objectStore(META_STORE).put({ since: response.serverTime, order: response.order } satisfies LyricsSyncMeta, "lyricsSync");
+  meta.put({ since: response.serverTime, order } satisfies LyricsSyncMeta, "lyricsSync");
   await done(tx);
-  notifyChanged();
+  if (response.order || response.lyrics.length) notifyChanged();
 }
 
 /** كل الأناشيد المحفوظة، مع رتبها الأبجدية من آخر مزامنة. */

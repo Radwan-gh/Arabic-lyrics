@@ -228,18 +228,22 @@ async function warmPages(pages, session) {
   const cache = await caches.open(PAGES_CACHE);
   const stale = [];
   let total = 0;
+  // هياكل بلا أي نسخة مخزَّنة. ما له نسخة (ولو قديمة) يعمل دون اتصال، فتحديثه لا
+  // يُنقص الجاهزية.
+  let missing = 0;
   for (const page of pages) {
     if (!page || typeof page.url !== "string") continue;
     total++;
     const href = new URL(page.url, self.location.origin).href;
     const key = page.shell ? shellKey(page.url) : href;
     const cached = await cache.match(key, { ignoreVary: true });
+    if (!cached) missing++;
     if (!cached || cached.headers.get(PAGE_VERSION_HEADER) !== String(page.version)) {
-      stale.push({ href, key, shell: page.shell === true, version: String(page.version) });
+      stale.push({ href, key, shell: page.shell === true, version: String(page.version), missing: !cached });
     }
   }
 
-  const status = { session, total, done: total - stale.length, running: stale.length > 0, complete: false };
+  const status = { session, total, done: total - stale.length, running: stale.length > 0, complete: missing === 0 };
   setStatus(status);
   if (stale.length) await writeStatus(cache, status);
 
@@ -259,6 +263,7 @@ async function warmPages(pages, session) {
       if (result === "offline") offline = true;
       else if (result === "saved") {
         status.done++;
+        if (page.missing) missing--;
         setStatus(status);
       }
     }
@@ -267,8 +272,8 @@ async function warmPages(pages, session) {
   if (generation !== sessionGeneration) return;
 
   status.running = false;
-  // «مكتمل» فقط حين تكون كل الصفحات المطلوبة مخزَّنة بنسختها الحالية.
-  status.complete = status.done === status.total;
+  // «مكتمل» حين يكون لكل هيكل مطلوب نسخة مخزَّنة؛ ما لم يُحدَّث منها يُعاد في المرة التالية.
+  status.complete = missing === 0;
   setStatus(status, true);
   await writeStatus(cache, status);
 }

@@ -19,7 +19,7 @@ import {
 import {
   applyLyricsSync,
   clearPrivateData,
-  getLyricsSince,
+  getLyricsSyncCursor,
   readAllLyrics,
   readSynced,
   writeMe,
@@ -184,21 +184,28 @@ async function runSync(sessionKey: string | null): Promise<void> {
   recompute();
   if (!navigator.onLine) return;
 
-  setData({ running: true, done: 0, complete: false });
+  // ما دام كل شيء محفوظًا فالمزامنة تحديث صامت في الخلفية: تبقى الحالة «متاح دون
+  // إنترنت» (البيانات الحالية صالحة للقراءة)، ولا يظهر تقدّم إلا للحفظ الأول أو
+  // بعد تغيّر الجلسة.
+  const showProgress = !previouslyComplete;
+  if (showProgress) setData({ running: true, done: 0, complete: false });
   try {
-    const since = await getLyricsSince();
-    const query = since ? `?since=${encodeURIComponent(since)}` : "";
+    const cursor = await getLyricsSyncCursor();
+    const query = cursor
+      ? `?since=${encodeURIComponent(cursor.since)}&orderHash=${encodeURIComponent(cursor.orderHash)}`
+      : "";
     await applyLyricsSync(await fetchJson<LyricsSyncResponse>(`${OFFLINE_LYRICS_URL}${query}`));
-    setData({ done: 1 });
+    if (showProgress) setData({ done: 1 });
     if (authenticated) {
       await writeMe(session, await fetchJson<OfflineMe>(OFFLINE_ME_URL));
-      setData({ done: 2 });
+      if (showProgress) setData({ done: 2 });
     } else {
       await writeMe(session, null);
     }
     await writeSynced(session);
-    setData({ running: false, complete: true });
+    setData({ running: false, done: total, complete: true });
   } catch {
+    // فشل التحديث لا يُلغي ما حُفظ سابقًا: تبقى الحالة كما كانت.
     setData({ running: false });
     return;
   }

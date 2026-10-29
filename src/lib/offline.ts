@@ -65,8 +65,12 @@ export interface OfflineLyric {
 export interface LyricsSyncResponse {
   /** وقت الخادم عند الاستجابة — يُرسَل `since` في المزامنة التالية. */
   serverTime: string;
-  /** كل الأناشيد الحالية بالترتيب الأبجدي: [المعرّف، مجموعة التعادل]. ما ليس فيها حُذف. */
-  order: [string, number][];
+  /**
+   * كل الأناشيد الحالية بالترتيب الأبجدي: [المعرّف، مجموعة التعادل]. ما ليس فيها حُذف.
+   * null إن طابقت بصمةَ الترتيب التي أرسلها الجهاز (`?orderHash=`) — لم يتغيّر شيء
+   * فيها، فلا داعي لإرسالها في كل مزامنة.
+   */
+  order: [string, number][] | null;
   /** الأناشيد المتغيّرة منذ `since` (أو كلها إن لم يُرسَل). */
   lyrics: OfflineLyric[];
 }
@@ -142,6 +146,11 @@ export function compareOfflineLyrics<T>(
     case "date_desc":
       return (a, b) => byDate(b, a) || byId(a, b);
   }
+}
+
+/** بصمة ترتيب الأناشيد — يحسبها الجهاز والخادم بالطريقة نفسها (راجع LyricsSyncResponse.order). */
+export function hashLyricsOrder(order: [string, number][]): string {
+  return hashString(order.map(([id, group]) => `${id}:${group}`).join(","));
 }
 
 /** بصمة نصية قصيرة (FNV-1a بـ 32 بت) — تكفي لكشف التغيّر، لا للأمان. */
