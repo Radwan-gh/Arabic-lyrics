@@ -19,9 +19,11 @@
     "db:deploy": "prisma migrate deploy",
     "db:seed": "prisma db seed",
     "db:seed:anaasheed": "tsx prisma/seed-anaasheed.ts",
-    "db:backfill-search": "tsx prisma/backfill-search-text.ts"
+    "db:backfill-search": "tsx prisma/backfill-search-text.ts",
+    "mcp:token": "tsx prisma/mcp-token.ts"
   },
   "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.32.2",
     "@prisma/client": "^6.2.0",
     "@types/bcryptjs": "^2.4.6",
     "@types/node": "^22.10.5",

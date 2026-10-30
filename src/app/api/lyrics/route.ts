@@ -3,12 +3,10 @@ import { z } from "zod";
 import { prisma } from "@/lib/prisma";
 import { getCurrentUser } from "@/lib/session";
 import { getFavoritedLyricsIds } from "@/lib/favorites";
-import { sanitizeLyricsHtml } from "@/lib/sanitize-lyrics";
 import { renderLyricsHtml } from "@/lib/render-lyrics";
 import { buildLyricsWhere, buildLyricsOrderBy, parseLyricsSort, LYRICS_PAGE_SIZE } from "@/lib/lyrics-search";
-import { buildSearchText, normalizeArabic } from "@/lib/arabic-search";
 import { findArabicMatch, splitAtMatch, buildContentSnippet } from "@/lib/arabic-highlight";
-import { findDuplicateLyrics } from "@/lib/lyrics";
+import { buildLyricsWriteData, findDuplicateLyrics } from "@/lib/lyrics";
 
 export async function GET(req: Request) {
   const { searchParams } = new URL(req.url);
@@ -86,10 +84,11 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: parsed.error.issues[0]?.message ?? "بيانات غير صالحة" }, { status: 400 });
   }
 
-  const { title, artist, album, content, tags, allowDuplicate } = parsed.data;
+  const { allowDuplicate, ...input } = parsed.data;
+  const { title } = input;
 
-  const cleanedContent = sanitizeLyricsHtml(content);
-  if (!cleanedContent.replace(/<[^>]*>/g, "").trim()) {
+  const data = buildLyricsWriteData(input);
+  if (!data) {
     return NextResponse.json({ error: "نص الأنشودة مطلوب" }, { status: 400 });
   }
 
@@ -106,16 +105,7 @@ export async function POST(req: Request) {
   }
 
   const lyrics = await prisma.lyrics.create({
-    data: {
-      title,
-      titleNormalized: normalizeArabic(title),
-      artist: artist || null,
-      album: album || null,
-      content: cleanedContent,
-      tags: tags ?? [],
-      searchText: buildSearchText({ title, artist, album, content: cleanedContent }),
-      createdById: session?.userId ?? null,
-    },
+    data: { ...data, createdById: session?.userId ?? null },
   });
 
   return NextResponse.json(lyrics, { status: 201 });

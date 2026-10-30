@@ -1,5 +1,6 @@
 import { prisma } from "./prisma";
-import { normalizeArabic } from "./arabic-search";
+import { buildSearchText, normalizeArabic } from "./arabic-search";
+import { sanitizeLyricsHtml } from "./sanitize-lyrics";
 import { buildLyricsWhere } from "./lyrics-search";
 
 export type DuplicateMatch = {
@@ -76,4 +77,32 @@ export async function getLyricsAndIncrementViews(id: string) {
       include: { createdBy: { select: { name: true } } },
     })
     .catch(() => null);
+}
+
+export interface LyricsWriteInput {
+  title: string;
+  artist?: string;
+  album?: string;
+  /** HTML المحرّر (يُنقّى هنا). */
+  content: string;
+  tags?: string[];
+}
+
+/**
+ * يجهّز حقول الحفظ المشتركة بين الإضافة والتعديل (مسارات الـ API وخادم MCP):
+ * تنقية المحتوى، والعنوان المُطبَّع، ونص البحث. يُرجع null إن خلا النص بعد التنقية.
+ */
+export function buildLyricsWriteData({ title, artist, album, content, tags }: LyricsWriteInput) {
+  const cleanedContent = sanitizeLyricsHtml(content);
+  if (!cleanedContent.replace(/<[^>]*>/g, "").trim()) return null;
+
+  return {
+    title,
+    titleNormalized: normalizeArabic(title),
+    artist: artist || null,
+    album: album || null,
+    content: cleanedContent,
+    tags: tags ?? [],
+    searchText: buildSearchText({ title, artist, album, content: cleanedContent }),
+  };
 }

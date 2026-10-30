@@ -205,6 +205,50 @@ since Next.js does not compress API route responses; 0.89 MB uncompressed);
 later syncs only transfer changed lyrics. Note: viewing a lyric bumps its `updatedAt` (view
 counter), so viewed lyrics are included in the next incremental sync.
 
+## MCP server (AI assistants)
+
+The app exposes a [Model Context Protocol](https://modelcontextprotocol.io)
+server at **`/api/mcp`** (Streamable HTTP, stateless), so AI assistants such as
+Claude can search, read, and manage lyrics directly.
+
+| Tool | Access |
+|------|--------|
+| `search_lyrics`, `get_lyrics`, `list_tags` | Anyone (no token) |
+| `get_playlist` | Owner, or anyone for a public playlist |
+| `add_lyrics` | Editor/Admin token |
+| `update_lyrics` | Admin token, or the Editor who created the lyric |
+| `list_my_playlists`, `create_playlist`, `add_to_playlist` | Any valid token (own playlists only) |
+
+Lyrics text goes in and out as plain text (one line per verse, a blank line
+between stanzas, `*bold*` / `_italic_` markers) — the same format as the editor.
+Adding or renaming to an existing title is refused with the matching lyrics
+unless `allowDuplicate` is set, as in the web UI. Nothing can be deleted
+through MCP.
+
+**Access tokens.** Write tools need a personal token, issued from a shell that
+has the production `DATABASE_URL` and `JWT_SECRET` (e.g. `railway run`):
+
+```bash
+npm run mcp:token -- user@example.com
+```
+
+The token is valid for a year and acts as that user. Its role and active state
+are read from the database on every request, so deactivating the user (or
+changing their role) applies immediately; rotating `JWT_SECRET` revokes every
+token (and signs everyone out). A request with an invalid token gets `401` —
+it never silently falls back to anonymous access.
+
+**Connecting Claude Code:**
+
+```bash
+claude mcp add --transport http nafahat https://<your-app>/api/mcp \
+  --header "Authorization: Bearer <token>"
+```
+
+Omit `--header` for read-only access. In claude.ai, add it as a custom
+connector with the URL only (read-only tools; custom connectors there do not
+send static bearer tokens).
+
 ## Project structure
 
 ```
@@ -215,6 +259,8 @@ prisma/data/               أناشيد source text, parsed JSON, and the parser
 src/lib/                   Prisma client, JWT/session helpers, password hashing
 src/middleware.ts          Route protection for /admin and lyrics create/edit
 src/app/                   Pages (App Router) and API routes
+src/lib/mcp/server.ts      MCP tools (served by src/app/api/mcp)
+prisma/mcp-token.ts        Issues MCP access tokens (npm run mcp:token)
 src/components/            Client-side UI components (forms, nav, tables)
 ```
 

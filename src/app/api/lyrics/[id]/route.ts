@@ -2,9 +2,7 @@ import { NextResponse } from "next/server";
 import { z } from "zod";
 import { prisma } from "@/lib/prisma";
 import { getCurrentUser } from "@/lib/session";
-import { getLyricsAndIncrementViews, findDuplicateLyrics } from "@/lib/lyrics";
-import { sanitizeLyricsHtml } from "@/lib/sanitize-lyrics";
-import { buildSearchText, normalizeArabic } from "@/lib/arabic-search";
+import { getLyricsAndIncrementViews, findDuplicateLyrics, buildLyricsWriteData } from "@/lib/lyrics";
 
 export async function GET(_req: Request, { params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
@@ -50,10 +48,11 @@ export async function PUT(req: Request, { params }: { params: Promise<{ id: stri
     return NextResponse.json({ error: parsed.error.issues[0]?.message ?? "بيانات غير صالحة" }, { status: 400 });
   }
 
-  const { title, artist, album, content, tags, allowDuplicate } = parsed.data;
+  const { allowDuplicate, ...input } = parsed.data;
+  const { title } = input;
 
-  const cleanedContent = sanitizeLyricsHtml(content);
-  if (!cleanedContent.replace(/<[^>]*>/g, "").trim()) {
+  const data = buildLyricsWriteData(input);
+  if (!data) {
     return NextResponse.json({ error: "نص الأنشودة مطلوب" }, { status: 400 });
   }
 
@@ -71,15 +70,7 @@ export async function PUT(req: Request, { params }: { params: Promise<{ id: stri
   const lyrics = await prisma.lyrics
     .update({
       where: { id },
-      data: {
-        title,
-        titleNormalized: normalizeArabic(title),
-        artist: artist || null,
-        album: album || null,
-        content: cleanedContent,
-        tags: tags ?? [],
-        searchText: buildSearchText({ title, artist, album, content: cleanedContent }),
-      },
+      data,
     })
     .catch(() => null);
 

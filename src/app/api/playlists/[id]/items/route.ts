@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { z } from "zod";
 import { prisma } from "@/lib/prisma";
 import { getCurrentUser } from "@/lib/session";
+import { appendToPlaylist } from "@/lib/playlists";
 
 async function requireOwner(id: string, userId: string) {
   const playlist = await prisma.playlist.findUnique({ where: { id }, select: { ownerId: true } });
@@ -31,19 +32,8 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
     return NextResponse.json({ error: "الأنشودة غير موجودة" }, { status: 404 });
   }
 
-  const last = await prisma.playlistItem.findFirst({
-    where: { playlistId: id },
-    orderBy: { position: "desc" },
-    select: { position: true },
-  });
-
-  const item = await prisma.playlistItem
-    .create({
-      data: { playlistId: id, lyricsId: lyrics.id, position: (last?.position ?? -1) + 1 },
-    })
-    .catch(() => null); // unique constraint → already in playlist
-
-  return NextResponse.json({ ok: true, added: !!item }, { status: item ? 201 : 200 });
+  const added = await appendToPlaylist(id, lyrics.id);
+  return NextResponse.json({ ok: true, added }, { status: added ? 201 : 200 });
 }
 
 const removeSchema = z.object({ lyricsId: z.string().min(1) });
