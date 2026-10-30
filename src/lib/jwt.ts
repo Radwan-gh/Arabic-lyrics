@@ -79,3 +79,28 @@ export async function verifySessionToken(token: string): Promise<SessionPayload 
     return null;
   }
 }
+
+/**
+ * رمز وصول طويل الأمد لخادم MCP (‎/api/mcp) يحمل معرّف المستخدم فقط: الدور
+ * وحالة الحساب يُقرآن من القاعدة عند كل طلب، فتعطيل الحساب أو تغيير دوره يسري
+ * فوراً على الرمز. يُصدَر عبر `npm run mcp:token`.
+ */
+export const MCP_TOKEN_MAX_AGE_DAYS = 365;
+
+export async function createMcpToken(userId: string): Promise<string> {
+  return new SignJWT({ userId, purpose: "mcp" })
+    .setProtectedHeader({ alg: "HS256" })
+    .setIssuedAt()
+    .setExpirationTime(`${MCP_TOKEN_MAX_AGE_DAYS}d`)
+    .sign(secretKey());
+}
+
+export async function verifyMcpToken(token: string): Promise<string | null> {
+  try {
+    const { payload } = await jwtVerify(token, secretKey());
+    if (payload.purpose !== "mcp" || typeof payload.userId !== "string") return null;
+    return payload.userId;
+  } catch {
+    return null;
+  }
+}

@@ -106,3 +106,20 @@ export async function getPublicPlaylistByToken(token: string) {
   if (!playlist || !playlist.isPublic) return null;
   return playlist;
 }
+
+/**
+ * يُلحق نشيداً بآخر الوصلة؛ عملية idempotent — النشيد الموجود مسبقاً لا يُكرَّر.
+ * يُرجع true إن أُضيف فعلاً. يفترض أن المستدعي تحقّق من ملكية الوصلة ووجود النشيد.
+ */
+export async function appendToPlaylist(playlistId: string, lyricsId: string): Promise<boolean> {
+  const last = await prisma.playlistItem.findFirst({
+    where: { playlistId },
+    orderBy: { position: "desc" },
+    select: { position: true },
+  });
+
+  const item = await prisma.playlistItem
+    .create({ data: { playlistId, lyricsId, position: (last?.position ?? -1) + 1 } })
+    .catch(() => null); // unique constraint → already in playlist
+  return !!item;
+}
