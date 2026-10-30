@@ -1,4 +1,4 @@
-// Service worker لتطبيق «أناشيد» — يدعم التثبيت (PWA) والعمل دون اتصال.
+// Service worker لتطبيق «نفحات» — يدعم التثبيت (PWA) والعمل دون اتصال.
 //
 // المبدأ: لا صفحات خاصة بوضع «دون اتصال». بيانات القراءة محفوظة على الجهاز في
 // IndexedDB (يزامنها العميل — راجع src/lib/offline-sync.ts)، ويخزّن الـ SW «هيكلًا»
@@ -18,7 +18,7 @@
 //   ويُجيب عند السؤال، ويحفظ آخر حالة في الكاش لتبقى معروفة بعد إعادة تشغيله.
 // - لا يُخزَّن: الطلبات عبر-الأصل، وطلبات التعديل، ومسارات /api/* عدا الوسوم.
 
-const VERSION = "v7";
+const VERSION = "v8";
 const STATIC_CACHE = `anaasheed-static-${VERSION}`; // أصول ثابتة (JS/CSS/خطوط/أيقونات)
 const PAGES_CACHE = `anaasheed-pages-${VERSION}`; // هياكل وصفحات HTML (خاصة بالجلسة)
 const DATA_CACHE = `anaasheed-data-${VERSION}`; // استجابات JSON
