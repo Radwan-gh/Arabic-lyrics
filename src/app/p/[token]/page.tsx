@@ -13,7 +13,7 @@ export async function generateMetadata({ params }: { params: Promise<{ token: st
   const playlist = await getPublicPlaylistByToken(token);
   if (!playlist) return { title: "وصلة غير متاحة" };
   return {
-    title: `${playlist.title} · وصلة أناشيد`,
+    title: playlist.title,
     description: playlist.description ?? undefined,
   };
 }

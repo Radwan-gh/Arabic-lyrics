@@ -30,7 +30,8 @@ const arefRuqaa = Aref_Ruqaa({
 });
 
 export const metadata: Metadata = {
-  title: "نفحات - ديوان الإنشاد",
+  // الصفحات التي تحدّد عنوانها (مثل الوصلة المشتركة) يُلحق بها اسم التطبيق.
+  title: { default: "نفحات - ديوان الإنشاد", template: "%s · نفحات" },
   description: "منصة لإدارة وحفظ الأناشيد العربية",
   applicationName: "نفحات",
   appleWebApp: {
