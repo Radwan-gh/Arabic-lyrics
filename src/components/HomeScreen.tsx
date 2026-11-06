@@ -10,7 +10,7 @@ import { LyricsSortSelect } from "@/components/LyricsSortSelect";
 import { BackToTopButton } from "@/components/BackToTopButton";
 import { Spinner } from "@/components/Spinner";
 import { RecentSearches } from "@/components/RecentSearches";
-import { QuickDeleteButton } from "@/components/QuickDeleteButton";
+import { SwipeToDelete } from "@/components/SwipeToDelete";
 import { UndoDeleteToast } from "@/components/UndoDeleteToast";
 import { useUndoableDelete } from "@/lib/use-undoable-delete";
 import { useRecentSearches } from "@/lib/recent-searches";
@@ -255,24 +255,34 @@ export function HomeScreen({
         {items.length === 0 && !hasMore ? (
           <p className="p-8 text-center text-sm text-[#6b7670]">{isFiltered ? "لا توجد نتائج مطابقة" : "لا توجد أناشيد بعد"}</p>
         ) : (
-          items.map((item) => (
-            <div key={item.id} className="flex min-h-16 items-center gap-2.5 border-b border-[#f0f0ec] px-5 py-3">
-              <Link href={`/lyrics/${item.id}`} className={`min-w-0 flex-1 rounded-sm ${focusRing}`}>
-                <div className="truncate text-[17px] font-bold leading-[1.4]">{item.title}</div>
-                <div className="mt-0.5 truncate text-[13px] text-[#6b7670]">
-                  {[item.artist, item.tags[0]].filter(Boolean).join(" · ")}
-                </div>
-              </Link>
-              {loggedIn && <FavoriteButton lyricsId={item.id} initialFavorited={item.favorited} variant="plain" />}
-              {item.canModify && (
-                <QuickDeleteButton
-                  title={item.title}
-                  variant="plain"
-                  onDelete={(viaKeyboard) => quickDelete.requestDelete(item.id, { focus: viaKeyboard })}
-                />
-              )}
-            </div>
-          ))
+          items.map((item) => {
+            const row = (
+              <div className="flex min-h-16 items-center gap-2.5 px-5 py-3">
+                <Link href={`/lyrics/${item.id}`} draggable={false} className={`min-w-0 flex-1 rounded-sm ${focusRing}`}>
+                  <div className="truncate text-[17px] font-bold leading-[1.4]">{item.title}</div>
+                  <div className="mt-0.5 truncate text-[13px] text-[#6b7670]">
+                    {[item.artist, item.tags[0]].filter(Boolean).join(" · ")}
+                  </div>
+                </Link>
+                {loggedIn && <FavoriteButton lyricsId={item.id} initialFavorited={item.favorited} variant="plain" />}
+              </div>
+            );
+            // من يملك صلاحية الحذف يسحب الصف نحو اليمين لحذفه (والتراجع من الإشعار).
+            return item.canModify ? (
+              <SwipeToDelete
+                key={item.id}
+                title={item.title}
+                onDelete={(viaKeyboard) => quickDelete.requestDelete(item.id, { focus: viaKeyboard })}
+                className="border-b border-[#f0f0ec]"
+              >
+                {row}
+              </SwipeToDelete>
+            ) : (
+              <div key={item.id} className="border-b border-[#f0f0ec]">
+                {row}
+              </div>
+            );
+          })
         )}
 
         {hasMore && (

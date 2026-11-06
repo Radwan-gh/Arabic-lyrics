@@ -7,13 +7,11 @@ interface QuickDeleteButtonProps {
   title: string;
   /** `viaKeyboard`: ضُغط الزر من لوحة المفاتيح (لنقل التركيز إلى «تراجع»). */
   onDelete: (viaKeyboard: boolean) => void;
-  /** icon: بطاقة سطح المكتب (بجانب زر المفضّلة icon). plain: صفّ الموبايل. */
-  variant?: "icon" | "plain";
 }
 
-/** زرّ حذف بلمسة واحدة في قائمة الأناشيد — بلا تأكيد، والتراجع عبر الإشعار. */
-export function QuickDeleteButton({ title, onDelete, variant = "icon" }: QuickDeleteButtonProps) {
-  const size = variant === "plain" ? "h-11 w-11 rounded-xl text-[#9aa39d]" : "h-9 w-9 rounded-lg text-neutral-400";
+/** زرّ حذف بنقرة واحدة في بطاقات سطح المكتب — بلا تأكيد، والتراجع عبر الإشعار.
+ * على الموبايل يُحذف الصف بسحبه (راجع SwipeToDelete). */
+export function QuickDeleteButton({ title, onDelete }: QuickDeleteButtonProps) {
   return (
     <button
       type="button"
@@ -21,7 +19,7 @@ export function QuickDeleteButton({ title, onDelete, variant = "icon" }: QuickDe
       onClick={(e) => onDelete(e.detail === 0)}
       aria-label={`حذف «${title}»`}
       title="حذف"
-      className={`inline-flex shrink-0 items-center justify-center leading-none transition-colors hover:bg-red-50 hover:text-red-600 active:text-red-600 ${size} ${focusRing}`}
+      className={`inline-flex shrink-0 items-center justify-center leading-none transition-colors hover:bg-red-50 hover:text-red-600 active:text-red-600 h-9 w-9 rounded-lg text-neutral-400 ${focusRing}`}
     >
       <Trash2 className="h-5 w-5" aria-hidden="true" />
     </button>
