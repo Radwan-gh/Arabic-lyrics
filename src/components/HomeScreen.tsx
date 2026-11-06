@@ -74,6 +74,7 @@ export function HomeScreen({
       initialHasMore,
       initialTotal,
       shell,
+      variant: "mobile",
     });
   const quickDelete = useUndoableDelete({ removeItem, restoreItem, confirmRemoved });
   const swipeHint = useSwipeHint();

@@ -4,6 +4,7 @@ import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { Trash2 } from "lucide-react";
 import { btnDanger } from "@/lib/ui";
+import { cameFromFeed, removeFromFeedSnapshots } from "@/lib/feed-restore";
 
 export function DeleteLyricsButton({ id }: { id: string }) {
   const [loading, setLoading] = useState(false);
@@ -17,8 +18,14 @@ export function DeleteLyricsButton({ id }: { id: string }) {
     setLoading(false);
 
     if (res.ok) {
-      router.push("/");
-      router.refresh();
+      if (cameFromFeed()) {
+        // فُتح من القائمة: رجوع إليها في الموضع نفسه، وقد أُزيل منها النشيد المحذوف.
+        removeFromFeedSnapshots(id);
+        router.back();
+      } else {
+        router.push("/");
+        router.refresh();
+      }
     } else {
       alert("حدث خطأ أثناء الحذف");
     }

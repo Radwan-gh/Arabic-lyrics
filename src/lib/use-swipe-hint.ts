@@ -4,6 +4,8 @@ import { useCallback, useEffect, useState } from "react";
 
 const SWIPE_HINT_KEY = "arabic-lyrics:swipe-delete-hint-seen";
 
+let knownShow: boolean | null = null;
+
 /**
  * تلميح «اسحب نحو اليمين للحذف» على الموبايل، يظهر حتى يُغلقه المستخدم أو يحذف
  * أول نشيد بالسحب، ثم لا يعود (يُحفظ في localStorage على هذا الجهاز). لا يظهر
@@ -11,17 +13,21 @@ const SWIPE_HINT_KEY = "arabic-lyrics:swipe-delete-hint-seen";
  * يتكرّر في كل زيارة أسوأ من غيابه.
  */
 export function useSwipeHint() {
-  const [show, setShow] = useState(false);
+  // بعد أول قراءة تُعرف القيمة في الذاكرة، فيُصيَّر بها مباشرةً أيّ تركيب لاحق (رجوع
+  // إلى القائمة): ظهور التلميح بعد التركيب يُزيح القائمة عن موضعها المستعاد.
+  const [show, setShow] = useState(() => knownShow ?? false);
 
   useEffect(() => {
     try {
-      setShow(localStorage.getItem(SWIPE_HINT_KEY) !== "1");
+      knownShow = localStorage.getItem(SWIPE_HINT_KEY) !== "1";
     } catch {
-      setShow(false);
+      knownShow = false;
     }
+    setShow(knownShow);
   }, []);
 
   const dismiss = useCallback(() => {
+    knownShow = false;
     setShow(false);
     try {
       localStorage.setItem(SWIPE_HINT_KEY, "1");
