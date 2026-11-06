@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useCallback, useEffect, useRef, useState } from "react";
-import { Plus, Search } from "lucide-react";
+import { ArrowRight, Plus, Search } from "lucide-react";
 import { BrandLogo } from "@/components/BrandLogo";
 import { FavoriteButton } from "@/components/FavoriteButton";
 import { MenuButton } from "@/components/MenuButton";
@@ -13,6 +13,7 @@ import { RecentSearches } from "@/components/RecentSearches";
 import { SwipeToDelete } from "@/components/SwipeToDelete";
 import { UndoDeleteToast } from "@/components/UndoDeleteToast";
 import { useUndoableDelete } from "@/lib/use-undoable-delete";
+import { useSwipeHint } from "@/lib/use-swipe-hint";
 import { useRecentSearches } from "@/lib/recent-searches";
 import { useLyricsFeed, type LyricsFeedItem } from "@/lib/use-lyrics-feed";
 import { useHomeStats } from "@/lib/offline-data";
@@ -75,6 +76,9 @@ export function HomeScreen({
       shell,
     });
   const quickDelete = useUndoableDelete({ removeItem, restoreItem, confirmRemoved });
+  const swipeHint = useSwipeHint();
+  // التلميح لمن يملك حذف نشيد ظاهر فقط، ويتحرّك أول صفّ قابل للحذف لتوضيحه.
+  const peekId = swipeHint.show ? items.find((i) => i.canModify)?.id : undefined;
 
   function buildUrl(overrides: { q?: string; tags?: string[]; sort?: LyricsSort }) {
     return buildHomeUrl({
@@ -252,6 +256,20 @@ export function HomeScreen({
           </span>
         </div>
 
+        {peekId && (
+          <div className="flex items-center gap-3 border-b border-emerald-100 bg-emerald-50 py-2 pe-2 ps-5 text-[13px] leading-6 text-emerald-900">
+            <ArrowRight className="h-5 w-5 shrink-0 text-emerald-700" aria-hidden="true" />
+            <p className="min-w-0 flex-1">اسحب أي نشيد نحو اليمين لحذفه، ويمكنك التراجع بعدها مباشرة.</p>
+            <button
+              type="button"
+              onClick={swipeHint.dismiss}
+              className={`inline-flex h-11 shrink-0 items-center rounded-xl px-3 text-sm font-semibold text-emerald-700 transition-colors hover:bg-emerald-100 ${focusRing}`}
+            >
+              فهمت
+            </button>
+          </div>
+        )}
+
         {items.length === 0 && !hasMore ? (
           <p className="p-8 text-center text-sm text-[#6b7670]">{isFiltered ? "لا توجد نتائج مطابقة" : "لا توجد أناشيد بعد"}</p>
         ) : (
@@ -272,7 +290,12 @@ export function HomeScreen({
               <SwipeToDelete
                 key={item.id}
                 title={item.title}
-                onDelete={(viaKeyboard) => quickDelete.requestDelete(item.id, { focus: viaKeyboard })}
+                onDelete={(viaKeyboard) => {
+                  // أول حذف يعني أن الإيماءة صارت معروفة: لا حاجة للتلميح بعدها.
+                  swipeHint.dismiss();
+                  quickDelete.requestDelete(item.id, { focus: viaKeyboard });
+                }}
+                peek={item.id === peekId}
                 className="border-b border-[#f0f0ec]"
               >
                 {row}
