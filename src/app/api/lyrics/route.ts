@@ -7,12 +7,18 @@ import { renderLyricsHtml } from "@/lib/render-lyrics";
 import { buildLyricsWhere, buildLyricsOrderBy, parseLyricsSort, LYRICS_PAGE_SIZE } from "@/lib/lyrics-search";
 import { findArabicMatch, splitAtMatch, buildContentSnippet } from "@/lib/arabic-highlight";
 import { buildLyricsWriteData, findDuplicateLyrics } from "@/lib/lyrics";
+import { canModifyLyrics } from "@/lib/lyrics-permissions";
 
 export async function GET(req: Request) {
   const { searchParams } = new URL(req.url);
   const q = searchParams.get("q")?.trim() || "";
   const tags = (searchParams.get("tags")?.split(",") ?? []).map((t) => t.trim()).filter(Boolean);
   const page = Math.max(1, Number(searchParams.get("page")) || 1);
+  // إزاحة صريحة (عدد العناصر المُحمَّلة) تتقدّم على page: بعد حذف نشيد من القائمة
+  // تنزاح الصفحات بمقدار واحد، فتسقط الإزاحة المحسوبة من page نشيدًا (راجع useLyricsFeed).
+  const offsetRaw = searchParams.get("offset");
+  const offset = offsetRaw === null || offsetRaw === "" ? NaN : Number(offsetRaw);
+  const skip = Number.isInteger(offset) && offset >= 0 ? offset : (page - 1) * LYRICS_PAGE_SIZE;
   const sort = parseLyricsSort(searchParams.get("sort"), "date_desc");
 
   const where = buildLyricsWhere(q, tags);
@@ -22,7 +28,7 @@ export async function GET(req: Request) {
     prisma.lyrics.findMany({
       where,
       orderBy: buildLyricsOrderBy(sort),
-      skip: (page - 1) * LYRICS_PAGE_SIZE,
+      skip,
       take: LYRICS_PAGE_SIZE,
       select: {
         id: true,
@@ -34,6 +40,7 @@ export async function GET(req: Request) {
         // يُستخدم أيضًا لبناء المقتطف المظلَّل (راجع lib/arabic-highlight) ولعرض
         // الأنشودة كاملة عند التمرير اللانهائي في الرئيسية — لا يُعاد خامًا.
         content: true,
+        createdById: true,
         createdBy: { select: { name: true } },
       },
     }),
@@ -44,8 +51,13 @@ export async function GET(req: Request) {
 
   // تظليل: العنوان أولًا، وإلا مقتطف من الكلمات — مطابقةً لتجربة شاشة البحث
   // الكاملة على الموبايل. بلا استعلام (q فارغة) لا حاجة لأيّ من هذا.
-  const items = rows.map(({ content, ...rest }) => {
-    const base = { ...rest, contentHtml: renderLyricsHtml(content), favorited: favoritedIds.has(rest.id) };
+  const items = rows.map(({ content, createdById, ...rest }) => {
+    const base = {
+      ...rest,
+      contentHtml: renderLyricsHtml(content),
+      favorited: favoritedIds.has(rest.id),
+      canModify: canModifyLyrics(session, createdById),
+    };
     if (!q) return { ...base, titleMatch: null, snippet: null };
     const titleSpan = findArabicMatch(rest.title, q);
     if (titleSpan) {

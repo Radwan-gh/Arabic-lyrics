@@ -7,6 +7,9 @@ import { FavoriteButton } from "@/components/FavoriteButton";
 import { LyricsSortSelect } from "@/components/LyricsSortSelect";
 import { BackToTopButton } from "@/components/BackToTopButton";
 import { Spinner } from "@/components/Spinner";
+import { QuickDeleteButton } from "@/components/QuickDeleteButton";
+import { UndoDeleteToast } from "@/components/UndoDeleteToast";
+import { useUndoableDelete } from "@/lib/use-undoable-delete";
 import { useLyricsFeed, type LyricsFeedItem } from "@/lib/use-lyrics-feed";
 import { useHomeStats } from "@/lib/offline-data";
 import { useHomeFilters, type HomeFilters } from "@/lib/use-home-filters";
@@ -41,14 +44,16 @@ export function HomeDesktopList({
   const filters = useHomeFilters(initialFilters);
   const { query, tags: selectedTags, sort } = filters;
   const isFiltered = Boolean(query) || selectedTags.length > 0;
-  const { items, hasMore, total, loading, error, retry, sentinelRef } = useLyricsFeed({
-    filters,
-    initialFilters,
-    initialItems,
-    initialHasMore,
-    initialTotal,
-    shell,
-  });
+  const { items, hasMore, total, loading, error, retry, sentinelRef, removedCount, removeItem, restoreItem, confirmRemoved } =
+    useLyricsFeed({
+      filters,
+      initialFilters,
+      initialItems,
+      initialHasMore,
+      initialTotal,
+      shell,
+    });
+  const quickDelete = useUndoableDelete({ removeItem, restoreItem, confirmRemoved });
 
   // نُبقي الرابط نظيفًا حين يكون الترتيب الافتراضي (أبجدي تصاعدي) — يطابق سلوك
   // buildUrl في نسخة الموبايل.
@@ -65,7 +70,7 @@ export function HomeDesktopList({
 
       <div className="flex flex-wrap items-center justify-between gap-3">
         <p className="text-sm text-neutral-600" aria-live="polite">
-          <span className="font-medium text-neutral-800">الكل : {formatCount(grandTotal)}</span>
+          <span className="font-medium text-neutral-800">الكل : {formatCount(Math.max(0, grandTotal - removedCount))}</span>
           {isFiltered && <span> ، نتائج البحث : {formatCount(total)}</span>}
         </p>
         <LyricsSortSelect sort={sort} query={query} tags={selectedTags} className="text-neutral-600" />
@@ -89,7 +94,15 @@ export function HomeDesktopList({
               contentHtml={item.contentHtml}
               action={
                 loggedIn ? (
-                  <FavoriteButton lyricsId={item.id} initialFavorited={item.favorited} variant="icon" />
+                  <div className="flex shrink-0 items-center gap-1">
+                    <FavoriteButton lyricsId={item.id} initialFavorited={item.favorited} variant="icon" />
+                    {item.canModify && (
+                      <QuickDeleteButton
+                        title={item.title}
+                        onDelete={(viaKeyboard) => quickDelete.requestDelete(item.id, { focus: viaKeyboard })}
+                      />
+                    )}
+                  </div>
                 ) : undefined
               }
             />
@@ -116,6 +129,13 @@ export function HomeDesktopList({
       )}
 
       <BackToTopButton className="fixed bottom-6 end-6 z-30 h-11 w-11" />
+
+      <UndoDeleteToast
+        toast={quickDelete.toast}
+        onUndo={quickDelete.undo}
+        onDismiss={quickDelete.dismiss}
+        className="inset-x-0 bottom-6 mx-auto w-full max-w-md px-4"
+      />
     </div>
   );
 }

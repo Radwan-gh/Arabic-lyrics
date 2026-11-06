@@ -10,6 +10,9 @@ import { LyricsSortSelect } from "@/components/LyricsSortSelect";
 import { BackToTopButton } from "@/components/BackToTopButton";
 import { Spinner } from "@/components/Spinner";
 import { RecentSearches } from "@/components/RecentSearches";
+import { QuickDeleteButton } from "@/components/QuickDeleteButton";
+import { UndoDeleteToast } from "@/components/UndoDeleteToast";
+import { useUndoableDelete } from "@/lib/use-undoable-delete";
 import { useRecentSearches } from "@/lib/recent-searches";
 import { useLyricsFeed, type LyricsFeedItem } from "@/lib/use-lyrics-feed";
 import { useHomeStats } from "@/lib/offline-data";
@@ -62,14 +65,16 @@ export function HomeScreen({
   const [recentOpen, setRecentOpen] = useState(false);
   const showRecent = recentOpen && !search.trim() && recent.items.length > 0;
   const closeRecent = useCallback(() => setRecentOpen(false), []);
-  const { items, hasMore, total, loading, error, retry, sentinelRef } = useLyricsFeed({
-    filters,
-    initialFilters,
-    initialItems,
-    initialHasMore,
-    initialTotal,
-    shell,
-  });
+  const { items, hasMore, total, loading, error, retry, sentinelRef, removedCount, removeItem, restoreItem, confirmRemoved } =
+    useLyricsFeed({
+      filters,
+      initialFilters,
+      initialItems,
+      initialHasMore,
+      initialTotal,
+      shell,
+    });
+  const quickDelete = useUndoableDelete({ removeItem, restoreItem, confirmRemoved });
 
   function buildUrl(overrides: { q?: string; tags?: string[]; sort?: LyricsSort }) {
     return buildHomeUrl({
@@ -215,7 +220,7 @@ export function HomeScreen({
           >
             الكل
             <span className={selectedTags.length === 0 ? "text-xs text-white/75" : "text-xs text-[#9aa39d]"}>
-              {grandTotal.toLocaleString("ar-EG")}
+              {Math.max(0, grandTotal - removedCount).toLocaleString("ar-EG")}
             </span>
           </button>
           {visibleTagCounts.map((t) => {
@@ -259,6 +264,13 @@ export function HomeScreen({
                 </div>
               </Link>
               {loggedIn && <FavoriteButton lyricsId={item.id} initialFavorited={item.favorited} variant="plain" />}
+              {item.canModify && (
+                <QuickDeleteButton
+                  title={item.title}
+                  variant="plain"
+                  onDelete={(viaKeyboard) => quickDelete.requestDelete(item.id, { focus: viaKeyboard })}
+                />
+              )}
             </div>
           ))
         )}
@@ -291,6 +303,13 @@ export function HomeScreen({
       </Link>
 
       <BackToTopButton className="fixed bottom-7 end-5 z-30 h-[52px] w-[52px]" />
+
+      <UndoDeleteToast
+        toast={quickDelete.toast}
+        onUndo={quickDelete.undo}
+        onDismiss={quickDelete.dismiss}
+        className="inset-x-5 bottom-[104px]"
+      />
     </div>
   );
 }
