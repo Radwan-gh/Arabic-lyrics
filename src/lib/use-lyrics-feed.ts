@@ -17,6 +17,14 @@ export interface LyricsFeedItem {
   createdAt: string;
   contentHtml: string;
   favorited: boolean;
+  /** يملك المستخدم الحالي صلاحية تعديله/حذفه (يُحسب على الخادم؛ false دون اتصال). */
+  canModify: boolean;
+}
+
+/** نشيد أُخفي من القائمة (حذف بانتظار التأكيد) مع موضعه، لإرجاعه عند التراجع. */
+export interface RemovedFeedItem {
+  item: LyricsFeedItem;
+  index: number;
 }
 
 interface UseLyricsFeedArgs {
@@ -52,12 +60,20 @@ export function useLyricsFeed({ filters, initialFilters, initialItems, initialHa
   const { query, tags, sort } = filters;
   const local = shell || homeFiltersKey(filters) !== homeFiltersKey(initialFilters);
   const [items, setItems] = useState(initialItems);
+  const itemsRef = useRef(items);
+  itemsRef.current = items;
   // في الهيكل لا صفحة أولى: مؤشّر التحميل (لا «لا توجد أناشيد») حتى تُقرأ بيانات الجهاز.
   const [hasMore, setHasMore] = useState(shell || initialHasMore);
   const [total, setTotal] = useState(initialTotal);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(false);
   const pageRef = useRef(1);
+  // عدد ما جاء من الخادم، وعدد ما حُذف منه فعليًا: الصفحة التالية تُطلب بإزاحة
+  // (الفرق بينهما) لا برقم صفحة، وإلا أسقط كل حذفٍ نشيدًا من الصفحة التالية.
+  const serverCountRef = useRef(initialItems.length);
+  const deletedRef = useRef(0);
+  // عدد الأناشيد المُخفاة الآن من القائمة (محذوفة أو بانتظار الحذف) — لإنقاص العدّادات.
+  const [removedCount, setRemovedCount] = useState(0);
   const loadingRef = useRef(false);
   const abortRef = useRef<AbortController | null>(null);
   const shownIdsRef = useRef<Set<string>>(new Set(initialItems.map((i) => i.id)));
@@ -95,6 +111,7 @@ export function useLyricsFeed({ filters, initialFilters, initialItems, initialHa
         createdAt: lyric.createdAt,
         contentHtml: lyric.contentHtml,
         favorited: source.favoriteIds.has(lyric.id),
+        canModify: false,
       }));
       append(page, remaining.length > page.length);
     },
@@ -108,6 +125,9 @@ export function useLyricsFeed({ filters, initialFilters, initialItems, initialHa
     abortRef.current?.abort();
     setError(false);
     pageRef.current = 1;
+    serverCountRef.current = initialItems.length;
+    deletedRef.current = 0;
+    setRemovedCount(0);
     offlineRef.current = null;
     loadingRef.current = false;
     setLoading(false);
@@ -163,6 +183,8 @@ export function useLyricsFeed({ filters, initialFilters, initialItems, initialHa
       if (tagsKey) params.set("tags", tagsKey);
       params.set("sort", sort);
       params.set("page", String(nextPage));
+      const offset = Math.max(0, serverCountRef.current - deletedRef.current);
+      params.set("offset", String(offset));
       let res: Response;
       try {
         res = await fetch(`/api/lyrics?${params.toString()}`, { signal: controller.signal });
@@ -176,9 +198,10 @@ export function useLyricsFeed({ filters, initialFilters, initialItems, initialHa
         setError(true);
         return;
       }
-      const data: { items: LyricsFeedItem[]; pageCount: number } = await res.json();
+      const data: { items: LyricsFeedItem[]; total: number } = await res.json();
       pageRef.current = nextPage;
-      append(data.items, nextPage < data.pageCount);
+      serverCountRef.current += data.items.length;
+      append(data.items, data.items.length > 0 && offset + data.items.length < data.total);
     } catch {
       // إلغاء الطلب (استعلام جديد وصل قبل اكتمال هذه الصفحة) — حالة الاستعلام
       // الجديد أُعيد ضبطها في تأثير إعادة الضبط أعلاه.
@@ -201,6 +224,37 @@ export function useLyricsFeed({ filters, initialFilters, initialItems, initialHa
     return () => window.removeEventListener("online", retry);
   }, [error, retry]);
 
+  /** يُخفي نشيدًا من القائمة فورًا (قبل تأكيد الخادم)، ويُرجعه مع موضعه. */
+  const removeItem = useCallback((id: string): RemovedFeedItem | null => {
+    const current = itemsRef.current;
+    const index = current.findIndex((i) => i.id === id);
+    if (index === -1) return null;
+    const removed = { item: current[index], index };
+    // تحديث فوري للمرجع: حذفان متتاليان قبل إعادة التصيير يريان القائمة الصحيحة.
+    itemsRef.current = current.filter((i) => i.id !== id);
+    setItems((prev) => prev.filter((i) => i.id !== id));
+    setTotal((t) => Math.max(0, t - 1));
+    setRemovedCount((n) => n + 1);
+    return removed;
+  }, []);
+
+  /** يُرجع نشيدًا أُخفي (تراجع أو فشل الحذف) إلى موضعه. */
+  const restoreItem = useCallback(({ item, index }: RemovedFeedItem) => {
+    setItems((prev) => {
+      if (prev.some((i) => i.id === item.id)) return prev;
+      const next = [...prev];
+      next.splice(Math.min(index, next.length), 0, item);
+      return next;
+    });
+    setTotal((t) => t + 1);
+    setRemovedCount((n) => Math.max(0, n - 1));
+  }, []);
+
+  /** أكّد الخادم الحذف: تُطلب الصفحات التالية بإزاحة أقلّ بواحد. */
+  const confirmRemoved = useCallback(() => {
+    deletedRef.current += 1;
+  }, []);
+
   const sentinelRef = useRef<HTMLDivElement | null>(null);
 
   useEffect(() => {
@@ -218,7 +272,7 @@ export function useLyricsFeed({ filters, initialFilters, initialItems, initialHa
     // أقصر من الشاشة) يُطلق تحميلًا جديدًا — المراقب لا يُبلغ إلا عند تغيّر التقاطع.
   }, [loadMore, error, items.length]);
 
-  return { items, hasMore, total, loading, error, retry, sentinelRef };
+  return { items, hasMore, total, loading, error, retry, sentinelRef, removedCount, removeItem, restoreItem, confirmRemoved };
 }
 
 // بيانات الجهاز بعد أول قراءة، لاستعمالها فورًا (البحث دون اتصال يعيد التصفية مع

@@ -8,6 +8,7 @@ import { HomeScreen } from "@/components/HomeScreen";
 import { HomeDesktopList } from "@/components/HomeDesktopList";
 import { headers } from "next/headers";
 import { isShellRequest } from "@/lib/offline";
+import { canModifyLyrics } from "@/lib/lyrics-permissions";
 import type { LyricsFeedItem } from "@/lib/use-lyrics-feed";
 import type { TagCount } from "@/lib/tags";
 import type { HomeFilters } from "@/lib/use-home-filters";
@@ -38,7 +39,7 @@ export default async function HomePage({
       where,
       orderBy: buildLyricsOrderBy(sort),
       take: LYRICS_PAGE_SIZE,
-      select: { id: true, title: true, artist: true, album: true, tags: true, createdAt: true, content: true },
+      select: { id: true, title: true, artist: true, album: true, tags: true, createdAt: true, content: true, createdById: true },
     }),
     prisma.lyrics.count({ where }),
     prisma.lyrics.count(),
@@ -59,6 +60,7 @@ export default async function HomePage({
     createdAt: item.createdAt.toISOString(),
     contentHtml: renderLyricsHtml(item.content),
     favorited: favoritedIds.has(item.id),
+    canModify: canModifyLyrics(session, item.createdById),
   }));
 
   const hasMore = items.length < total;
