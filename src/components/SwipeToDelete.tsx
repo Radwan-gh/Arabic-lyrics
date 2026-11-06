@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef, useState, type ReactNode, type PointerEvent } from "react";
+import { useEffect, useRef, useState, type ReactNode, type PointerEvent } from "react";
 import { Trash2 } from "lucide-react";
 
 interface SwipeToDeleteProps {
@@ -8,6 +8,8 @@ interface SwipeToDeleteProps {
   title: string;
   /** `viaKeyboard`: الحذف من الزر البديل بلوحة المفاتيح (لنقل التركيز إلى «تراجع»). */
   onDelete: (viaKeyboard: boolean) => void;
+  /** تلميح أول مرة: ينزاح الصف وحده قليلًا نحو اليمين ثم يعود، كاشفًا خلفية الحذف. */
+  peek?: boolean;
   className?: string;
   children: ReactNode;
 }
@@ -20,6 +22,11 @@ const DELETE_RATIO = 0.35;
 const FLING_VELOCITY = 0.6;
 const FLING_MIN_PX = 60;
 const ANIM_MS = 180;
+/** مسافة انزياح التلميح — تكفي لكشف الأيقونة وكلمة «حذف». */
+const PEEK_PX = 96;
+const PEEK_DELAY_MS = 700;
+const PEEK_HOLD_MS = 650;
+const PEEK_ANIM_MS = 350;
 
 /**
  * صفّ في قائمة الموبايل يُحذف بسحبه نحو اليمين: تنكشف خلفه خلفية حمراء بأيقونة
@@ -32,10 +39,11 @@ const ANIM_MS = 180;
  * بعد السحب تُلغى النقرة التالية حتى لا يُفتح النشيد. لقارئ الشاشة ولوحة
  * المفاتيح زرّ حذف مخفيّ بصريًا يظهر عند التركيز.
  */
-export function SwipeToDelete({ title, onDelete, className = "", children }: SwipeToDeleteProps) {
+export function SwipeToDelete({ title, onDelete, peek = false, className = "", children }: SwipeToDeleteProps) {
   const rowRef = useRef<HTMLDivElement>(null);
   const [dx, setDx] = useState(0);
   const [animating, setAnimating] = useState(false);
+  const [peeking, setPeeking] = useState(false);
   const gesture = useRef<{
     id: number;
     startX: number;
@@ -50,8 +58,42 @@ export function SwipeToDelete({ title, onDelete, className = "", children }: Swi
 
   const width = () => rowRef.current?.offsetWidth ?? 360;
 
+  // التلميح مرة واحدة لكل ظهور للصف، ويُتخطّى مع «تقليل الحركة» أو إن بدأ المستخدم بالسحب.
+  useEffect(() => {
+    if (!peek || window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+    let active = false;
+    const timers = [
+      setTimeout(() => {
+        if (gesture.current) return;
+        active = true;
+        setPeeking(true);
+        setDx(PEEK_PX);
+      }, PEEK_DELAY_MS),
+      setTimeout(() => {
+        if (active && !gesture.current) setDx(0);
+      }, PEEK_DELAY_MS + PEEK_ANIM_MS + PEEK_HOLD_MS),
+      setTimeout(() => {
+        active = false;
+        setPeeking(false);
+      }, PEEK_DELAY_MS + 2 * PEEK_ANIM_MS + PEEK_HOLD_MS),
+    ];
+    return () => {
+      timers.forEach(clearTimeout);
+      // أُلغي التلميح وهو جارٍ («فهمت» مثلًا): يعود الصف إلى مكانه.
+      if (active && !gesture.current) {
+        setPeeking(false);
+        setDx(0);
+      }
+    };
+  }, [peek]);
+
   function onPointerDown(e: PointerEvent<HTMLDivElement>) {
     if (animating || (e.pointerType === "mouse" && e.button !== 0)) return;
+    if (peeking) {
+      // لمسة أثناء التلميح: يعود الصف فورًا ويبدأ السحب الحقيقي من الصفر.
+      setPeeking(false);
+      setDx(0);
+    }
     gesture.current = {
       id: e.pointerId,
       startX: e.clientX,
@@ -149,7 +191,11 @@ export function SwipeToDelete({ title, onDelete, className = "", children }: Swi
         style={{
           touchAction: "pan-y",
           transform: dx ? `translateX(${dx}px)` : undefined,
-          transition: animating ? `transform ${ANIM_MS}ms ease-out` : undefined,
+          transition: animating
+            ? `transform ${ANIM_MS}ms ease-out`
+            : peeking
+              ? `transform ${PEEK_ANIM_MS}ms ease-in-out`
+              : undefined,
         }}
       >
         {children}
