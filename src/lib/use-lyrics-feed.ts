@@ -7,7 +7,17 @@ import { normalizeArabic } from "@/lib/arabic-search";
 import { compareOfflineLyrics, type OfflineLyric } from "@/lib/offline";
 import { OFFLINE_DATA_EVENT } from "@/lib/offline-db";
 import { loadOfflineDataset, matchesSearch, type OfflineDataset } from "@/lib/offline-data";
-import { saveFeedSnapshot, takeFeedSnapshot, type FeedVariant } from "@/lib/feed-restore";
+import {
+  discardPersistedFeedSnapshot,
+  findFeedAnchor,
+  persistFeedSnapshot,
+  scrollToFeedAnchor,
+  saveFeedSnapshot,
+  takeFeedSnapshot,
+  takePersistedFeedSnapshot,
+  type FeedVariant,
+  type PersistedFeedSnapshot,
+} from "@/lib/feed-restore";
 
 export interface LyricsFeedItem {
   id: string;
@@ -106,6 +116,20 @@ export function useLyricsFeed({ filters, initialFilters, initialItems, initialHa
     return () => cancelAnimationFrame(frame);
   }, [restored]);
 
+  // استعادة دون اتصال (بعد قراءة بيانات الجهاز): التمرير بعد تصيير العناصر المستعادة.
+  const pendingScrollRef = useRef<PersistedFeedSnapshot | null>(null);
+  useLayoutEffect(() => {
+    const target = pendingScrollRef.current;
+    if (!target) return;
+    pendingScrollRef.current = null;
+    const apply = () => {
+      if (!target.anchor || !scrollToFeedAnchor(target.anchor)) window.scrollTo(0, target.scrollY);
+    };
+    apply();
+    const frame = requestAnimationFrame(apply);
+    return () => cancelAnimationFrame(frame);
+  }, [items]);
+
   useEffect(() => {
     const homePath = window.location.pathname;
     if (!restored) scrollYRef.current = window.scrollY;
@@ -115,9 +139,29 @@ export function useLyricsFeed({ filters, initialFilters, initialItems, initialHa
       if (window.location.pathname !== homePath) return;
       scrollYRef.current = window.scrollY;
     }
+    // مغادرة الصفحة كلّها (تنقّل دون اتصال يُحمّل الصفحة من جديد): لقطة مصغّرة تبقى
+    // في الجلسة لتُستعاد عند الرجوع — راجع takePersistedFeedSnapshot.
+    function onPageHide() {
+      if (window.location.pathname !== homePath) return;
+      const ids = itemsRef.current.map((i) => i.id);
+      const anchor = findFeedAnchor(ids);
+      // النسخة المخفيّة (لا نشيد ظاهر منها) لا تحفظ شيئًا: الاستعادة للظاهرة وحدها.
+      if (!anchor) {
+        discardPersistedFeedSnapshot(variant);
+        return;
+      }
+      persistFeedSnapshot(variant, { key: stateRef.current.filtersKey, ids, scrollY: scrollYRef.current, anchor });
+    }
+    function onPageShow(e: PageTransitionEvent) {
+      if (e.persisted) discardPersistedFeedSnapshot(variant);
+    }
     window.addEventListener("scroll", onScroll, { passive: true });
+    window.addEventListener("pagehide", onPageHide);
+    window.addEventListener("pageshow", onPageShow);
     return () => {
       window.removeEventListener("scroll", onScroll);
+      window.removeEventListener("pagehide", onPageHide);
+      window.removeEventListener("pageshow", onPageShow);
       const state = stateRef.current;
       saveFeedSnapshot(variant, {
         key: state.filtersKey,
@@ -144,32 +188,63 @@ export function useLyricsFeed({ filters, initialFilters, initialItems, initialHa
   // الصفحة التالية من اللقطة المحفوظة: كل ما يطابق البحث والوسوم ولم يُعرض بعد،
   // بالترتيب المطلوب (مطابق لترتيب قاعدة البيانات — راجع compareOfflineLyrics).
   // الاستبعاد بالمعرّف (لا بالإزاحة) يضمن ألّا يتكرّر ولا يسقط نشيد.
-  const loadFromOffline = useCallback(
+  const matchingOffline = useCallback(
     (source: OfflineSource) => {
       const tagList = tagsKey ? tagsKey.split(",") : [];
-      const matching = source.lyrics.filter((lyric) => {
+      return source.lyrics.filter((lyric) => {
         if (tagList.length && !lyric.tags.some((t) => tagList.includes(t))) return false;
         return matchesSearch(source, lyric, query);
       });
+    },
+    [query, tagsKey],
+  );
+
+  const loadFromOffline = useCallback(
+    (source: OfflineSource) => {
+      const matching = matchingOffline(source);
       // العدد من اللقطة فقط حين تكون هي مصدر القائمة كلّها؛ وإلا فعدد الخادم أدقّ.
       if (local) setTotal(matching.length);
       const remaining = matching
         .filter((lyric) => !shownIdsRef.current.has(lyric.id))
         .sort(compareOfflineLyrics(sort, (l: OfflineLyric) => l, (l) => normalizeArabic(l.title)));
-      const page = remaining.slice(0, LYRICS_PAGE_SIZE).map((lyric) => ({
-        id: lyric.id,
-        title: lyric.title,
-        artist: lyric.artist,
-        album: lyric.album,
-        tags: lyric.tags,
-        createdAt: lyric.createdAt,
-        contentHtml: lyric.contentHtml,
-        favorited: source.favoriteIds.has(lyric.id),
-        canModify: false,
-      }));
+      const page = remaining.slice(0, LYRICS_PAGE_SIZE).map((lyric) => toFeedItem(source, lyric));
       append(page, remaining.length > page.length);
     },
-    [query, tagsKey, sort, local, append],
+    [matchingOffline, sort, local, append],
+  );
+
+  // لقطة الجلسة (رجوع دون اتصال) — تُقرأ مرة واحدة عند أول ضبط للقائمة في الهيكل.
+  const persistedRef = useRef<PersistedFeedSnapshot | null | undefined>(undefined);
+  const resetRunsRef = useRef(0);
+
+  /** يُعيد القائمة دون اتصال إلى ما كانت عليه: العناصر نفسها بترتيبها من بيانات الجهاز، ثم موضع التمرير. */
+  const restoreFromPersisted = useCallback(
+    (snapshot: PersistedFeedSnapshot) => {
+      const controller = new AbortController();
+      abortRef.current = controller;
+      // يمنع الحارس الظاهر من تحميل الصفحة الأولى أثناء قراءة بيانات الجهاز.
+      loadingRef.current = true;
+      setHasMore(true);
+      void (async () => {
+        const source = cachedSource ?? (await loadOfflineSource());
+        if (controller.signal.aborted) return;
+        loadingRef.current = false;
+        if (!source) return; // الحارس يُكمل كالمعتاد (فيُظهر خطأ قابلًا لإعادة المحاولة).
+        offlineRef.current = source;
+        const matching = matchingOffline(source);
+        const byId = new Map(matching.map((l) => [l.id, l]));
+        const restoredItems = snapshot.ids
+          .map((id) => byId.get(id))
+          .filter((l): l is OfflineLyric => Boolean(l))
+          .map((lyric) => toFeedItem(source, lyric));
+        shownIdsRef.current = new Set(restoredItems.map((i) => i.id));
+        pendingScrollRef.current = snapshot;
+        setItems(restoredItems);
+        setTotal(matching.length);
+        setHasMore(matching.length > restoredItems.length);
+      })();
+    },
+    [matchingOffline],
   );
 
   useEffect(() => {
@@ -206,6 +281,18 @@ export function useLyricsFeed({ filters, initialFilters, initialItems, initialHa
     }
     shownIdsRef.current = new Set();
     setItems([]);
+    const firstRun = resetRunsRef.current++ === 0;
+    if (shell && persistedRef.current === undefined) persistedRef.current = takePersistedFeedSnapshot(variant);
+    const persisted = persistedRef.current;
+    if (persisted) {
+      // أول ضبط قد يكون بمعايير الهيكل المخزَّن قبل قراءة الرابط: ننتظر الضبط التالي.
+      if (persisted.key === filtersKey) {
+        persistedRef.current = null;
+        restoreFromPersisted(persisted);
+        return;
+      }
+      if (!firstRun) persistedRef.current = null;
+    }
     if (cachedSource) {
       // اللقطة في الذاكرة: النتائج فورًا، بلا وميض مؤشّر التحميل أثناء الكتابة.
       offlineRef.current = cachedSource;
@@ -214,7 +301,7 @@ export function useLyricsFeed({ filters, initialFilters, initialItems, initialHa
       // الحارس الظاهر (قائمة فارغة) يُطلق loadMore فيجلب اللقطة.
       setHasMore(true);
     }
-  }, [initialItems, initialHasMore, initialTotal, local, loadFromOffline]);
+  }, [initialItems, initialHasMore, initialTotal, local, loadFromOffline, shell, variant, filtersKey, restoreFromPersisted]);
 
   const loadMore = useCallback(async () => {
     if (loadingRef.current || !hasMore) return;
@@ -349,6 +436,20 @@ if (typeof window !== "undefined") {
   window.addEventListener(OFFLINE_DATA_EVENT, () => {
     cachedSource = null;
   });
+}
+
+function toFeedItem(source: OfflineSource, lyric: OfflineLyric): LyricsFeedItem {
+  return {
+    id: lyric.id,
+    title: lyric.title,
+    artist: lyric.artist,
+    album: lyric.album,
+    tags: lyric.tags,
+    createdAt: lyric.createdAt,
+    contentHtml: lyric.contentHtml,
+    favorited: source.favoriteIds.has(lyric.id),
+    canModify: false,
+  };
 }
 
 async function loadOfflineSource(): Promise<OfflineSource | null> {
