@@ -1,10 +1,12 @@
 "use client";
 
+import { useEffect } from "react";
 import { usePathname } from "next/navigation";
 import { Navbar } from "@/components/Navbar";
 import { PWAInstallFloating } from "@/components/PWAInstallButton";
 import { MenuProvider } from "@/lib/menu-context";
 import type { SessionPayload } from "@/lib/jwt";
+import { noteRoute } from "@/lib/feed-restore";
 
 // مسارات الشاشات الغامرة على الموبايل: بلا شريط تنقّل علوي ولا حشوة الحاوية
 // المعتادة — كل شاشة تبني كرومها الخاص (شبيهًا بتطبيق أصلي). سطح المكتب (sm+)
@@ -38,6 +40,7 @@ export function AppChrome({
 }) {
   const pathname = usePathname();
   const immersive = isImmersive(pathname);
+  useEffect(() => noteRoute(pathname), [pathname]);
 
   return (
     <MenuProvider>

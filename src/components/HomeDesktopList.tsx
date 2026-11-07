@@ -52,6 +52,7 @@ export function HomeDesktopList({
       initialHasMore,
       initialTotal,
       shell,
+      variant: "desktop",
     });
   const quickDelete = useUndoableDelete({ removeItem, restoreItem, confirmRemoved });
 

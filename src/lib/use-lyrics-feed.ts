@@ -1,12 +1,13 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useLayoutEffect, useRef, useState } from "react";
 import { LYRICS_PAGE_SIZE } from "@/lib/lyrics-search";
 import { homeFiltersKey, type HomeFilters } from "@/lib/use-home-filters";
 import { normalizeArabic } from "@/lib/arabic-search";
 import { compareOfflineLyrics, type OfflineLyric } from "@/lib/offline";
 import { OFFLINE_DATA_EVENT } from "@/lib/offline-db";
 import { loadOfflineDataset, matchesSearch, type OfflineDataset } from "@/lib/offline-data";
+import { saveFeedSnapshot, takeFeedSnapshot, type FeedVariant } from "@/lib/feed-restore";
 
 export interface LyricsFeedItem {
   id: string;
@@ -37,6 +38,8 @@ interface UseLyricsFeedArgs {
   initialTotal: number;
   /** صفحة فُتحت من هيكل دون اتصال (بلا صفحة أولى من الخادم): القائمة كلها من الجهاز. */
   shell?: boolean;
+  /** أيّ نسختَي الرئيسية — لحفظ موضعها واستعادته عند الرجوع (راجع feed-restore). */
+  variant: FeedVariant;
 }
 
 type OfflineSource = OfflineDataset;
@@ -55,30 +58,81 @@ type OfflineSource = OfflineDataset;
  * دون اتصال — راجع useAppRouter)، تُحسب القائمة وعدد النتائج كلّها من الجهاز. إن لم تكن اللقطة
  * محفوظة يظهر خطأ قابل لإعادة المحاولة (error/retry) بدل مؤشّر انتظار معلَّق،
  * وتُعاد المحاولة تلقائيًا عند عودة الاتصال.
+ *
+ * عند الرجوع إلى الرئيسية من تفاصيل نشيد تُستعاد القائمة كما تُركت (كل الصفحات
+ * المحمَّلة وموضع التمرير) بدل البدء من الصفحة الأولى — راجع feed-restore.
  */
-export function useLyricsFeed({ filters, initialFilters, initialItems, initialHasMore, initialTotal, shell = false }: UseLyricsFeedArgs) {
+export function useLyricsFeed({ filters, initialFilters, initialItems, initialHasMore, initialTotal, shell = false, variant }: UseLyricsFeedArgs) {
   const { query, tags, sort } = filters;
   const local = shell || homeFiltersKey(filters) !== homeFiltersKey(initialFilters);
-  const [items, setItems] = useState(initialItems);
+  const filtersKey = homeFiltersKey(filters);
+  // لقطة القائمة كما تُركت، إن كان هذا التركيب رجوعًا إليها (تُقرأ مرة واحدة).
+  const [restored] = useState(() => takeFeedSnapshot(variant, filtersKey));
+  const [items, setItems] = useState(restored?.items ?? initialItems);
   const itemsRef = useRef(items);
   itemsRef.current = items;
   // في الهيكل لا صفحة أولى: مؤشّر التحميل (لا «لا توجد أناشيد») حتى تُقرأ بيانات الجهاز.
-  const [hasMore, setHasMore] = useState(shell || initialHasMore);
-  const [total, setTotal] = useState(initialTotal);
+  const [hasMore, setHasMore] = useState(restored ? restored.hasMore : shell || initialHasMore);
+  const [total, setTotal] = useState(restored?.total ?? initialTotal);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(false);
-  const pageRef = useRef(1);
+  const pageRef = useRef(restored?.page ?? 1);
   // عدد ما جاء من الخادم، وعدد ما حُذف منه فعليًا: الصفحة التالية تُطلب بإزاحة
   // (الفرق بينهما) لا برقم صفحة، وإلا أسقط كل حذفٍ نشيدًا من الصفحة التالية.
-  const serverCountRef = useRef(initialItems.length);
-  const deletedRef = useRef(0);
+  const serverCountRef = useRef(restored?.serverCount ?? initialItems.length);
+  const deletedRef = useRef(restored?.deleted ?? 0);
   // عدد الأناشيد المُخفاة الآن من القائمة (محذوفة أو بانتظار الحذف) — لإنقاص العدّادات.
-  const [removedCount, setRemovedCount] = useState(0);
+  const [removedCount, setRemovedCount] = useState(restored?.removedCount ?? 0);
   const loadingRef = useRef(false);
   const abortRef = useRef<AbortController | null>(null);
-  const shownIdsRef = useRef<Set<string>>(new Set(initialItems.map((i) => i.id)));
-  const offlineRef = useRef<OfflineSource | null>(null);
+  const shownIdsRef = useRef<Set<string>>(new Set((restored?.items ?? initialItems).map((i) => i.id)));
+  const offlineRef = useRef<OfflineSource | null>(restored?.offline ?? null);
   const tagsKey = tags.join(",");
+  // مدخلات التركيب الذي استُعيدت له اللقطة: ما دامت هي نفسها لا يُعاد ضبط القائمة.
+  const restoredForRef = useRef(restored ? { initialItems, initialHasMore, initialTotal, local } : null);
+
+  // موضع التمرير الأخير والحالة الراهنة، لحفظها عند مغادرة الرئيسية.
+  const scrollYRef = useRef(restored?.scrollY ?? 0);
+  const stateRef = useRef({ hasMore, total, removedCount, filtersKey });
+  stateRef.current = { hasMore, total, removedCount, filtersKey };
+
+  // يُعاد موضع التمرير قبل الرسم (بعد تصيير كل الصفحات المستعادة)، ثم مرة أخرى في
+  // الإطار التالي تحسّبًا لاستعادة المتصفح التلقائية أو تغيّر ارتفاع ما فوق القائمة.
+  useLayoutEffect(() => {
+    if (!restored) return;
+    const y = restored.scrollY;
+    window.scrollTo(0, y);
+    const frame = requestAnimationFrame(() => window.scrollTo(0, y));
+    return () => cancelAnimationFrame(frame);
+  }, [restored]);
+
+  useEffect(() => {
+    const homePath = window.location.pathname;
+    if (!restored) scrollYRef.current = window.scrollY;
+    function onScroll() {
+      // بعد بدء التنقّل يتغيّر الرابط قبل أن يمرّر Next.js الصفحة الجديدة إلى الأعلى:
+      // ذلك التمرير ليس موضع القائمة، فلا يُسجَّل.
+      if (window.location.pathname !== homePath) return;
+      scrollYRef.current = window.scrollY;
+    }
+    window.addEventListener("scroll", onScroll, { passive: true });
+    return () => {
+      window.removeEventListener("scroll", onScroll);
+      const state = stateRef.current;
+      saveFeedSnapshot(variant, {
+        key: state.filtersKey,
+        items: itemsRef.current,
+        hasMore: state.hasMore,
+        total: state.total,
+        page: pageRef.current,
+        serverCount: serverCountRef.current,
+        deleted: deletedRef.current,
+        removedCount: state.removedCount,
+        offline: offlineRef.current,
+        scrollY: scrollYRef.current,
+      });
+    };
+  }, [restored, variant]);
 
   const append = useCallback((next: LyricsFeedItem[], more: boolean) => {
     const fresh = next.filter((i) => !shownIdsRef.current.has(i.id));
@@ -119,6 +173,18 @@ export function useLyricsFeed({ filters, initialFilters, initialItems, initialHa
   );
 
   useEffect(() => {
+    // القائمة مستعادة لهذه المدخلات نفسها (رجوع إلى الرئيسية): لا إعادة ضبط.
+    const restoredFor = restoredForRef.current;
+    if (
+      restoredFor &&
+      restoredFor.initialItems === initialItems &&
+      restoredFor.initialHasMore === initialHasMore &&
+      restoredFor.initialTotal === initialTotal &&
+      restoredFor.local === local
+    ) {
+      return;
+    }
+    restoredForRef.current = null;
     // يُلغي أي طلب «تحميل المزيد» لا يزال قيد التنفيذ لاستعلام سابق (مثلاً
     // بحث حيّ يبدّل النتائج بينما كان التمرير اللانهائي يجلب صفحة تالية له)،
     // حتى لا تصل نتائجه متأخرةً فتُلحق عناصر الاستعلام القديم بقائمة الجديد.
