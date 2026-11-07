@@ -85,3 +85,90 @@ export function takeFeedSnapshot(variant: FeedVariant, key: string): FeedSnapsho
   if (performance.now() - lastPopAt > POP_WINDOW_MS) return null;
   return snapshot;
 }
+
+/**
+ * دون اتصال لا ينجح التنقّل داخل التطبيق: فتح نشيد يُحمّل الصفحة كاملةً (من هيكل
+ * الـ SW)، فتضيع اللقطة التي في الذاكرة، والرجوع يُحمّل هيكل الرئيسية من جديد.
+ * لذلك تُحفظ عند مغادرة الصفحة (pagehide) لقطة مصغّرة في sessionStorage: معرّفات
+ * الأناشيد المعروضة فقط (نصوصها في بيانات الجهاز) وموضع التمرير، وتُستعاد حين
+ * يكون تحميل الصفحة نفسه رجوعًا/تقدّمًا في السجلّ.
+ */
+export interface PersistedFeedSnapshot {
+  key: string;
+  ids: string[];
+  scrollY: number;
+  /** أول نشيد ظاهر وبُعده عن أعلى الشاشة: يُعاد إلى البُعد نفسه، فلا يزيحه اختلاف ما
+   * فوق القائمة (مثل تلميح السحب الذي لا يظهر دون اتصال). */
+  anchor: { id: string; top: number } | null;
+}
+
+/** رابط النشيد الظاهر في القائمة (نسختا الرئيسية مركّبتان معًا، والمخفيّة بلا offsetParent). */
+function visibleFeedLink(id: string): HTMLElement | null {
+  for (const el of document.querySelectorAll<HTMLElement>(`a[href="/lyrics/${CSS.escape(id)}"]`)) {
+    if (el.offsetParent !== null) return el;
+  }
+  return null;
+}
+
+/** أول نشيد يبدأ داخل الشاشة من بين المعروضة؛ null إن لم تكن هذه النسخة ظاهرة. */
+export function findFeedAnchor(ids: string[]): { id: string; top: number } | null {
+  let fallback: { id: string; top: number } | null = null;
+  for (const id of ids) {
+    const el = visibleFeedLink(id);
+    if (!el) continue;
+    const top = el.getBoundingClientRect().top;
+    if (top >= 0) return { id, top };
+    fallback = { id, top };
+  }
+  return fallback;
+}
+
+/** يمرّر الصفحة حتى يعود النشيد المرجعي إلى بُعده عن أعلى الشاشة؛ false إن لم يُعثر عليه. */
+export function scrollToFeedAnchor(anchor: { id: string; top: number }): boolean {
+  const el = visibleFeedLink(anchor.id);
+  if (!el) return false;
+  window.scrollBy(0, el.getBoundingClientRect().top - anchor.top);
+  return true;
+}
+
+const PERSIST_PREFIX = "arabic-lyrics:feed-restore:";
+const persistChecked = new Set<FeedVariant>();
+
+export function persistFeedSnapshot(variant: FeedVariant, snapshot: PersistedFeedSnapshot) {
+  try {
+    sessionStorage.setItem(PERSIST_PREFIX + variant, JSON.stringify(snapshot));
+  } catch {
+    // تخزين غير متاح أو ممتلئ: يبدأ الرجوع دون اتصال من أعلى القائمة كما كان.
+  }
+}
+
+/** أُعيد عرض الصفحة من ذاكرة المتصفح (bfcache) بحالتها كاملة: اللقطة المحفوظة لا حاجة لها. */
+export function discardPersistedFeedSnapshot(variant: FeedVariant) {
+  try {
+    sessionStorage.removeItem(PERSIST_PREFIX + variant);
+  } catch {
+    // لا شيء.
+  }
+}
+
+/** اللقطة المحفوظة لهذه النسخة إن كان تحميل هذه الصفحة رجوعًا في السجلّ؛ مرة واحدة لكل تحميل. */
+export function takePersistedFeedSnapshot(variant: FeedVariant): PersistedFeedSnapshot | null {
+  if (typeof window === "undefined" || persistChecked.has(variant)) return null;
+  persistChecked.add(variant);
+  let raw: string | null = null;
+  try {
+    raw = sessionStorage.getItem(PERSIST_PREFIX + variant);
+    sessionStorage.removeItem(PERSIST_PREFIX + variant);
+  } catch {
+    return null;
+  }
+  const nav = performance.getEntriesByType("navigation")[0] as PerformanceNavigationTiming | undefined;
+  if (!raw || nav?.type !== "back_forward") return null;
+  try {
+    const parsed = JSON.parse(raw) as PersistedFeedSnapshot;
+    if (!Array.isArray(parsed.ids) || typeof parsed.key !== "string") return null;
+    return { ...parsed, anchor: parsed.anchor ?? null };
+  } catch {
+    return null;
+  }
+}
