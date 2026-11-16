@@ -211,13 +211,20 @@ The app exposes a [Model Context Protocol](https://modelcontextprotocol.io)
 server at **`/api/mcp`** (Streamable HTTP, stateless), so AI assistants such as
 Claude can search, read, and manage lyrics directly.
 
+**Sign-in is the normal app login.** The server implements the MCP
+authorization flow (OAuth 2.1 + PKCE, dynamic client registration, discovery
+via `/.well-known/oauth-protected-resource` and
+`/.well-known/oauth-authorization-server`). When you add the server, the
+client opens the app's login page (password or Google); after signing in you
+see **ربط … بحسابك** and choose **السماح**. The client then holds a 1-hour
+access token that it renews automatically (refresh tokens last 90 days).
+
 | Tool | Access |
 |------|--------|
-| `search_lyrics`, `get_lyrics`, `list_tags` | Anyone (no token) |
+| `search_lyrics`, `get_lyrics`, `list_tags`, `list_my_playlists`, `create_playlist`, `add_to_playlist` | Any signed-in user (own playlists only) |
 | `get_playlist` | Owner, or anyone for a public playlist |
-| `add_lyrics` | Editor/Admin token |
-| `update_lyrics` | Admin token, or the Editor who created the lyric |
-| `list_my_playlists`, `create_playlist`, `add_to_playlist` | Any valid token (own playlists only) |
+| `add_lyrics` | Editor / Admin |
+| `update_lyrics` | Admin, or the Editor who created the lyric |
 
 Lyrics text goes in and out as plain text (one line per verse, a blank line
 between stanzas, `*bold*` / `_italic_` markers) — the same format as the editor.
@@ -225,29 +232,19 @@ Adding or renaming to an existing title is refused with the matching lyrics
 unless `allowDuplicate` is set, as in the web UI. Nothing can be deleted
 through MCP.
 
-**Access tokens.** Write tools need a personal token, issued from a shell that
-has the production `DATABASE_URL` and `JWT_SECRET` (e.g. `railway run`):
+**Connecting:**
 
-```bash
-npm run mcp:token -- user@example.com
-```
+- **Claude Code:** `claude mcp add --transport http nafahat https://<your-app>/api/mcp`,
+  then run `/mcp` and pick *Authenticate*.
+- **claude.ai:** Settings → Connectors → Add custom connector, with the URL
+  `https://<your-app>/api/mcp`, then *Connect*.
 
-The token is valid for a year and acts as that user. Its role and active state
-are read from the database on every request, so deactivating the user (or
-changing their role) applies immediately; rotating `JWT_SECRET` revokes every
-token (and signs everyone out). A request with an invalid token gets `401` —
-it never silently falls back to anonymous access.
-
-**Connecting Claude Code:**
-
-```bash
-claude mcp add --transport http nafahat https://<your-app>/api/mcp \
-  --header "Authorization: Bearer <token>"
-```
-
-Omit `--header` for read-only access. In claude.ai, add it as a custom
-connector with the URL only (read-only tools; custom connectors there do not
-send static bearer tokens).
+**Revoking access.** There is no token table: every token is a JWT signed
+with `JWT_SECRET`, and the user's role and active state are re-read on every
+MCP request and every refresh. Deactivating a user (or changing their role)
+therefore applies immediately; rotating `JWT_SECRET` revokes every MCP
+connection (and signs everyone out). Set `APP_URL` in production so the
+issuer and resource URLs stay stable behind the proxy.
 
 ## Project structure
 
@@ -260,7 +257,7 @@ src/lib/                   Prisma client, JWT/session helpers, password hashing
 src/middleware.ts          Route protection for /admin and lyrics create/edit
 src/app/                   Pages (App Router) and API routes
 src/lib/mcp/server.ts      MCP tools (served by src/app/api/mcp)
-prisma/mcp-token.ts        Issues MCP access tokens (npm run mcp:token)
+src/lib/mcp/oauth.ts       OAuth 2.1 sign-in for MCP clients (src/app/oauth, src/app/api/oauth)
 src/components/            Client-side UI components (forms, nav, tables)
 ```
 

@@ -25,11 +25,16 @@ export function isGoogleAuthEnabled(): boolean {
 
 /** Public origin of the app, used for the OAuth redirect URI and post-login redirects. */
 export function appOrigin(req: Request): string {
+  const url = new URL(req.url);
+  return originFromHeaders(req.headers, url.host, url.protocol.replace(":", ""));
+}
+
+/** Same as `appOrigin`, for server components that only have the request headers. */
+export function originFromHeaders(headers: Headers, fallbackHost = "localhost", fallbackProto = "http"): string {
   const configured = process.env.APP_URL?.replace(/\/+$/, "");
   if (configured) return configured;
-  const url = new URL(req.url);
-  const host = req.headers.get("x-forwarded-host") ?? req.headers.get("host") ?? url.host;
-  const proto = req.headers.get("x-forwarded-proto")?.split(",")[0]?.trim() ?? url.protocol.replace(":", "");
+  const host = headers.get("x-forwarded-host") ?? headers.get("host") ?? fallbackHost;
+  const proto = headers.get("x-forwarded-proto")?.split(",")[0]?.trim() ?? fallbackProto;
   return `${proto}://${host}`;
 }
 

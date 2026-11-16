@@ -81,25 +81,30 @@ export async function verifySessionToken(token: string): Promise<SessionPayload 
 }
 
 /**
- * رمز وصول طويل الأمد لخادم MCP (‎/api/mcp) يحمل معرّف المستخدم فقط: الدور
- * وحالة الحساب يُقرآن من القاعدة عند كل طلب، فتعطيل الحساب أو تغيير دوره يسري
- * فوراً على الرمز. يُصدَر عبر `npm run mcp:token`.
+ * رموز موقّعة لغرض محدّد (تدفّق OAuth لخادم MCP): الحقل `purpose` يمنع استعمال
+ * رمز مكان آخر — رمز الجلسة مثلاً بلا purpose فلا يُقبل هنا، ورموز OAuth تفتقد
+ * حقول الجلسة فلا تُقبل جلسةً. `expiresIn` بصيغة jose (مثل "1h")، أو null لرمز بلا انتهاء.
  */
-export const MCP_TOKEN_MAX_AGE_DAYS = 365;
-
-export async function createMcpToken(userId: string): Promise<string> {
-  return new SignJWT({ userId, purpose: "mcp" })
-    .setProtectedHeader({ alg: "HS256" })
-    .setIssuedAt()
-    .setExpirationTime(`${MCP_TOKEN_MAX_AGE_DAYS}d`)
-    .sign(secretKey());
+export async function signPurposeToken(
+  purpose: string,
+  claims: Record<string, unknown>,
+  expiresIn: string | null,
+  audience?: string,
+): Promise<string> {
+  const jwt = new SignJWT({ ...claims, purpose }).setProtectedHeader({ alg: "HS256" }).setIssuedAt();
+  if (expiresIn) jwt.setExpirationTime(expiresIn);
+  if (audience) jwt.setAudience(audience);
+  return jwt.sign(secretKey());
 }
 
-export async function verifyMcpToken(token: string): Promise<string | null> {
+export async function verifyPurposeToken(
+  token: string,
+  purpose: string,
+  audience?: string,
+): Promise<Record<string, unknown> | null> {
   try {
-    const { payload } = await jwtVerify(token, secretKey());
-    if (payload.purpose !== "mcp" || typeof payload.userId !== "string") return null;
-    return payload.userId;
+    const { payload } = await jwtVerify(token, secretKey(), audience ? { audience } : {});
+    return payload.purpose === purpose ? payload : null;
   } catch {
     return null;
   }
