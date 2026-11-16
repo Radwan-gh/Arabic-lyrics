@@ -35,6 +35,8 @@ model User {
 
 model Lyrics {
   id        String   @id @default(cuid())
+  // رقم تسلسلي قصير لرابط المشاركة (‎/l/<shortId>‎) بدل المعرّف الطويل.
+  shortId   Int      @unique @default(autoincrement())
   title     String
   // مفتاح مطابقة موحّد للعنوان (normalizeArabic) — يُستخدم لكشف التكرار.
   titleNormalized String @default("")
