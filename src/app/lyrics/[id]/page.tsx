@@ -1,3 +1,5 @@
+import type { Metadata } from "next";
+import { cache } from "react";
 import { notFound } from "next/navigation";
 import { headers } from "next/headers";
 import { after } from "next/server";
@@ -10,6 +12,48 @@ import { buildWhatsAppLyrics } from "@/lib/whatsapp-lyrics";
 import { isShellRequest } from "@/lib/offline";
 import { LyricsDetail } from "@/components/LyricsDetail";
 import { canModifyLyrics } from "@/lib/lyrics-permissions";
+
+// يُستعمل النشيد في العنوان وفي الصفحة معاً، فيُجلب مرة واحدة لكل طلب.
+const loadLyrics = cache(getLyrics);
+
+/** أصل الموقع المطلق — روابط المعاينة (واتساب وغيره) لا تقبل مساراً نسبياً للصورة. */
+function requestOrigin(hdrs: { get(name: string): string | null }): string | null {
+  const configured = process.env.APP_URL?.trim().replace(/\/+$/, "");
+  if (configured) return configured;
+  const host = hdrs.get("x-forwarded-host") ?? hdrs.get("host");
+  if (!host) return null;
+  return `${hdrs.get("x-forwarded-proto") ?? "https"}://${host}`;
+}
+
+/** عنوان الصفحة = عنوان النشيد، مع بطاقة معاينة عند المشاركة تحمل العنوان وشعار «نفحات». */
+export async function generateMetadata({ params }: { params: Promise<{ id: string }> }): Promise<Metadata> {
+  const [{ id }, hdrs] = await Promise.all([params, headers()]);
+  // هيكل القراءة دون اتصال بلا بيانات: يضبط المتصفح العنوان بعد تحميلها من الجهاز.
+  if (isShellRequest(hdrs)) return {};
+
+  const lyrics = await loadLyrics(id);
+  if (!lyrics) return { title: "نشيد غير موجود" };
+
+  const origin = requestOrigin(hdrs);
+  const description = lyrics.artist ? `${lyrics.artist} · نفحات - ديوان الإنشاد` : "نفحات - ديوان الإنشاد";
+  const image = { url: "/icons/icon-maskable-512.png", width: 512, height: 512, alt: "نفحات", type: "image/png" };
+
+  return {
+    title: lyrics.title,
+    description,
+    metadataBase: origin ? new URL(origin) : undefined,
+    openGraph: {
+      type: "article",
+      title: lyrics.title,
+      description,
+      url: `/lyrics/${lyrics.id}`,
+      siteName: "نفحات",
+      locale: "ar",
+      images: [image],
+    },
+    twitter: { card: "summary", title: lyrics.title, description, images: [image.url] },
+  };
+}
 
 export default async function LyricsPage({
   params,
@@ -33,7 +77,7 @@ export default async function LyricsPage({
 
   // كل الاستعلامات تحتاج المعرّف فقط، فتُنفَّذ معاً في رحلة واحدة إلى قاعدة البيانات.
   const [lyrics, favorited, playlistNav] = await Promise.all([
-    getLyrics(id),
+    loadLyrics(id),
     session ? isFavorited(session.userId, id) : Promise.resolve(false),
     playlistId ? getPlaylistNavContext(playlistId, id, session?.userId ?? null) : Promise.resolve(null),
   ]);

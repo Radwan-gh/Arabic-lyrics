@@ -1,5 +1,6 @@
 "use client";
 
+import { useEffect } from "react";
 import Link from "next/link";
 import { usePathname, useSearchParams } from "next/navigation";
 import { Pencil } from "lucide-react";
@@ -115,6 +116,11 @@ function selectPlaylistNav(dataset: OfflineDataset, playlistId: string, lyricsId
 }
 
 function LyricsDetailView({ data, loggedIn }: { data: LyricsDetailData; loggedIn: boolean }) {
+  // دون اتصال يأتي الهيكل بلا عنوان من الخادم، فيُضبط هنا ليطابق الصفحة المتصلة.
+  useEffect(() => {
+    document.title = `${data.title} · نفحات`;
+  }, [data.title]);
+
   return (
     <>
       {/* الموبايل: شاشة قراءة غامرة (كروم أدنى، تنقّل بالسحب). سطح المكتب يبقى كما هو أدناه. */}
