@@ -34,6 +34,8 @@ export function isShellRequest(headers: { get(name: string): string | null }): b
 
 export interface OfflineLyric {
   id: string;
+  /** رقم رابط المشاركة القصير؛ غائب في السجلات المحفوظة قبل إضافته. */
+  shortId?: number;
   title: string;
   artist: string | null;
   album: string | null;
