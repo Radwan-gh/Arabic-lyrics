@@ -87,7 +87,7 @@ function selectLyricDetail(
     createdByName: lyric.createdByName,
     favorited: dataset.favoriteIds.has(lyric.id),
     canModify: canModifyLyrics(viewer, lyric.createdById),
-    shareUrl: `${window.location.origin}/lyrics/${lyric.id}`,
+    shareUrl: `${window.location.origin}${lyric.shortId ? `/l/${lyric.shortId}` : `/lyrics/${lyric.id}`}`,
     shareText: buildWhatsAppLyricsFromHtml({ title: lyric.title, artist: lyric.artist, html: lyric.contentHtml, tags: lyric.tags }),
     siteLabel: window.location.host,
     playlist: playlistId ? selectPlaylistNav(dataset, playlistId, lyric.id) : null,

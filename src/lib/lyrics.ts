@@ -61,6 +61,20 @@ export async function getLyrics(id: string) {
   return prisma.lyrics.findUnique({ where: { id }, include: { createdBy: { select: { name: true } } } });
 }
 
+/** مسار رابط المشاركة القصير للنشيد (يحوِّل إلى صفحته عبر ‎/l/[code]‎). */
+export function lyricsSharePath(shortId: number): string {
+  return `/l/${shortId}`;
+}
+
+/** معرّف النشيد صاحب الرقم القصير، أو null إن لم يكن الرقم صالحاً أو موجوداً. */
+export async function getLyricsIdByShortId(code: string): Promise<string | null> {
+  if (!/^[1-9]\d{0,9}$/.test(code)) return null;
+  const shortId = Number(code);
+  if (shortId > 2147483647) return null;
+  const row = await prisma.lyrics.findUnique({ where: { shortId }, select: { id: true } });
+  return row?.id ?? null;
+}
+
 /** يزيد عدّاد مشاهدات النشيد؛ يتجاهل الفشل (نشيد محذوف مثلاً) لأنه لا يخصّ القارئ. */
 export async function incrementLyricsViews(id: string): Promise<void> {
   await prisma.lyrics

@@ -2,7 +2,7 @@ import { notFound } from "next/navigation";
 import { headers } from "next/headers";
 import { after } from "next/server";
 import { getCurrentUser } from "@/lib/session";
-import { getLyrics, incrementLyricsViews } from "@/lib/lyrics";
+import { getLyrics, incrementLyricsViews, lyricsSharePath } from "@/lib/lyrics";
 import { isFavorited } from "@/lib/favorites";
 import { getPlaylistNavContext } from "@/lib/playlists";
 import { renderLyricsHtml } from "@/lib/render-lyrics";
@@ -46,6 +46,7 @@ export default async function LyricsPage({
 
   const host = hdrs.get("x-forwarded-host") ?? hdrs.get("host") ?? "";
   const proto = hdrs.get("x-forwarded-proto") ?? "https";
+  const sharePath = lyricsSharePath(lyrics.shortId);
 
   return (
     <LyricsDetail
@@ -63,7 +64,7 @@ export default async function LyricsPage({
         createdByName: lyrics.createdBy?.name ?? null,
         favorited,
         canModify: canModifyLyrics(viewer, lyrics.createdById),
-        shareUrl: host ? `${proto}://${host}/lyrics/${lyrics.id}` : `/lyrics/${lyrics.id}`,
+        shareUrl: host ? `${proto}://${host}${sharePath}` : sharePath,
         shareText: buildWhatsAppLyrics({
           title: lyrics.title,
           artist: lyrics.artist,

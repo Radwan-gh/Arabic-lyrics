@@ -29,6 +29,7 @@ export async function GET(req: NextRequest) {
       where: changedWhere,
       select: {
         id: true,
+        shortId: true,
         title: true,
         artist: true,
         album: true,
@@ -60,6 +61,7 @@ export async function GET(req: NextRequest) {
     order,
     lyrics: rows.map((r) => ({
       id: r.id,
+      shortId: r.shortId,
       title: r.title,
       artist: r.artist,
       album: r.album,
