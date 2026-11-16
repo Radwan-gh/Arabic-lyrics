@@ -21,6 +21,7 @@ const IMMERSIVE_MOBILE_ROUTES = [
   /^\/p\/[^/]+$/,
   /^\/login$/,
   /^\/signup\/complete$/,
+  /^\/oauth\/authorize$/,
   /^\/admin\/users$/,
   /^\/admin\/tags$/,
 ];

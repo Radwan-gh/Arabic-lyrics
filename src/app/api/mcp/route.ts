@@ -1,56 +1,46 @@
-import { NextResponse, type NextRequest } from "next/server";
+import type { NextRequest } from "next/server";
 import { WebStandardStreamableHTTPServerTransport } from "@modelcontextprotocol/sdk/server/webStandardStreamableHttp.js";
-import { prisma } from "@/lib/prisma";
-import { verifyMcpToken } from "@/lib/jwt";
-import { buildMcpServer, type McpUser } from "@/lib/mcp/server";
+import { appOrigin } from "@/lib/google-oauth";
+import { buildMcpServer, findActiveMcpUser } from "@/lib/mcp/server";
+import { CORS_HEADERS, corsPreflight, protectedResourceMetadataUrl, verifyAccessToken } from "@/lib/mcp/oauth";
 
 // خادم MCP عبر Streamable HTTP بلا جلسات (stateless): كل طلب يبني خادماً ونقلاً
-// جديدين ثم يغلقهما. بلا ترويسة Authorization يعمل الطلب كزائر (أدوات القراءة
-// فقط)؛ أما الرمز غير الصالح فيُرفض صراحةً بدل التراجع بصمت إلى وضع الزائر.
+// جديدين ثم يغلقهما. كل طلب يحتاج رمز وصول من تدفّق OAuth (تسجيل الدخول في
+// التطبيق)؛ بدونه تُرجع 401 مع رابط بيانات المورد، فيبدأ العميل تسجيل الدخول.
 export const dynamic = "force-dynamic";
 
-type Auth = { ok: true; user: McpUser | null } | { ok: false };
-
-async function authenticate(req: NextRequest): Promise<Auth> {
-  const header = req.headers.get("authorization");
-  if (!header) return { ok: true, user: null };
-
-  const token = /^Bearer\s+(.+)$/i.exec(header)?.[1]?.trim();
-  const userId = token ? await verifyMcpToken(token) : null;
-  if (!userId) return { ok: false };
-
-  const user = await prisma.user.findUnique({
-    where: { id: userId },
-    select: { id: true, name: true, role: true, isActive: true, isApproved: true },
-  });
-  if (!user || !user.isActive || !user.isApproved) return { ok: false };
-  return { ok: true, user: { userId: user.id, name: user.name, role: user.role } };
-}
-
-function origin(req: NextRequest) {
-  return process.env.APP_URL?.replace(/\/+$/, "") || req.nextUrl.origin;
+function unauthorized(origin: string, hadToken: boolean) {
+  const params = [`resource_metadata="${protectedResourceMetadataUrl(origin)}"`];
+  if (hadToken) params.push('error="invalid_token"');
+  return Response.json(
+    { jsonrpc: "2.0", error: { code: -32001, message: "يجب تسجيل الدخول إلى نفحات" }, id: null },
+    { status: 401, headers: { ...CORS_HEADERS, "WWW-Authenticate": `Bearer ${params.join(", ")}` } },
+  );
 }
 
 async function handle(req: NextRequest): Promise<Response> {
-  const auth = await authenticate(req);
-  if (!auth.ok) {
-    return NextResponse.json(
-      { jsonrpc: "2.0", error: { code: -32001, message: "رمز MCP غير صالح أو الحساب غير مفعّل" }, id: null },
-      { status: 401, headers: { "WWW-Authenticate": 'Bearer error="invalid_token"' } },
-    );
-  }
+  const origin = appOrigin(req);
+  const token = /^Bearer\s+(.+)$/i.exec(req.headers.get("authorization") ?? "")?.[1]?.trim();
+  if (!token) return unauthorized(origin, false);
 
-  const server = buildMcpServer(auth.user, origin(req));
+  const userId = await verifyAccessToken(token, origin);
+  const user = userId ? await findActiveMcpUser(userId) : null;
+  if (!user) return unauthorized(origin, true);
+
+  const server = buildMcpServer(user, origin);
   const transport = new WebStandardStreamableHTTPServerTransport({
     sessionIdGenerator: undefined,
     enableJsonResponse: true,
   });
   await server.connect(transport);
   try {
-    return await transport.handleRequest(req);
+    const res = await transport.handleRequest(req);
+    for (const [key, value] of Object.entries(CORS_HEADERS)) res.headers.set(key, value);
+    return res;
   } finally {
     await server.close();
   }
 }
 
 export { handle as GET, handle as POST, handle as DELETE };
+export const OPTIONS = corsPreflight;

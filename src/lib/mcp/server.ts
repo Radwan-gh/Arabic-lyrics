@@ -10,11 +10,21 @@ import { canModifyLyrics } from "@/lib/lyrics-permissions";
 import { getTagCounts } from "@/lib/tags";
 import { appendToPlaylist } from "@/lib/playlists";
 
-/** صاحب الرمز بعد التحقق منه وقراءة دوره الحالي من القاعدة؛ null للزائر المجهول. */
+/** صاحب الرمز بعد التحقق منه وقراءة دوره الحالي من القاعدة. */
 export interface McpUser {
   userId: string;
   name: string;
   role: Role;
+}
+
+/** المستخدم إن كان حسابه مفعّلاً وموافَقاً عليه، وإلا null (يُفحص عند كل طلب وكل تجديد رمز). */
+export async function findActiveMcpUser(userId: string): Promise<McpUser | null> {
+  const user = await prisma.user.findUnique({
+    where: { id: userId },
+    select: { id: true, name: true, role: true, isActive: true, isApproved: true },
+  });
+  if (!user || !user.isActive || !user.isApproved) return null;
+  return { userId: user.id, name: user.name, role: user.role };
 }
 
 // قيود الحقول نفسها في مسارات ‎/api/lyrics.
@@ -35,14 +45,12 @@ function fail(message: string, extra?: Record<string, unknown>): CallToolResult 
   return { isError: true, content: [{ type: "text", text: JSON.stringify({ error: message, ...extra }, null, 2) }] };
 }
 
-const NEEDS_TOKEN = "This tool needs an MCP access token (Authorization: Bearer <token>). Ask an admin to run `npm run mcp:token`.";
-
 /**
  * يبني خادم MCP لطلب واحد (وضع stateless): الأدوات تغلق على هوية صاحب الطلب،
- * فلا تُشارَك حالة بين الطلبات. القراءة مفتوحة كما في الواجهة (كل الأناشيد ظاهرة
- * للجميع)، والكتابة تتطلّب رمزاً وتطبّق قواعد الأدوار نفسها في canModifyLyrics.
+ * فلا تُشارَك حالة بين الطلبات. كل طلب مُصادَق عليه (تسجيل الدخول عبر OAuth)،
+ * والكتابة تطبّق قواعد الأدوار نفسها في الواجهة (canModifyLyrics).
  */
-export function buildMcpServer(user: McpUser | null, origin: string): McpServer {
+export function buildMcpServer(user: McpUser, origin: string): McpServer {
   const server = new McpServer(
     { name: "nafahat", version: "1.0.0" },
     {
@@ -50,7 +58,7 @@ export function buildMcpServer(user: McpUser | null, origin: string): McpServer 
         "نفحات (Nafahat): an Arabic nasheed/lyrics library. Search is diacritics-insensitive and normalizes Arabic letter forms. " +
         "Use search_lyrics to find IDs, then get_lyrics for the full text. Before add_lyrics, search first to avoid duplicates. " +
         "A 'وصلة' is a user's playlist of nasheeds for a performance." +
-        (user ? ` Signed in as ${user.name} (${user.role}).` : " Anonymous: read-only tools only."),
+        ` Signed in as ${user.name} (${user.role}).`,
     },
   );
 
@@ -132,7 +140,7 @@ export function buildMcpServer(user: McpUser | null, origin: string): McpServer 
     {
       title: "Add lyrics",
       description:
-        "Add a new nasheed (Editor or Admin token required). Fails with the matching nasheeds if one with the same title exists, unless allowDuplicate is true.",
+        "Add a new nasheed (Editor or Admin accounts only). Fails with the matching nasheeds if one with the same title exists, unless allowDuplicate is true.",
       inputSchema: {
         title: titleField,
         artist: optionalTextField.optional().describe("Munshid / performer."),
@@ -143,7 +151,6 @@ export function buildMcpServer(user: McpUser | null, origin: string): McpServer 
       },
     },
     async ({ text, allowDuplicate, ...fields }) => {
-      if (!user) return fail(NEEDS_TOKEN);
       if (user.role !== "ADMIN" && user.role !== "EDITOR") return fail("إضافة الأناشيد متاحة للمحرّر والمدير فقط");
 
       const data = buildLyricsWriteData({ ...fields, content: lyricsTextToHtml(text) });
@@ -177,7 +184,6 @@ export function buildMcpServer(user: McpUser | null, origin: string): McpServer 
       annotations: { idempotentHint: true },
     },
     async ({ id, text, allowDuplicate, ...fields }) => {
-      if (!user) return fail(NEEDS_TOKEN);
 
       const existing = await prisma.lyrics.findUnique({ where: { id } });
       if (!existing) return fail("الأنشودة غير موجودة");
@@ -207,11 +213,10 @@ export function buildMcpServer(user: McpUser | null, origin: string): McpServer 
     "list_my_playlists",
     {
       title: "List my playlists",
-      description: "The token owner's playlists (وصلات) with their item counts.",
+      description: "Your playlists (وصلات) with their item counts.",
       annotations: { readOnlyHint: true },
     },
     async () => {
-      if (!user) return fail(NEEDS_TOKEN);
       const playlists = await prisma.playlist.findMany({
         where: { ownerId: user.userId },
         orderBy: { createdAt: "desc" },
@@ -241,7 +246,7 @@ export function buildMcpServer(user: McpUser | null, origin: string): McpServer 
           },
         },
       });
-      if (!playlist || (!playlist.isPublic && playlist.ownerId !== user?.userId)) return fail("الوصلة غير موجودة");
+      if (!playlist || (!playlist.isPublic && playlist.ownerId !== user.userId)) return fail("الوصلة غير موجودة");
       return json({
         id: playlist.id,
         title: playlist.title,
@@ -256,14 +261,13 @@ export function buildMcpServer(user: McpUser | null, origin: string): McpServer 
     "create_playlist",
     {
       title: "Create playlist",
-      description: "Create a new private playlist (وصلة) owned by the token owner.",
+      description: "Create a new private playlist (وصلة) of your own.",
       inputSchema: {
         title: z.string().trim().min(1).max(120),
         description: z.string().trim().max(500).optional(),
       },
     },
     async ({ title, description }) => {
-      if (!user) return fail(NEEDS_TOKEN);
       const playlist = await prisma.playlist.create({
         data: { title, description: description || null, ownerId: user.userId },
         select: { id: true, title: true },
@@ -284,7 +288,6 @@ export function buildMcpServer(user: McpUser | null, origin: string): McpServer 
       annotations: { idempotentHint: true },
     },
     async ({ playlistId, lyricsIds }) => {
-      if (!user) return fail(NEEDS_TOKEN);
       const playlist = await prisma.playlist.findUnique({ where: { id: playlistId }, select: { ownerId: true } });
       if (!playlist || playlist.ownerId !== user.userId) return fail("الوصلة غير موجودة");
 
