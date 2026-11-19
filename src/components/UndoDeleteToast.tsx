@@ -3,6 +3,7 @@
 import { useEffect, useRef } from "react";
 import { X } from "lucide-react";
 import type { DeleteToastState } from "@/lib/use-undoable-delete";
+import { formatLyricsCount } from "@/lib/format";
 
 interface UndoDeleteToastProps {
   toast: DeleteToastState | null;
@@ -29,7 +30,14 @@ export function UndoDeleteToast({ toast, onUndo, onDismiss, className = "" }: Un
       {toast && (
         <div className="pointer-events-auto flex items-center gap-2 rounded-xl bg-neutral-900 py-1.5 pe-1.5 ps-4 text-sm text-white shadow-lg">
           <p className="min-w-0 flex-1 truncate">
-            {toast.kind === "deleted" ? "حُذف" : "تعذّر حذف"} «<span className="font-naskh">{toast.title}</span>»
+            {toast.kind === "deleted" ? "حُذف" : "تعذّر حذف"}{" "}
+            {toast.count > 1 ? (
+              formatLyricsCount(toast.count)
+            ) : (
+              <>
+                «<span className="font-naskh">{toast.title}</span>»
+              </>
+            )}
           </p>
           {toast.kind === "deleted" ? (
             <button

@@ -10,6 +10,10 @@ interface SwipeToDeleteProps {
   onDelete: (viaKeyboard: boolean) => void;
   /** تلميح أول مرة: ينزاح الصف وحده قليلًا نحو اليمين ثم يعود، كاشفًا خلفية الحذف. */
   peek?: boolean;
+  /** ضغطة مطوّلة على الصف (بلا تحريك) — لبدء التحديد المتعدد. */
+  onLongPress?: () => void;
+  /** وضع التحديد: لا سحب ولا ضغط مطوّل، ويُترك النقر للصف نفسه. */
+  disabled?: boolean;
   className?: string;
   children: ReactNode;
 }
@@ -27,6 +31,27 @@ const PEEK_PX = 96;
 const PEEK_DELAY_MS = 700;
 const PEEK_HOLD_MS = 650;
 const PEEK_ANIM_MS = 350;
+/** مدة الضغط المطوّل قبل بدء التحديد. */
+const LONG_PRESS_MS = 500;
+
+/**
+ * يبتلع النقرة التي تلي إفلات الضغط المطوّل أينما وقعت: دخول وضع التحديد قد
+ * يُزيح القائمة، فتقع تلك النقرة على صفّ آخر (لا يخصّه suppressClick). يزول
+ * المستمع مع أول لمسة جديدة، فلا تُبتلع لمسة حقيقية إن لم تأتِ تلك النقرة.
+ */
+function swallowNextClick() {
+  const swallow = (e: MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    cleanup();
+  };
+  const cleanup = () => {
+    document.removeEventListener("click", swallow, true);
+    document.removeEventListener("pointerdown", cleanup, true);
+  };
+  document.addEventListener("click", swallow, true);
+  document.addEventListener("pointerdown", cleanup, true);
+}
 
 /**
  * صفّ في قائمة الموبايل يُحذف بسحبه نحو اليمين: تنكشف خلفه خلفية حمراء بأيقونة
@@ -39,7 +64,15 @@ const PEEK_ANIM_MS = 350;
  * بعد السحب تُلغى النقرة التالية حتى لا يُفتح النشيد. لقارئ الشاشة ولوحة
  * المفاتيح زرّ حذف مخفيّ بصريًا يظهر عند التركيز.
  */
-export function SwipeToDelete({ title, onDelete, peek = false, className = "", children }: SwipeToDeleteProps) {
+export function SwipeToDelete({
+  title,
+  onDelete,
+  peek = false,
+  onLongPress,
+  disabled = false,
+  className = "",
+  children,
+}: SwipeToDeleteProps) {
   const rowRef = useRef<HTMLDivElement>(null);
   const [dx, setDx] = useState(0);
   const [animating, setAnimating] = useState(false);
@@ -55,6 +88,32 @@ export function SwipeToDelete({ title, onDelete, peek = false, className = "", c
   } | null>(null);
   const suppressClick = useRef(false);
   const armed = useRef(false);
+  const longPressTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const onLongPressRef = useRef(onLongPress);
+  onLongPressRef.current = onLongPress;
+
+  // الضغطة الحالية أطلقت التحديد (بالمؤقّت أو بقائمة السياق)، أو تحرّكت فلم تعد ضغطًا مطوّلًا.
+  const pressRef = useRef<{ fired: boolean; moved: boolean } | null>(null);
+
+  function fireLongPress() {
+    const press = pressRef.current;
+    if (!press || press.fired || press.moved || !onLongPressRef.current) return;
+    press.fired = true;
+    clearLongPress();
+    // الإيماءة انتهت هنا: لا سحب بعدها، ولا تفتح النشيدَ النقرةُ التي تلي الإفلات.
+    if (gesture.current) gesture.current.mode = "ignore";
+    suppressClick.current = true;
+    swallowNextClick();
+    navigator.vibrate?.(15);
+    onLongPressRef.current();
+  }
+
+  function clearLongPress() {
+    if (longPressTimer.current) clearTimeout(longPressTimer.current);
+    longPressTimer.current = null;
+  }
+
+  useEffect(() => clearLongPress, []);
 
   const width = () => rowRef.current?.offsetWidth ?? 360;
 
@@ -88,6 +147,11 @@ export function SwipeToDelete({ title, onDelete, peek = false, className = "", c
   }, [peek]);
 
   function onPointerDown(e: PointerEvent<HTMLDivElement>) {
+    if (disabled) {
+      // قد لا تتبع الضغطَ المطوّل نقرةٌ (أندرويد بعد قائمة السياق): لا تُبتلع لمسة التحديد التالية.
+      suppressClick.current = false;
+      return;
+    }
     if (animating || (e.pointerType === "mouse" && e.button !== 0)) return;
     if (peeking) {
       // لمسة أثناء التلميح: يعود الصف فورًا ويبدأ السحب الحقيقي من الصفر.
@@ -105,6 +169,14 @@ export function SwipeToDelete({ title, onDelete, peek = false, className = "", c
     };
     suppressClick.current = false;
     armed.current = false;
+    clearLongPress();
+    pressRef.current = { fired: false, moved: false };
+    if (onLongPressRef.current) {
+      longPressTimer.current = setTimeout(() => {
+        longPressTimer.current = null;
+        fireLongPress();
+      }, LONG_PRESS_MS);
+    }
   }
 
   function onPointerMove(e: PointerEvent<HTMLDivElement>) {
@@ -114,6 +186,9 @@ export function SwipeToDelete({ title, onDelete, peek = false, className = "", c
     const moveY = e.clientY - g.startY;
     if (g.mode === "pending") {
       if (Math.abs(moveX) < SLOP_PX && Math.abs(moveY) < SLOP_PX) return;
+      // تحرّك الإصبع: سحب أو تمرير، لا ضغط مطوّل.
+      clearLongPress();
+      if (pressRef.current) pressRef.current.moved = true;
       // أفقي نحو اليمين فقط؛ غير ذلك (عمودي أو نحو اليسار) ليس لنا.
       if (moveX > 0 && Math.abs(moveX) > Math.abs(moveY) * 1.2) {
         g.mode = "swipe";
@@ -139,6 +214,7 @@ export function SwipeToDelete({ title, onDelete, peek = false, className = "", c
   function finish(e: PointerEvent<HTMLDivElement>, cancelled: boolean) {
     const g = gesture.current;
     if (!g || g.id !== e.pointerId) return;
+    clearLongPress();
     gesture.current = null;
     if (g.mode !== "swipe") return;
     const w = width();
@@ -187,9 +263,21 @@ export function SwipeToDelete({ title, onDelete, peek = false, className = "", c
           e.stopPropagation();
         }}
         onDragStart={(e) => e.preventDefault()}
-        className="relative bg-white"
+        // الضغط المطوّل يفتح قائمة السياق (أندرويد) أو معاينة الرابط (iOS): التحديد بدلًا منها.
+        // وقد يسبق قائمةُ السياق المؤقّتَ (ويلغي المتصفح المؤشّر معها)، فتُطلق التحديد هي أيضًا.
+        onContextMenu={
+          onLongPress && !disabled
+            ? (e) => {
+                e.preventDefault();
+                if (!pressRef.current) pressRef.current = { fired: false, moved: false };
+                fireLongPress();
+              }
+            : undefined
+        }
+        className={`relative bg-white ${onLongPress ? "select-none" : ""}`}
         style={{
           touchAction: "pan-y",
+          WebkitTouchCallout: onLongPress ? "none" : undefined,
           transform: dx ? `translateX(${dx}px)` : undefined,
           transition: animating
             ? `transform ${ANIM_MS}ms ease-out`
@@ -199,6 +287,7 @@ export function SwipeToDelete({ title, onDelete, peek = false, className = "", c
         }}
       >
         {children}
+        {!disabled && (
         <button
           type="button"
           onClick={(e) => onDelete(e.detail === 0)}
@@ -206,6 +295,7 @@ export function SwipeToDelete({ title, onDelete, peek = false, className = "", c
         >
           حذف «{title}»
         </button>
+        )}
       </div>
     </div>
   );
