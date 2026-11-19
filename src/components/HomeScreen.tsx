@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useCallback, useEffect, useRef, useState } from "react";
-import { ArrowRight, Plus, Search } from "lucide-react";
+import { ArrowRight, Check, Plus, Search, Trash2, X } from "lucide-react";
 import { BrandLogo } from "@/components/BrandLogo";
 import { FavoriteButton } from "@/components/FavoriteButton";
 import { MenuButton } from "@/components/MenuButton";
@@ -22,6 +22,7 @@ import { useAppRouter } from "@/lib/use-app-router";
 import type { TagCount } from "@/lib/tags";
 import type { LyricsSort } from "@/lib/lyrics-search";
 import { focusRing } from "@/lib/ui";
+import { formatLyricsCount } from "@/lib/format";
 
 interface HomeScreenProps {
   initialFilters: HomeFilters;
@@ -78,8 +79,65 @@ export function HomeScreen({
     });
   const quickDelete = useUndoableDelete({ removeItem, restoreItem, confirmRemoved });
   const swipeHint = useSwipeHint();
+  // التحديد المتعدد: يبدأ بضغطة مطوّلة على نشيد (أو بزرّ «تحديد»)، ثم تُبدّل كل
+  // لمسة تحديد نشيد، ويُحذف المحدَّد دفعة واحدة مع إمكانية التراجع.
+  const [selecting, setSelecting] = useState(false);
+  const [selected, setSelected] = useState<Set<string>>(() => new Set());
+  const selectableIds = items.filter((i) => i.canModify).map((i) => i.id);
+  const allSelected = selectableIds.length > 0 && selectableIds.every((id) => selected.has(id));
   // التلميح لمن يملك حذف نشيد ظاهر فقط، ويتحرّك أول صفّ قابل للحذف لتوضيحه.
-  const peekId = swipeHint.show ? items.find((i) => i.canModify)?.id : undefined;
+  const peekId = swipeHint.show && !selecting ? selectableIds[0] : undefined;
+
+  const startSelection = useCallback((id?: string) => {
+    setSelecting(true);
+    setSelected(new Set(id ? [id] : []));
+  }, []);
+
+  const exitSelection = useCallback(() => {
+    setSelecting(false);
+    setSelected(new Set());
+  }, []);
+
+  function toggleSelected(id: string) {
+    setSelected((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  }
+
+  function toggleSelectAll() {
+    setSelected(allSelected ? new Set() : new Set(selectableIds));
+  }
+
+  function deleteSelected(viaKeyboard: boolean) {
+    // بترتيب القائمة، ليعود كلٌّ إلى موضعه عند التراجع.
+    const ids = items.filter((i) => selected.has(i.id)).map((i) => i.id);
+    if (ids.length === 0) return;
+    exitSelection();
+    quickDelete.requestDelete(ids, { focus: viaKeyboard });
+  }
+
+  // ما خرج من القائمة (بحث أو تصفية جديدة، أو حذف) لا يبقى محدَّدًا.
+  useEffect(() => {
+    setSelected((prev) => {
+      if (prev.size === 0) return prev;
+      const present = new Set(items.map((i) => i.id));
+      const next = new Set([...prev].filter((id) => present.has(id)));
+      return next.size === prev.size ? prev : next;
+    });
+  }, [items]);
+
+  // Escape يُنهي وضع التحديد.
+  useEffect(() => {
+    if (!selecting) return;
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") exitSelection();
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [selecting, exitSelection]);
 
   function buildUrl(overrides: { q?: string; tags?: string[]; sort?: LyricsSort }) {
     return buildHomeUrl({
@@ -150,10 +208,44 @@ export function HomeScreen({
   return (
     <div className="flex min-h-dvh flex-col bg-[#f7f7f4] text-[#14211c]">
       <div className="sticky top-0 z-20 bg-[#f7f7f4]">
-        <header className="flex items-center justify-between gap-3 px-5 pb-3 pt-3.5">
-          <BrandLogo className="text-[28px] text-emerald-800" />
-          <MenuButton />
-        </header>
+        {selecting ? (
+          <div className="flex h-[70px] items-center gap-1 px-3 pb-3 pt-3.5" role="toolbar" aria-label="أدوات التحديد">
+            <button
+              type="button"
+              onClick={exitSelection}
+              aria-label="إلغاء التحديد"
+              className={`inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-xl text-[#3c4a44] transition-colors hover:bg-[#ecece7] ${focusRing}`}
+            >
+              <X className="h-6 w-6" aria-hidden="true" />
+            </button>
+            <p className="min-w-0 flex-1 truncate text-[17px] font-bold" aria-live="polite">
+              {selected.size > 0 ? `تم تحديد ${selected.size.toLocaleString("ar-EG")}` : "اختر الأناشيد"}
+            </p>
+            <button
+              type="button"
+              onClick={toggleSelectAll}
+              disabled={selectableIds.length === 0}
+              className={`inline-flex h-11 shrink-0 items-center rounded-xl px-3 text-sm font-semibold text-emerald-700 transition-colors hover:bg-emerald-50 disabled:opacity-50 ${focusRing}`}
+            >
+              {allSelected ? "إلغاء الكل" : "تحديد الكل"}
+            </button>
+            <button
+              type="button"
+              onClick={(e) => deleteSelected(e.detail === 0)}
+              disabled={selected.size === 0}
+              aria-label={selected.size > 0 ? `حذف المحدَّد (${formatLyricsCount(selected.size)})` : "حذف المحدَّد"}
+              className={`inline-flex h-11 shrink-0 items-center gap-1.5 rounded-xl bg-red-600 px-3.5 text-sm font-semibold text-white transition-colors hover:bg-red-700 disabled:cursor-not-allowed disabled:bg-red-300 ${focusRing}`}
+            >
+              <Trash2 className="h-5 w-5" aria-hidden="true" />
+              حذف
+            </button>
+          </div>
+        ) : (
+          <header className="flex items-center justify-between gap-3 px-5 pb-3 pt-3.5">
+            <BrandLogo className="text-[28px] text-emerald-800" />
+            <MenuButton />
+          </header>
+        )}
 
         <div className="px-5 pb-3">
           <form
@@ -251,16 +343,29 @@ export function HomeScreen({
       <div className="flex-1 border-t border-[#e6e6e1] bg-white">
         <div className="flex flex-wrap items-center justify-between gap-2 bg-[#f7f7f4] px-5 py-2.5">
           <LyricsSortSelect sort={sort} query={query} tags={selectedTags} className="text-[13px] text-[#3c4a44]" />
-          <span className="text-[13px] text-[#6b7670]">
-            {isFiltered ? "نتائج البحث · " : ""}
-            {total.toLocaleString("ar-EG")} نشيداً
-          </span>
+          <div className="flex items-center gap-1">
+            <span className="text-[13px] text-[#6b7670]">
+              {isFiltered ? "نتائج البحث · " : ""}
+              {total.toLocaleString("ar-EG")} نشيداً
+            </span>
+            {!selecting && selectableIds.length > 0 && (
+              <button
+                type="button"
+                onClick={() => startSelection()}
+                className={`-me-2 inline-flex h-9 items-center rounded-lg px-2 text-[13px] font-semibold text-emerald-700 transition-colors hover:bg-emerald-50 ${focusRing}`}
+              >
+                تحديد
+              </button>
+            )}
+          </div>
         </div>
 
         {peekId && (
           <div className="flex items-center gap-3 border-b border-emerald-100 bg-emerald-50 py-2 pe-2 ps-5 text-[13px] leading-6 text-emerald-900">
             <ArrowRight className="h-5 w-5 shrink-0 text-emerald-700" aria-hidden="true" />
-            <p className="min-w-0 flex-1">اسحب أي نشيد نحو اليمين لحذفه، ويمكنك التراجع بعدها مباشرة.</p>
+            <p className="min-w-0 flex-1">
+              اسحب النشيد نحو اليمين لحذفه، أو اضغط عليه مطوّلًا لتحديد عدة أناشيد.
+            </p>
             <button
               type="button"
               onClick={swipeHint.dismiss}
@@ -275,6 +380,53 @@ export function HomeScreen({
           <p className="p-8 text-center text-sm text-[#6b7670]">{isFiltered ? "لا توجد نتائج مطابقة" : "لا توجد أناشيد بعد"}</p>
         ) : (
           items.map((item) => {
+            if (selecting) {
+              if (!item.canModify) {
+                // لا صلاحية لحذفه: يبقى ظاهرًا بلا تفاعل، فلا يغادر المستخدم وضع التحديد بلمسة.
+                return (
+                  <div key={item.id} aria-disabled="true" className="border-b border-[#f0f0ec] opacity-50">
+                    <div className="flex min-h-16 items-center gap-3 px-5 py-3">
+                      <span className="h-6 w-6 shrink-0" aria-hidden="true" />
+                      <div className="min-w-0 flex-1">
+                        <div className="truncate text-[17px] font-bold leading-[1.4]">{item.title}</div>
+                        <div className="mt-0.5 truncate text-[13px] text-[#6b7670]">
+                          {[item.artist, item.tags[0]].filter(Boolean).join(" · ")}
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                );
+              }
+              const isSelected = selected.has(item.id);
+              return (
+                <SwipeToDelete key={item.id} title={item.title} onDelete={() => {}} disabled className="border-b border-[#f0f0ec]">
+                  <button
+                    type="button"
+                    role="checkbox"
+                    aria-checked={isSelected}
+                    onClick={() => toggleSelected(item.id)}
+                    className={`flex min-h-16 w-full items-center gap-3 px-5 py-3 text-start transition-colors ${
+                      isSelected ? "bg-emerald-50" : "bg-white"
+                    } focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-emerald-500`}
+                  >
+                    <span
+                      aria-hidden="true"
+                      className={`inline-flex h-6 w-6 shrink-0 items-center justify-center rounded-full border-2 transition-colors ${
+                        isSelected ? "border-emerald-700 bg-emerald-700 text-white" : "border-[#c8d1cc] bg-white"
+                      }`}
+                    >
+                      {isSelected && <Check className="h-4 w-4" strokeWidth={3} />}
+                    </span>
+                    <span className="min-w-0 flex-1">
+                      <span className="block truncate text-[17px] font-bold leading-[1.4]">{item.title}</span>
+                      <span className="mt-0.5 block truncate text-[13px] text-[#6b7670]">
+                        {[item.artist, item.tags[0]].filter(Boolean).join(" · ")}
+                      </span>
+                    </span>
+                  </button>
+                </SwipeToDelete>
+              );
+            }
             const row = (
               <div className="flex min-h-16 items-center gap-2.5 px-5 py-3">
                 <Link href={`/lyrics/${item.id}`} draggable={false} className={`min-w-0 flex-1 rounded-sm ${focusRing}`}>
@@ -297,6 +449,7 @@ export function HomeScreen({
                   quickDelete.requestDelete(item.id, { focus: viaKeyboard });
                 }}
                 peek={item.id === peekId}
+                onLongPress={() => startSelection(item.id)}
                 className="border-b border-[#f0f0ec]"
               >
                 {row}
@@ -328,6 +481,7 @@ export function HomeScreen({
         )}
       </div>
 
+      {!selecting && (
       <Link
         href="/lyrics/new"
         aria-label="إضافة أنشودة"
@@ -335,6 +489,7 @@ export function HomeScreen({
       >
         <Plus className="h-[28px] w-[28px]" aria-hidden="true" />
       </Link>
+      )}
 
       <BackToTopButton className="fixed bottom-7 end-5 z-30 h-[52px] w-[52px]" />
 

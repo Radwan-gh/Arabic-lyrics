@@ -8,8 +8,12 @@ export const UNDO_DELETE_MS = 5000;
 
 export interface DeleteToastState {
   kind: "deleted" | "error";
-  id: string;
+  /** معرّف عملية الحذف (لا النشيد): يميّز إشعار كل عملية عن التي تليها. */
+  key: number;
+  /** عنوان النشيد حين يكون الحذف لنشيد واحد. */
   title: string;
+  /** عدد الأناشيد في هذه العملية (أو عدد ما فشل حذفه في إشعار الخطأ). */
+  count: number;
   /** نُقل التركيز إلى الإشعار (الحذف جرى من لوحة المفاتيح، فلا يضيع التركيز). */
   focus: boolean;
 }
@@ -21,37 +25,69 @@ interface UseUndoableDeleteArgs {
 }
 
 interface Pending {
-  removed: RemovedFeedItem;
+  key: number;
+  /** بترتيب الإخفاء: يُرجَع بعكسه ليعود كلٌّ إلى موضعه الأصلي. */
+  removed: RemovedFeedItem[];
   timer: ReturnType<typeof setTimeout>;
 }
 
+let nextKey = 1;
+
 /**
- * حذف سريع من قائمة الأناشيد بلمسة واحدة، بلا نافذة تأكيد: يختفي النشيد فورًا
- * ويظهر إشعار «تراجع» لمدة UNDO_DELETE_MS، ثم يُرسل الحذف إلى الخادم. إن فشل
- * الحذف يعود النشيد إلى موضعه مع رسالة خطأ.
+ * حذف سريع من قائمة الأناشيد بلا نافذة تأكيد — لنشيد واحد (سحب) أو لعدة أناشيد
+ * (التحديد المتعدد): تختفي فورًا ويظهر إشعار «تراجع» لمدة UNDO_DELETE_MS، ثم
+ * يُرسل الحذف إلى الخادم. ما فشل حذفه يعود إلى موضعه مع رسالة خطأ.
  *
- * حذف واحد فقط ينتظر في كل لحظة: حذفٌ جديد، أو مغادرة الصفحة، أو إخفاؤها (إغلاق
- * التطبيق على الموبايل) يُرسل المنتظِر فورًا — بـ keepalive ليكتمل الطلب حتى لو
- * أُغلقت الصفحة.
+ * عملية حذف واحدة فقط تنتظر في كل لحظة: حذفٌ جديد، أو مغادرة الصفحة، أو إخفاؤها
+ * (إغلاق التطبيق على الموبايل) يُرسل المنتظِر فورًا — بـ keepalive ليكتمل الطلب
+ * حتى لو أُغلقت الصفحة.
  */
 export function useUndoableDelete({ removeItem, restoreItem, confirmRemoved }: UseUndoableDeleteArgs) {
   const pendingRef = useRef<Pending | null>(null);
   const [toast, setToast] = useState<DeleteToastState | null>(null);
 
-  const send = useCallback(
-    (removed: RemovedFeedItem) => {
-      const { item } = removed;
-      fetch(`/api/lyrics/${item.id}`, { method: "DELETE", keepalive: true })
-        .then((res) => {
-          if (!res.ok) throw new Error(String(res.status));
-          confirmRemoved();
-        })
-        .catch(() => {
-          restoreItem(removed);
-          setToast({ kind: "error", id: item.id, title: item.title, focus: false });
-        });
+  const restoreAll = useCallback(
+    (removed: RemovedFeedItem[]) => {
+      for (let i = removed.length - 1; i >= 0; i--) restoreItem(removed[i]);
     },
-    [confirmRemoved, restoreItem],
+    [restoreItem],
+  );
+
+  const send = useCallback(
+    (removed: RemovedFeedItem[]) => {
+      const fail = (failed: RemovedFeedItem[]) => {
+        if (failed.length === 0) return;
+        restoreAll(failed);
+        setToast({ kind: "error", key: nextKey++, title: failed[0].item.title, count: failed.length, focus: false });
+      };
+
+      if (removed.length === 1) {
+        const [only] = removed;
+        fetch(`/api/lyrics/${only.item.id}`, { method: "DELETE", keepalive: true })
+          .then((res) => {
+            if (!res.ok) throw new Error(String(res.status));
+            confirmRemoved();
+          })
+          .catch(() => fail(removed));
+        return;
+      }
+
+      fetch("/api/lyrics/bulk-delete", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ ids: removed.map((r) => r.item.id) }),
+        keepalive: true,
+      })
+        .then(async (res) => {
+          if (!res.ok) throw new Error(String(res.status));
+          const data: { deleted: string[] } = await res.json();
+          const deleted = new Set(data.deleted);
+          for (let i = 0; i < deleted.size; i++) confirmRemoved();
+          fail(removed.filter((r) => !deleted.has(r.item.id)));
+        })
+        .catch(() => fail(removed));
+    },
+    [confirmRemoved, restoreAll],
   );
 
   const flush = useCallback(() => {
@@ -62,19 +98,25 @@ export function useUndoableDelete({ removeItem, restoreItem, confirmRemoved }: U
     send(pending.removed);
   }, [send]);
 
+  /** يُخفي نشيدًا أو عدة أناشيد ويبدأ مهلة التراجع. */
   const requestDelete = useCallback(
-    (id: string, { focus = false }: { focus?: boolean } = {}) => {
+    (ids: string | string[], { focus = false }: { focus?: boolean } = {}) => {
       flush();
-      const removed = removeItem(id);
-      if (!removed) return;
+      const removed: RemovedFeedItem[] = [];
+      for (const id of Array.isArray(ids) ? ids : [ids]) {
+        const r = removeItem(id);
+        if (r) removed.push(r);
+      }
+      if (removed.length === 0) return;
+      const key = nextKey++;
       const timer = setTimeout(() => {
-        if (pendingRef.current?.removed.item.id !== id) return;
+        if (pendingRef.current?.key !== key) return;
         pendingRef.current = null;
         send(removed);
-        setToast((t) => (t?.kind === "deleted" && t.id === id ? null : t));
+        setToast((t) => (t?.kind === "deleted" && t.key === key ? null : t));
       }, UNDO_DELETE_MS);
-      pendingRef.current = { removed, timer };
-      setToast({ kind: "deleted", id, title: removed.item.title, focus });
+      pendingRef.current = { key, removed, timer };
+      setToast({ kind: "deleted", key, title: removed[0].item.title, count: removed.length, focus });
     },
     [flush, removeItem, send],
   );
@@ -84,9 +126,9 @@ export function useUndoableDelete({ removeItem, restoreItem, confirmRemoved }: U
     if (!pending) return;
     clearTimeout(pending.timer);
     pendingRef.current = null;
-    restoreItem(pending.removed);
+    restoreAll(pending.removed);
     setToast(null);
-  }, [restoreItem]);
+  }, [restoreAll]);
 
   const dismiss = useCallback(() => {
     flush();
