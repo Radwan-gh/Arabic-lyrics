@@ -253,6 +253,8 @@ prisma/schema.prisma       Database schema (User, Lyrics)
 prisma/seed.ts             Seed script (admin bootstrap + sample lyrics)
 prisma/seed-anaasheed.ts   Idempotent seeder for the أناشيد collection
 prisma/data/               أناشيد source text, parsed JSON, and the parser
+prisma/data/munajat.json   أناشيد whose lyrics are mostly مناجاة (tagged «مناجاة»)
+prisma/tag-munajat.ts      Adds the «مناجاة» tag to those أناشيد in the database
 src/lib/                   Prisma client, JWT/session helpers, password hashing
 src/middleware.ts          Route protection for /admin and lyrics create/edit
 src/app/                   Pages (App Router) and API routes

@@ -16,6 +16,12 @@ import { fileURLToPath } from "node:url";
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const SRC = path.join(__dirname, "anaasheed-source.txt");
 const OUT = path.join(__dirname, "anaasheed.json");
+// Anaasheed whose lyrics are mostly مناجاة (direct address to God), keyed by title + album.
+const MUNAJAT = new Set(
+  JSON.parse(fs.readFileSync(path.join(__dirname, "munajat.json"), "utf8")).map(
+    (m) => `${m.title}|${m.album}`,
+  ),
+);
 
 // Known maqamat, longest-first so multi-word names match before their prefixes.
 const KNOWN_MAQAMS = [
@@ -188,7 +194,8 @@ function parse() {
     }
     artist = normalizeSpaces(artist).slice(0, 200);
 
-    // Tags: maqam name, «نشيد», optional wazn (≤30 chars). Deduped, capped at 10.
+    // Tags: maqam name, «نشيد», optional wazn (≤30 chars), «مناجاة» when listed in
+    // munajat.json. Deduped, capped at 10.
     const maqamTag = normalizeSpaces(maqam);
     const tags = [];
     const pushTag = (t) => {
@@ -198,6 +205,9 @@ function parse() {
     pushTag(maqamTag);
     pushTag("نشيد");
     if (wazn) pushTag(wazn);
+    const album = `مقام ${maqamTag}`.slice(0, 200);
+    const cleanTitle = normalizeSpaces(title).slice(0, 200);
+    if (MUNAJAT.has(`${cleanTitle}|${album}`)) pushTag("مناجاة");
 
     // Content: most anaasheed are قصائد whose بيت is two hemistichs, one per source
     // line. Present them as couplets — insert a blank line after every two verses.
@@ -209,9 +219,9 @@ function parse() {
     const content = htmlParts.join("");
 
     records.push({
-      title: normalizeSpaces(title).slice(0, 200),
+      title: cleanTitle,
       artist: artist || null,
-      album: `مقام ${maqamTag}`.slice(0, 200),
+      album,
       content,
       tags,
     });
