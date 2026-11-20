@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
 import { Plus, X } from "lucide-react";
 import { TagPickerPanel } from "./TagPickerPanel";
+import { TagSheet } from "./TagSheet";
 import { useQuickTags } from "@/lib/use-quick-tags";
 import { useOnline } from "@/lib/use-online";
 import { focusRing } from "@/lib/ui";
@@ -13,7 +14,8 @@ type Variant = "card" | "detail" | "reader";
 const chipCls: Record<Variant, string> = {
   card: "rounded-full bg-neutral-100 px-2 py-0.5 text-[11px] text-neutral-600 hover:bg-neutral-200",
   detail: "rounded-full bg-neutral-100 px-3 py-1 text-xs text-neutral-600 hover:bg-neutral-200",
-  reader: "inline-flex h-[30px] items-center rounded-full border border-[#e6e6e1] bg-white px-3 text-[13px] text-[#5c6660]",
+  reader:
+    "inline-flex h-[30px] items-center rounded-full border border-[#e6e6e1] bg-white px-3 text-[13px] text-[#5c6660]",
 };
 
 // شاشة القراءة بالمظهر الداكن (خلفية ‎#0e1613).
@@ -82,6 +84,13 @@ export function QuickTagEditor({
 
   useEffect(() => {
     if (!open || sheet) return;
+    // Esc يغلق اللوح المنسدل حتى لو لم يكن التركيز في حقل البحث.
+    function onKey(e: KeyboardEvent) {
+      if (e.key === "Escape" && !e.defaultPrevented) {
+        e.preventDefault();
+        close();
+      }
+    }
     function onDown(e: MouseEvent) {
       if (ref.current && !ref.current.contains(e.target as Node)) {
         setOpen(false);
@@ -89,7 +98,11 @@ export function QuickTagEditor({
       }
     }
     document.addEventListener("mousedown", onDown);
-    return () => document.removeEventListener("mousedown", onDown);
+    document.addEventListener("keydown", onKey);
+    return () => {
+      document.removeEventListener("mousedown", onDown);
+      document.removeEventListener("keydown", onKey);
+    };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [open, sheet]);
 
@@ -108,7 +121,10 @@ export function QuickTagEditor({
   );
 
   return (
-    <div ref={ref} className={`relative flex flex-wrap items-center gap-1.5 ${variant === "card" ? "" : "gap-2"} ${className}`}>
+    <div
+      ref={ref}
+      className={`relative flex flex-wrap items-center gap-1.5 ${variant === "card" ? "" : "gap-2"} ${className}`}
+    >
       {tags.map((tag) =>
         canModify && !sheet ? (
           <span key={tag} className={`group inline-flex items-center ${chip} !pe-1`}>
@@ -160,47 +176,17 @@ export function QuickTagEditor({
         <div
           role="dialog"
           aria-label="إضافة وسوم"
-          className="absolute start-0 top-full z-20 mt-1 w-72 rounded-xl border border-neutral-200 bg-white p-2 shadow-lg"
+          // ارتفاع ثابت: القائمة تُمرَّر داخله ولا يتغيّر حجم اللوح مع البحث.
+          className="absolute start-0 top-full z-20 mt-1 flex h-[22rem] w-72 flex-col rounded-xl border border-neutral-200 bg-white p-2 shadow-lg"
         >
           {panel}
         </div>
       )}
 
       {open && sheet && (
-        <div
-          className="fixed inset-0 z-50"
-          role="dialog"
-          aria-modal="true"
-          aria-label="وسوم الأنشودة"
-          // شاشة القراءة تتنقّل بين أناشيد الوصلة بالسحب: لا يصل السحب داخل اللوح إليها.
-          onTouchStart={(e) => e.stopPropagation()}
-          onTouchEnd={(e) => e.stopPropagation()}
-        >
-          <button
-            type="button"
-            aria-label="إغلاق"
-            onClick={close}
-            className={`absolute inset-0 ${dark ? "bg-black/50" : "bg-[#14211c]/30"}`}
-          />
-          <div className={`absolute inset-x-0 bottom-0 flex max-h-[85vh] flex-col gap-3 overflow-y-auto rounded-t-3xl px-5 pb-8 pt-2.5 shadow-2xl ${
-              dark ? "bg-[#17221e]" : "bg-white"
-            }`}>
-            <span aria-hidden="true" className={`mx-auto h-1.5 w-11 rounded-full ${dark ? "bg-white/20" : "bg-neutral-200"}`} />
-            <div className="flex items-center justify-between">
-              <span className={`text-lg font-extrabold ${dark ? "text-[#f2f5f3]" : "text-[#14211c]"}`}>وسوم الأنشودة</span>
-              <button
-                type="button"
-                onClick={close}
-                className={`rounded-lg px-3 py-2 text-sm font-semibold ${
-                  dark ? "text-emerald-300 focus-visible:ring-offset-[#17221e]" : "text-emerald-700"
-                } ${focusRing}`}
-              >
-                تم
-              </button>
-            </div>
-            {panel}
-          </div>
-        </div>
+        <TagSheet title="وسوم الأنشودة" onClose={close} dark={dark}>
+          {panel}
+        </TagSheet>
       )}
     </div>
   );
