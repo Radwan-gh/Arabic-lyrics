@@ -237,6 +237,7 @@ export function ReaderScreen({
           canModify={canModify}
           onTagsChange={onTagsChange}
           variant="reader"
+          dark={appearance === "dark"}
           className="mt-[14px]"
         />
         <div
