@@ -13,6 +13,7 @@ import { RecentSearches } from "@/components/RecentSearches";
 import { SwipeToDelete } from "@/components/SwipeToDelete";
 import { UndoDeleteToast } from "@/components/UndoDeleteToast";
 import { BulkTagSheet } from "@/components/BulkTagSheet";
+import { useOnline } from "@/lib/use-online";
 import { useUndoableDelete } from "@/lib/use-undoable-delete";
 import { useSwipeHint } from "@/lib/use-swipe-hint";
 import { useRecentSearches } from "@/lib/recent-searches";
@@ -98,6 +99,11 @@ export function HomeScreen({
   const [selected, setSelected] = useState<Set<string>>(() => new Set());
   // لوح وسم المحدَّد (إضافة وسم لعدة أناشيد دفعة واحدة).
   const [bulkTagOpen, setBulkTagOpen] = useState(false);
+  // الوسم يحتاج اتصالًا: يُخفى زرّه دون اتصال ويُغلق لوحه إن انقطع الاتصال أثناءه.
+  const online = useOnline();
+  useEffect(() => {
+    if (!online) setBulkTagOpen(false);
+  }, [online]);
   const selectableIds = items.filter((i) => i.canModify).map((i) => i.id);
   const allSelected = selectableIds.length > 0 && selectableIds.every((id) => selected.has(id));
   // التلميح لمن يملك حذف نشيد ظاهر فقط، ويتحرّك أول صفّ قابل للحذف لتوضيحه.
@@ -245,16 +251,18 @@ export function HomeScreen({
             >
               {allSelected ? "إلغاء الكل" : "تحديد الكل"}
             </button>
-            <button
-              type="button"
-              onClick={() => setBulkTagOpen(true)}
-              disabled={selected.size === 0}
-              aria-label={selected.size > 0 ? `وسم المحدَّد (${formatLyricsCount(selected.size)})` : "وسم المحدَّد"}
-              title="وسم المحدَّد"
-              className={`inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-xl border border-emerald-600 text-emerald-700 transition-colors hover:bg-emerald-50 disabled:cursor-not-allowed disabled:border-emerald-200 disabled:text-emerald-300 ${focusRing}`}
-            >
-              <Tag className="h-5 w-5" aria-hidden="true" />
-            </button>
+            {online && (
+              <button
+                type="button"
+                onClick={() => setBulkTagOpen(true)}
+                disabled={selected.size === 0}
+                aria-label={selected.size > 0 ? `وسم المحدَّد (${formatLyricsCount(selected.size)})` : "وسم المحدَّد"}
+                title="وسم المحدَّد"
+                className={`inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-xl border border-emerald-600 text-emerald-700 transition-colors hover:bg-emerald-50 disabled:cursor-not-allowed disabled:border-emerald-200 disabled:text-emerald-300 ${focusRing}`}
+              >
+                <Tag className="h-5 w-5" aria-hidden="true" />
+              </button>
+            )}
             <button
               type="button"
               onClick={(e) => deleteSelected(e.detail === 0)}
@@ -526,7 +534,7 @@ export function HomeScreen({
         className="inset-x-5 bottom-[104px]"
       />
 
-      {bulkTagOpen && (
+      {bulkTagOpen && online && (
         <BulkTagSheet
           ids={items.filter((i) => selected.has(i.id)).map((i) => i.id)}
           onClose={() => setBulkTagOpen(false)}
