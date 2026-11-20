@@ -16,6 +16,12 @@ const chipCls: Record<Variant, string> = {
   reader: "inline-flex h-[30px] items-center rounded-full border border-[#e6e6e1] bg-white px-3 text-[13px] text-[#5c6660]",
 };
 
+// شاشة القراءة بالمظهر الداكن (خلفية ‎#0e1613).
+const readerDarkChipCls =
+  "inline-flex h-[30px] items-center rounded-full border border-white/15 bg-white/[0.06] px-3 text-[13px] text-[#c9d3ce]";
+const readerDarkAddCls = "border-emerald-400/60 text-emerald-300 hover:border-emerald-300 hover:bg-emerald-400/10";
+const addToneCls = "border-emerald-400 text-emerald-700 hover:border-emerald-600 hover:bg-emerald-50";
+
 const addCls: Record<Variant, string> = {
   card: "h-[22px] px-2 text-[11px]",
   detail: "h-7 px-3 text-xs",
@@ -30,6 +36,8 @@ interface QuickTagEditorProps {
   variant: Variant;
   /** يُستدعى بعد كل حفظ ناجح بالوسوم كما أعادها الخادم. */
   onTagsChange?: (tags: string[]) => void;
+  /** مظهر القراءة الداكن في شاشة القراءة: شرائح بخلفية داكنة بدل البيضاء. */
+  dark?: boolean;
   className?: string;
 }
 
@@ -45,6 +53,7 @@ export function QuickTagEditor({
   canModify: allowed,
   variant,
   onTagsChange,
+  dark = false,
   className = "",
 }: QuickTagEditorProps) {
   const { tags, toggle, error, saving, clearError } = useQuickTags(lyricsId, initialTags, onTagsChange);
@@ -55,6 +64,7 @@ export function QuickTagEditor({
   const ref = useRef<HTMLDivElement>(null);
   const triggerRef = useRef<HTMLButtonElement>(null);
   const sheet = variant === "reader";
+  const chip = dark && sheet ? readerDarkChipCls : chipCls[variant];
 
   function close() {
     setOpen(false);
@@ -93,7 +103,7 @@ export function QuickTagEditor({
     <div ref={ref} className={`relative flex flex-wrap items-center gap-1.5 ${variant === "card" ? "" : "gap-2"} ${className}`}>
       {tags.map((tag) =>
         canModify && !sheet ? (
-          <span key={tag} className={`group inline-flex items-center ${chipCls[variant]} !pe-1`}>
+          <span key={tag} className={`group inline-flex items-center ${chip} !pe-1`}>
             <Link href={`/?tags=${encodeURIComponent(tag)}`} className={`rounded-full ${focusRing}`}>
               #{tag}
             </Link>
@@ -108,7 +118,7 @@ export function QuickTagEditor({
             </button>
           </span>
         ) : (
-          <Link key={tag} href={`/?tags=${encodeURIComponent(tag)}`} className={`${chipCls[variant]} ${focusRing}`}>
+          <Link key={tag} href={`/?tags=${encodeURIComponent(tag)}`} className={`${chip} ${focusRing}`}>
             #{tag}
           </Link>
         ),
@@ -123,7 +133,9 @@ export function QuickTagEditor({
           aria-expanded={open}
           aria-label="إضافة وسم"
           title="إضافة وسم"
-          className={`inline-flex items-center gap-1 rounded-full border border-dashed border-emerald-400 font-medium text-emerald-700 transition-colors hover:border-emerald-600 hover:bg-emerald-50 ${addCls[variant]} ${focusRing}`}
+          className={`inline-flex items-center gap-1 rounded-full border border-dashed font-medium transition-colors ${
+            dark && sheet ? readerDarkAddCls : addToneCls
+          } ${addCls[variant]} ${focusRing}`}
         >
           <Plus className="h-3 w-3" aria-hidden="true" />
           وسم
@@ -131,7 +143,7 @@ export function QuickTagEditor({
       )}
 
       {!open && error && (
-        <span role="alert" className="text-xs text-red-600">
+        <span role="alert" className={`text-xs ${dark && sheet ? "text-red-300" : "text-red-600"}`}>
           {error}
         </span>
       )}
