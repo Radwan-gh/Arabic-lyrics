@@ -5,6 +5,7 @@ import { useEffect, useRef, useState } from "react";
 import { Plus, X } from "lucide-react";
 import { TagPickerPanel } from "./TagPickerPanel";
 import { useQuickTags } from "@/lib/use-quick-tags";
+import { useOnline } from "@/lib/use-online";
 import { focusRing } from "@/lib/ui";
 
 type Variant = "card" | "detail" | "reader";
@@ -36,10 +37,21 @@ interface QuickTagEditorProps {
  * صف وسوم النشيد مع تعديل سريع: كل وسم رابط للتصفية، ومن يملك التعديل يرى
  * شريحة «+ وسم» تفتح المنتقي (لوح منسدل على سطح المكتب، لوح سفلي في شاشة القراءة)
  * وزر × على الوسم لإزالته مباشرة (سطح المكتب). الحفظ فوري ومتفائل بلا زر «حفظ».
+ * دون اتصال تظهر الوسوم للقراءة فقط.
  */
-export function QuickTagEditor({ lyricsId, tags: initialTags, canModify, variant, onTagsChange, className = "" }: QuickTagEditorProps) {
+export function QuickTagEditor({
+  lyricsId,
+  tags: initialTags,
+  canModify: allowed,
+  variant,
+  onTagsChange,
+  className = "",
+}: QuickTagEditorProps) {
   const { tags, toggle, error, saving, clearError } = useQuickTags(lyricsId, initialTags, onTagsChange);
   const [open, setOpen] = useState(false);
+  // دون اتصال لا يمكن الحفظ: يُخفى زر الوسم وأزرار الإزالة، ويُغلق المنتقي إن كان مفتوحًا.
+  const online = useOnline();
+  const canModify = allowed && online;
   const ref = useRef<HTMLDivElement>(null);
   const triggerRef = useRef<HTMLButtonElement>(null);
   const sheet = variant === "reader";
@@ -49,6 +61,14 @@ export function QuickTagEditor({ lyricsId, tags: initialTags, canModify, variant
     clearError();
     triggerRef.current?.focus();
   }
+
+  useEffect(() => {
+    if (!online && open) {
+      setOpen(false);
+      clearError();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [online]);
 
   useEffect(() => {
     if (!open || sheet) return;
