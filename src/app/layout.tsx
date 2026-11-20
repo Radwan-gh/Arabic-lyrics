@@ -1,5 +1,5 @@
 import type { Metadata, Viewport } from "next";
-import { Tajawal, Scheherazade_New, Aref_Ruqaa } from "next/font/google";
+import { Scheherazade_New, Aref_Ruqaa } from "next/font/google";
 import "./globals.css";
 import { AppChrome } from "@/components/AppChrome";
 import { RouteProgress } from "@/components/RouteProgress";
@@ -9,16 +9,11 @@ import { prisma } from "@/lib/prisma";
 import { LYRICS_SCALE_NO_FLASH_SCRIPT } from "@/lib/lyrics-font";
 import { INSTALL_PROMPT_CAPTURE_SCRIPT } from "@/lib/install-prompt-script";
 
-const tajawal = Tajawal({
-  subsets: ["arabic"],
-  weight: ["400", "500", "700", "800"],
-  variable: "--font-tajawal",
-});
-
-// خطّ نسخ لعرض الأناشيد (العنوان والنصّ) — أوضح للتشكيل. يُطبَّق عبر أداة font-naskh.
+// خطّ الموقع كله (الواجهة ونصوص الأناشيد): «شهرزاد الجديد» — خطّ نسخ أوضح للتشكيل.
+// يُطبَّق افتراضيًا عبر font-sans على <body>، وتبقى font-naskh اسمًا مرادفًا له.
 const scheherazade = Scheherazade_New({
-  subsets: ["arabic"],
-  weight: ["400", "700"],
+  subsets: ["arabic", "latin"],
+  weight: ["400", "500", "600", "700"],
   variable: "--font-scheherazade",
 });
 
@@ -54,7 +49,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
     session?.role === "ADMIN" ? await prisma.user.count({ where: { isApproved: false } }).catch(() => 0) : 0;
 
   return (
-    <html lang="ar" dir="rtl" className={`${tajawal.variable} ${scheherazade.variable} ${arefRuqaa.variable}`}>
+    <html lang="ar" dir="rtl" className={`${scheherazade.variable} ${arefRuqaa.variable}`}>
       <head>
         {/* يطبّق حجم خط الأناشيد المحفوظ قبل الرسم لمنع وميض تغيّر الحجم. */}
         <script dangerouslySetInnerHTML={{ __html: LYRICS_SCALE_NO_FLASH_SCRIPT }} />
