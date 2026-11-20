@@ -2,9 +2,9 @@
 
 import { useState } from "react";
 import { TagPickerPanel } from "./TagPickerPanel";
+import { TagSheet } from "./TagSheet";
 import { rememberTag } from "@/lib/use-tag-suggestions";
 import { tagKey } from "@/lib/tag-rules";
-import { focusRing } from "@/lib/ui";
 
 interface BulkTagSheetProps {
   ids: string[];
@@ -63,27 +63,17 @@ export function BulkTagSheet({ ids, onClose, onUpdated }: BulkTagSheetProps) {
   }
 
   return (
-    <div className="fixed inset-0 z-50" role="dialog" aria-modal="true" aria-label="وسم الأناشيد المحدَّدة">
-      <button type="button" aria-label="إغلاق" onClick={onClose} className="absolute inset-0 bg-[#14211c]/30" />
-      <div className="absolute inset-x-0 bottom-0 flex max-h-[85vh] flex-col gap-3 overflow-y-auto rounded-t-3xl bg-white px-5 pb-8 pt-2.5 shadow-2xl">
-        <span aria-hidden="true" className="mx-auto h-1.5 w-11 rounded-full bg-neutral-200" />
-        <div className="flex items-center justify-between gap-3">
-          <span className="text-lg font-extrabold text-[#14211c]">وسم {total} نشيدًا</span>
-          <button type="button" onClick={onClose} className={`rounded-lg px-3 py-2 text-sm font-semibold text-emerald-700 ${focusRing}`}>
-            تم
-          </button>
-        </div>
-        <TagPickerPanel
-          mode="bulk"
-          selected={applied}
-          onToggle={add}
-          error={error}
-          status={status}
-          busy={busy}
-          onClose={onClose}
-          touch
-        />
-      </div>
-    </div>
+    <TagSheet title={`وسم ${total} نشيدًا`} onClose={onClose}>
+      <TagPickerPanel
+        mode="bulk"
+        selected={applied}
+        onToggle={add}
+        error={error}
+        status={status}
+        busy={busy}
+        onClose={onClose}
+        touch
+      />
+    </TagSheet>
   );
 }
