@@ -1,11 +1,10 @@
 // ─────────────────────────────────────────────────────────────────────────────
-// تفضيلات قارئ الأنشودة (الشاشة الغامرة على الموبايل): تباعد الأسطر والمظهر.
+// تفضيلات قارئ الأنشودة (الشاشة الغامرة على الموبايل): تباعد الأسطر.
+// (مظهر العرض فاتح/داكن/ورقي إعداد واحد للموقع كله — راجع lib/theme.ts.)
 // على غرار lyrics-font.ts و wake-lock.ts — تخزين محلي مغلّف بـ try/catch، ويبقى
 // الاختيار ثابتًا عبر الأناشيد والجلسات. نطاق التأثير محصور بشاشة القراءة الغامرة
 // ووضع الأداء (لا يُطبَّق كمتغيّر CSS عالمي كحجم الخط، فتأثيره أخفّ ولا يمسّ بقية الموقع).
 // ─────────────────────────────────────────────────────────────────────────────
-
-import { getSiteTheme } from "@/lib/theme";
 
 export const LINE_SPACING_LEVELS = ["compact", "comfortable", "wide"] as const;
 export type LineSpacing = (typeof LINE_SPACING_LEVELS)[number];
@@ -21,26 +20,7 @@ export const LINE_SPACING_CLS: Record<LineSpacing, string> = {
   wide: "leading-[2.5]",
 };
 
-export const READING_APPEARANCES = ["light", "dark", "paper"] as const;
-export type ReadingAppearance = (typeof READING_APPEARANCES)[number];
-export const READING_APPEARANCE_DEFAULT: ReadingAppearance = "light";
-export const READING_APPEARANCE_LABELS: Record<ReadingAppearance, string> = {
-  light: "فاتح",
-  dark: "داكن",
-  paper: "ورقي",
-};
-/**
- * خلفية/لون نص شاشة القراءة الغامرة لكل مظهر. صنف theme-light/theme-dark يثبّت
- * ألوان الواجهة داخل الشاشة على مظهر القراءة المختار، بغضّ النظر عن مظهر الموقع.
- */
-export const READING_APPEARANCE_CLS: Record<ReadingAppearance, string> = {
-  light: "theme-light bg-[#f7f7f4] text-[#14211c]",
-  dark: "theme-dark bg-[#0e1613] text-[#f2f5f3]",
-  paper: "theme-light bg-[#f3ecda] text-[#2b2417]",
-};
-
 const LINE_SPACING_KEY = "arabic-lyrics:line-spacing";
-const APPEARANCE_KEY = "arabic-lyrics:reading-appearance";
 
 function readEnum<T extends string>(key: string, allowed: readonly T[], fallback: T): T {
   try {
@@ -64,13 +44,4 @@ export function readStoredLineSpacing(): LineSpacing {
 }
 export function persistLineSpacing(value: LineSpacing): void {
   persistEnum(LINE_SPACING_KEY, value);
-}
-
-/** بلا اختيار محفوظ: يتبع مظهر الموقع (داكن ← داكن، وإلا فاتح). */
-export function readStoredReadingAppearance(): ReadingAppearance {
-  const fallback: ReadingAppearance = getSiteTheme() === "dark" ? "dark" : READING_APPEARANCE_DEFAULT;
-  return readEnum(APPEARANCE_KEY, READING_APPEARANCES, fallback);
-}
-export function persistReadingAppearance(value: ReadingAppearance): void {
-  persistEnum(APPEARANCE_KEY, value);
 }

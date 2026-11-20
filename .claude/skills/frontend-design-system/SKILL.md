@@ -19,10 +19,13 @@ designed by one person, not assembled from parts.
 
 Stay inside a small, deliberate scale so screens feel unified.
 
-- **Light & dark themes are automatic.** Colors are CSS-variable tokens
-  (`tailwind.config.ts` + `src/app/globals.css`) that flip when `<html>` has the
-  `dark` class (toggled from the side menu, see `src/lib/theme.ts`). Use the tokens
-  below and dark mode comes for free — **don't** add `dark:` variants per element,
+- **View modes (light / dark / paper) are automatic.** Colors are CSS-variable
+  tokens (`tailwind.config.ts` + `src/app/globals.css`) that switch when `<html>` has
+  the `dark` or `paper` class. One site-wide setting (`src/lib/theme.ts`), chosen from
+  the side menu or the reader's settings sheet, saved in a cookie (server renders the
+  right class — no flash) and localStorage. Use the tokens below and every mode comes
+  for free — **don't** add `dark:` variants per element, and don't drive colors from
+  JS theme state (it renders light first, then flips),
   and **never** hardcode hex values (`bg-[#fff]`) or `bg-white` for surfaces: they
   won't flip.
 - **Surfaces:** `bg-surface` (cards, inputs, sheets, drawers), `bg-canvas`
@@ -39,9 +42,9 @@ Stay inside a small, deliberate scale so screens feel unified.
   `text-emerald-700`. Tints: `bg-emerald-50/100`, `border-emerald-200`.
 - **`text-white`** only on solid colored backgrounds (emerald/red/amber). It does
   not flip.
-- **Fixed-appearance areas:** add `theme-light` or `theme-dark` to a container to
-  pin the tokens inside it regardless of the site theme (reader appearances,
-  performance mode, the exported lyrics image).
+- **Fixed-appearance areas:** add `theme-light`, `theme-dark` or `theme-paper` to a
+  container to pin the tokens inside it regardless of the site mode (performance
+  mode is always dark, the exported lyrics image always light).
 - **Danger:** `bg-red-600` for destructive solid buttons; `text-danger` /
   `text-danger-strong` for error text and destructive links; tint `bg-red-50`.
   Warnings: `text-warn*` on `bg-amber-50/100`.
@@ -107,7 +110,7 @@ For any list/data view or async action, design **all** states, not just the happ
 
 - No physical-direction classes where logical ones belong.
 - Colors/spacing/radius stay within the tokens above; checked in **both** light
-  and dark mode (toggle «الوضع الداكن» in the side menu).
+  dark and paper (side menu → «مظهر العرض»).
 - Hover + focus-visible states present on every interactive element.
 - Loading / empty / error states handled.
 - `npm run lint` is clean.
