@@ -18,7 +18,8 @@
 //   ويُجيب عند السؤال، ويحفظ آخر حالة في الكاش لتبقى معروفة بعد إعادة تشغيله.
 // - لا يُخزَّن: الطلبات عبر-الأصل، وطلبات التعديل، ومسارات /api/* عدا الوسوم.
 
-const VERSION = "v8";
+// v9: الهياكل المخزَّنة تحمل سكربت مظهر العرض الجديد (فاتح/داكن/ورقي).
+const VERSION = "v9";
 const STATIC_CACHE = `anaasheed-static-${VERSION}`; // أصول ثابتة (JS/CSS/خطوط/أيقونات)
 const PAGES_CACHE = `anaasheed-pages-${VERSION}`; // هياكل وصفحات HTML (خاصة بالجلسة)
 const DATA_CACHE = `anaasheed-data-${VERSION}`; // استجابات JSON
@@ -197,10 +198,13 @@ async function putPage(cache, href, response, version) {
 
 // لا صفحة مخزَّنة لهذا المسار (مثل صفحات الإضافة والإدارة التي تتطلّب اتصالًا).
 function unavailableResponse() {
+  // يتبع مظهر العرض المحفوظ (فاتح/داكن/ورقي — راجع src/lib/theme.ts) عبر صنف على <html>.
   const html = `<!doctype html><html lang="ar" dir="rtl"><head><meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1"><title>أناشيد</title>
+<meta name="viewport" content="width=device-width,initial-scale=1"><title>نفحات</title>
+<script>try{var t=localStorage.getItem("arabic-lyrics:theme");if(!t&&matchMedia("(prefers-color-scheme: dark)").matches)t="dark";if(t==="dark"||t==="paper")document.documentElement.className=t;}catch(e){}</script>
 <style>body{margin:0;min-height:100vh;display:flex;align-items:center;justify-content:center;
 font-family:system-ui,sans-serif;background:#f7f7f4;color:#14211c;text-align:center;padding:24px}
+.dark body{background:#0e1613;color:#eef2f0}.paper body{background:#f3ecda;color:#2b2417}
 a{display:inline-block;margin-top:16px;padding:10px 20px;border-radius:999px;background:#047857;
 color:#fff;text-decoration:none}</style></head><body><div><p>هذه الصفحة تتطلّب اتصالًا بالإنترنت.</p>
 <a href="javascript:history.back()">رجوع</a></div></body></html>`;
