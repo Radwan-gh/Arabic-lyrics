@@ -316,6 +316,12 @@ export function useLyricsFeed({ filters, initialFilters, initialItems, initialHa
     setRemovedCount((n) => Math.max(0, n - 1));
   }, []);
 
+  /** يحدّث حقولًا في نشيد ظاهر بالقائمة (مثل الوسوم بعد التعديل السريع) دون إعادة تحميل. */
+  const updateItem = useCallback((id: string, patch: Partial<Omit<LyricsFeedItem, "id">>) => {
+    itemsRef.current = itemsRef.current.map((i) => (i.id === id ? { ...i, ...patch } : i));
+    setItems((prev) => prev.map((i) => (i.id === id ? { ...i, ...patch } : i)));
+  }, []);
+
   /** أكّد الخادم الحذف: تُطلب الصفحات التالية بإزاحة أقلّ بواحد. */
   const confirmRemoved = useCallback(() => {
     deletedRef.current += 1;
@@ -338,7 +344,20 @@ export function useLyricsFeed({ filters, initialFilters, initialItems, initialHa
     // أقصر من الشاشة) يُطلق تحميلًا جديدًا — المراقب لا يُبلغ إلا عند تغيّر التقاطع.
   }, [loadMore, error, items.length]);
 
-  return { items, hasMore, total, loading, error, retry, sentinelRef, removedCount, removeItem, restoreItem, confirmRemoved };
+  return {
+    items,
+    hasMore,
+    total,
+    loading,
+    error,
+    retry,
+    sentinelRef,
+    removedCount,
+    removeItem,
+    restoreItem,
+    confirmRemoved,
+    updateItem,
+  };
 }
 
 // بيانات الجهاز بعد أول قراءة، لاستعمالها فورًا (البحث دون اتصال يعيد التصفية مع
