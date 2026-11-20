@@ -96,7 +96,15 @@ export function QuickTagEditor({
   if (!canModify && tags.length === 0) return null;
 
   const panel = (
-    <TagPickerPanel selected={tags} onToggle={toggle} error={error} busy={saving} onClose={close} touch={sheet} />
+    <TagPickerPanel
+      selected={tags}
+      onToggle={toggle}
+      error={error}
+      busy={saving}
+      onClose={close}
+      touch={sheet}
+      dark={dark && sheet}
+    />
   );
 
   return (
@@ -168,12 +176,25 @@ export function QuickTagEditor({
           onTouchStart={(e) => e.stopPropagation()}
           onTouchEnd={(e) => e.stopPropagation()}
         >
-          <button type="button" aria-label="إغلاق" onClick={close} className="absolute inset-0 bg-[#14211c]/30" />
-          <div className="absolute inset-x-0 bottom-0 flex max-h-[85vh] flex-col gap-3 overflow-y-auto rounded-t-3xl bg-white px-5 pb-8 pt-2.5 shadow-2xl">
-            <span aria-hidden="true" className="mx-auto h-1.5 w-11 rounded-full bg-neutral-200" />
+          <button
+            type="button"
+            aria-label="إغلاق"
+            onClick={close}
+            className={`absolute inset-0 ${dark ? "bg-black/50" : "bg-[#14211c]/30"}`}
+          />
+          <div className={`absolute inset-x-0 bottom-0 flex max-h-[85vh] flex-col gap-3 overflow-y-auto rounded-t-3xl px-5 pb-8 pt-2.5 shadow-2xl ${
+              dark ? "bg-[#17221e]" : "bg-white"
+            }`}>
+            <span aria-hidden="true" className={`mx-auto h-1.5 w-11 rounded-full ${dark ? "bg-white/20" : "bg-neutral-200"}`} />
             <div className="flex items-center justify-between">
-              <span className="text-lg font-extrabold text-[#14211c]">وسوم الأنشودة</span>
-              <button type="button" onClick={close} className={`rounded-lg px-3 py-2 text-sm font-semibold text-emerald-700 ${focusRing}`}>
+              <span className={`text-lg font-extrabold ${dark ? "text-[#f2f5f3]" : "text-[#14211c]"}`}>وسوم الأنشودة</span>
+              <button
+                type="button"
+                onClick={close}
+                className={`rounded-lg px-3 py-2 text-sm font-semibold ${
+                  dark ? "text-emerald-300 focus-visible:ring-offset-[#17221e]" : "text-emerald-700"
+                } ${focusRing}`}
+              >
                 تم
               </button>
             </div>
