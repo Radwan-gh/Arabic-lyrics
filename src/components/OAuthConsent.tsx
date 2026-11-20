@@ -13,7 +13,7 @@ const ROLE_GRANTS: Record<Role, string> = {
 };
 
 const shell =
-  "flex min-h-dvh flex-col justify-center gap-[22px] bg-[#f7f7f4] px-7 text-[#14211c] sm:mx-auto sm:min-h-0 sm:max-w-sm sm:bg-transparent sm:px-0 sm:py-10";
+  "flex min-h-dvh flex-col justify-center gap-[22px] bg-canvas px-7 text-ink sm:mx-auto sm:min-h-0 sm:max-w-sm sm:bg-transparent sm:px-0 sm:py-10";
 
 const bigBtn = `inline-flex h-[54px] w-full items-center justify-center rounded-2xl text-[17px] font-bold transition-colors ${focusRing}`;
 
@@ -37,20 +37,20 @@ export function OAuthConsent({ clientName, redirectHost, userName, role, fields 
         <h1 className="mt-2 text-[28px] font-extrabold sm:text-2xl">
           ربط <bdi>{clientName}</bdi> بحسابك
         </h1>
-        <p className="text-[15px] leading-[1.8] text-[#6b7670]">
+        <p className="text-[15px] leading-[1.8] text-ink-4">
           يطلب هذا التطبيق الوصول إلى «نفحات» باسمك وبصلاحياتك: {ROLE_GRANTS[role]}
         </p>
       </div>
 
-      <dl className="flex flex-col gap-3 rounded-2xl border border-[#e6e6e1] bg-white p-4 text-[15px]">
+      <dl className="flex flex-col gap-3 rounded-2xl border border-line bg-surface p-4 text-[15px]">
         <div className="flex items-center justify-between gap-3">
-          <dt className="text-[#6b7670]">الحساب</dt>
+          <dt className="text-ink-4">الحساب</dt>
           <dd className="truncate font-semibold">
-            {userName} <span className="font-normal text-[#6b7670]">({ROLE_LABELS[role]})</span>
+            {userName} <span className="font-normal text-ink-4">({ROLE_LABELS[role]})</span>
           </dd>
         </div>
         <div className="flex items-center justify-between gap-3">
-          <dt className="text-[#6b7670]">العودة إلى</dt>
+          <dt className="text-ink-4">العودة إلى</dt>
           <dd dir="ltr" className="truncate font-semibold">
             {redirectHost}
           </dd>
@@ -68,13 +68,13 @@ export function OAuthConsent({ clientName, redirectHost, userName, role, fields 
           type="submit"
           name="decision"
           value="deny"
-          className={`${bigBtn} border border-[#e6e6e1] bg-white text-[#3c4a44] hover:bg-[#f2f2ee]`}
+          className={`${bigBtn} border border-line bg-surface text-ink-2 hover:bg-fill-2`}
         >
           رفض
         </button>
       </form>
 
-      <p className="text-sm leading-[1.8] text-[#6b7670]">
+      <p className="text-sm leading-[1.8] text-ink-4">
         لا تسمح إلا إذا كنت أنت من بدأ الربط الآن. يمكنك إيقاف الوصول لاحقاً بحذف الخادم من التطبيق.
       </p>
     </div>
@@ -86,15 +86,15 @@ export function OAuthError({ message }: { message: string }) {
   return (
     <div className={shell}>
       <div className="flex flex-col items-start gap-2">
-        <span className="inline-flex h-14 w-14 items-center justify-center rounded-[18px] bg-red-50 text-red-700">
+        <span className="inline-flex h-14 w-14 items-center justify-center rounded-[18px] bg-red-50 text-danger-strong">
           <TriangleAlert className="h-[26px] w-[26px]" aria-hidden="true" />
         </span>
         <h1 className="mt-2 text-[28px] font-extrabold sm:text-2xl">تعذّر إتمام الربط</h1>
-        <p role="alert" className="text-[15px] leading-[1.8] text-[#6b7670]">
+        <p role="alert" className="text-[15px] leading-[1.8] text-ink-4">
           {message}
         </p>
       </div>
-      <Link href="/" className={`self-start text-[15px] font-semibold text-emerald-700 ${focusRing}`}>
+      <Link href="/" className={`self-start text-[15px] font-semibold text-accent ${focusRing}`}>
         العودة إلى الرئيسية
       </Link>
     </div>

@@ -58,12 +58,12 @@ export function PendingUsers({
 
   return (
     <section aria-labelledby="pending-users-title" className="rounded-xl border border-amber-200 bg-amber-50/60 p-4 sm:p-6">
-      <h2 id="pending-users-title" className="flex items-center gap-2 text-lg font-semibold text-amber-900">
+      <h2 id="pending-users-title" className="flex items-center gap-2 text-lg font-semibold text-warn-deep">
         <Clock className="h-5 w-5" aria-hidden="true" />
         طلبات بانتظار الموافقة
-        <span className="rounded-full bg-amber-200 px-2 text-sm font-bold leading-6 text-amber-900">{users.length}</span>
+        <span className="rounded-full bg-amber-200 px-2 text-sm font-bold leading-6 text-warn-deep">{users.length}</span>
       </h2>
-      <p className="mt-1 text-sm text-amber-800">حسابات أُنشئت عبر Google، ولا يمكن لأصحابها الدخول قبل موافقتك.</p>
+      <p className="mt-1 text-sm text-warn-strong">حسابات أُنشئت عبر Google، ولا يمكن لأصحابها الدخول قبل موافقتك.</p>
 
       <ul className="mt-4 flex flex-col gap-3">
         {users.map((u) => {
@@ -71,7 +71,7 @@ export function PendingUsers({
           return (
             <li
               key={u.id}
-              className={`flex flex-col gap-3 rounded-lg border border-amber-100 bg-white p-4 sm:flex-row sm:items-center ${busy ? "opacity-50" : ""}`}
+              className={`flex flex-col gap-3 rounded-lg border border-amber-100 bg-surface p-4 sm:flex-row sm:items-center ${busy ? "opacity-50" : ""}`}
             >
               <div className="min-w-0 flex-1">
                 <div className="truncate font-bold text-neutral-900">{u.name}</div>

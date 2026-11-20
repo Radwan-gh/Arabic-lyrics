@@ -228,15 +228,15 @@ export function HomeScreen({
     : tagCounts;
 
   return (
-    <div className="flex min-h-dvh flex-col bg-[#f7f7f4] text-[#14211c]">
-      <div className="sticky top-0 z-20 bg-[#f7f7f4]">
+    <div className="flex min-h-dvh flex-col bg-canvas text-ink">
+      <div className="sticky top-0 z-20 bg-canvas">
         {selecting ? (
           <div className="flex h-[70px] items-center gap-1 px-3 pb-3 pt-3.5" role="toolbar" aria-label="أدوات التحديد">
             <button
               type="button"
               onClick={exitSelection}
               aria-label="إلغاء التحديد"
-              className={`inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-xl text-[#3c4a44] transition-colors hover:bg-[#ecece7] ${focusRing}`}
+              className={`inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-xl text-ink-2 transition-colors hover:bg-fill-3 ${focusRing}`}
             >
               <X className="h-6 w-6" aria-hidden="true" />
             </button>
@@ -247,7 +247,7 @@ export function HomeScreen({
               type="button"
               onClick={toggleSelectAll}
               disabled={selectableIds.length === 0}
-              className={`inline-flex h-11 shrink-0 items-center rounded-xl px-3 text-sm font-semibold text-emerald-700 transition-colors hover:bg-emerald-50 disabled:opacity-50 ${focusRing}`}
+              className={`inline-flex h-11 shrink-0 items-center rounded-xl px-3 text-sm font-semibold text-accent transition-colors hover:bg-emerald-50 disabled:opacity-50 ${focusRing}`}
             >
               {allSelected ? "إلغاء الكل" : "تحديد الكل"}
             </button>
@@ -258,7 +258,7 @@ export function HomeScreen({
                 disabled={selected.size === 0}
                 aria-label={selected.size > 0 ? `وسم المحدَّد (${formatLyricsCount(selected.size)})` : "وسم المحدَّد"}
                 title="وسم المحدَّد"
-                className={`inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-xl border border-emerald-600 text-emerald-700 transition-colors hover:bg-emerald-50 disabled:cursor-not-allowed disabled:border-emerald-200 disabled:text-emerald-300 ${focusRing}`}
+                className={`inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-xl border border-emerald-600 text-accent transition-colors hover:bg-emerald-50 disabled:cursor-not-allowed disabled:border-emerald-200 disabled:text-emerald-300 ${focusRing}`}
               >
                 <Tag className="h-5 w-5" aria-hidden="true" />
               </button>
@@ -276,7 +276,7 @@ export function HomeScreen({
           </div>
         ) : (
           <header className="flex items-center justify-between gap-3 px-5 pb-3 pt-3.5">
-            <BrandLogo className="text-[28px] text-emerald-800" />
+            <BrandLogo className="text-[28px] text-accent-strong" />
             <MenuButton />
           </header>
         )}
@@ -290,7 +290,7 @@ export function HomeScreen({
               searchInputRef.current?.blur();
             }}
           >
-            <Search className="pointer-events-none absolute inset-y-0 start-3.5 my-auto h-5 w-5 text-[#9aa39d]" aria-hidden="true" />
+            <Search className="pointer-events-none absolute inset-y-0 start-3.5 my-auto h-5 w-5 text-ink-6" aria-hidden="true" />
             <input
               ref={searchInputRef}
               type="search"
@@ -311,7 +311,7 @@ export function HomeScreen({
               aria-expanded={showRecent}
               placeholder="ابحث عن نشيد أو منشد أو كلمة..."
               aria-label="ابحث عن نشيد أو منشد أو كلمة"
-              className="h-12 w-full rounded-2xl border border-[#e6e6e1] bg-white ps-11 pe-3.5 text-base text-[#14211c] placeholder:text-[#9aa39d] focus:outline-none focus:ring-2 focus:ring-emerald-100"
+              className="h-12 w-full rounded-2xl border border-line bg-surface ps-11 pe-3.5 text-base text-ink placeholder:text-ink-6 focus:outline-none focus:ring-2 focus:ring-emerald-100"
             />
             {showRecent && (
               <RecentSearches
@@ -328,7 +328,7 @@ export function HomeScreen({
         </div>
 
         <div className="flex items-center gap-2 overflow-x-auto px-5 pb-3.5">
-          <div className="flex h-[34px] shrink-0 items-center gap-1.5 rounded-full border border-dashed border-[#c8d1cc] bg-white px-3 text-[#6b7670]">
+          <div className="flex h-[34px] shrink-0 items-center gap-1.5 rounded-full border border-dashed border-line-3 bg-surface px-3 text-ink-4">
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
               <path d="M9 5H2v7l6.29 6.29c.94.94 2.48.94 3.42 0l3.58-3.58c.94-.94.94-2.48 0-3.42L9 5Z" />
               <path d="M6 9.01V9" />
@@ -338,7 +338,7 @@ export function HomeScreen({
               onChange={(e) => setTagQuery(e.target.value)}
               placeholder="ابحث عن وسم"
               aria-label="ابحث عن وسم لعرضه في الشريط"
-              className="w-[74px] border-0 bg-transparent text-sm text-[#14211c] outline-none placeholder:text-[#9aa39d]"
+              className="w-[74px] border-0 bg-transparent text-sm text-ink outline-none placeholder:text-ink-6"
             />
           </div>
           <button
@@ -346,11 +346,11 @@ export function HomeScreen({
             onClick={clearTags}
             aria-pressed={selectedTags.length === 0}
             className={`inline-flex h-[34px] shrink-0 items-center gap-1.5 rounded-full px-3.5 text-sm ${
-              selectedTags.length === 0 ? "bg-emerald-700 font-medium text-white" : "border border-[#e6e6e1] bg-white text-[#3c4a44]"
+              selectedTags.length === 0 ? "bg-emerald-700 font-medium text-white" : "border border-line bg-surface text-ink-2"
             } ${focusRing}`}
           >
             الكل
-            <span className={selectedTags.length === 0 ? "text-xs text-white/75" : "text-xs text-[#9aa39d]"}>
+            <span className={selectedTags.length === 0 ? "text-xs text-white/75" : "text-xs text-ink-6"}>
               {Math.max(0, grandTotal - removedCount).toLocaleString("ar-EG")}
             </span>
           </button>
@@ -363,22 +363,22 @@ export function HomeScreen({
                 onClick={() => toggleTag(t.tag)}
                 aria-pressed={active}
                 className={`inline-flex h-[34px] shrink-0 items-center gap-1.5 rounded-full px-3.5 text-sm ${
-                  active ? "bg-emerald-700 font-medium text-white" : "border border-[#e6e6e1] bg-white text-[#3c4a44]"
+                  active ? "bg-emerald-700 font-medium text-white" : "border border-line bg-surface text-ink-2"
                 } ${focusRing}`}
               >
                 {t.tag}
-                <span className={active ? "text-xs text-white/75" : "text-xs text-[#9aa39d]"}>{t.count.toLocaleString("ar-EG")}</span>
+                <span className={active ? "text-xs text-white/75" : "text-xs text-ink-6"}>{t.count.toLocaleString("ar-EG")}</span>
               </button>
             );
           })}
         </div>
       </div>
 
-      <div className="flex-1 border-t border-[#e6e6e1] bg-white">
-        <div className="flex flex-wrap items-center justify-between gap-2 bg-[#f7f7f4] px-5 py-2.5">
-          <LyricsSortSelect sort={sort} query={query} tags={selectedTags} className="text-[13px] text-[#3c4a44]" />
+      <div className="flex-1 border-t border-line bg-surface">
+        <div className="flex flex-wrap items-center justify-between gap-2 bg-canvas px-5 py-2.5">
+          <LyricsSortSelect sort={sort} query={query} tags={selectedTags} className="text-[13px] text-ink-2" />
           <div className="flex items-center gap-1">
-            <span className="text-[13px] text-[#6b7670]">
+            <span className="text-[13px] text-ink-4">
               {isFiltered ? "نتائج البحث · " : ""}
               {total.toLocaleString("ar-EG")} نشيداً
             </span>
@@ -386,7 +386,7 @@ export function HomeScreen({
               <button
                 type="button"
                 onClick={() => startSelection()}
-                className={`-me-2 inline-flex h-9 items-center rounded-lg px-2 text-[13px] font-semibold text-emerald-700 transition-colors hover:bg-emerald-50 ${focusRing}`}
+                className={`-me-2 inline-flex h-9 items-center rounded-lg px-2 text-[13px] font-semibold text-accent transition-colors hover:bg-emerald-50 ${focusRing}`}
               >
                 تحديد
               </button>
@@ -395,15 +395,15 @@ export function HomeScreen({
         </div>
 
         {peekId && (
-          <div className="flex items-center gap-3 border-b border-emerald-100 bg-emerald-50 py-2 pe-2 ps-5 text-[13px] leading-6 text-emerald-900">
-            <ArrowRight className="h-5 w-5 shrink-0 text-emerald-700" aria-hidden="true" />
+          <div className="flex items-center gap-3 border-b border-emerald-100 bg-emerald-50 py-2 pe-2 ps-5 text-[13px] leading-6 text-accent-deep">
+            <ArrowRight className="h-5 w-5 shrink-0 text-accent" aria-hidden="true" />
             <p className="min-w-0 flex-1">
               اسحب النشيد نحو اليمين لحذفه، أو اضغط عليه مطوّلًا لتحديد عدة أناشيد.
             </p>
             <button
               type="button"
               onClick={swipeHint.dismiss}
-              className={`inline-flex h-11 shrink-0 items-center rounded-xl px-3 text-sm font-semibold text-emerald-700 transition-colors hover:bg-emerald-100 ${focusRing}`}
+              className={`inline-flex h-11 shrink-0 items-center rounded-xl px-3 text-sm font-semibold text-accent transition-colors hover:bg-emerald-100 ${focusRing}`}
             >
               فهمت
             </button>
@@ -411,19 +411,19 @@ export function HomeScreen({
         )}
 
         {items.length === 0 && !hasMore ? (
-          <p className="p-8 text-center text-sm text-[#6b7670]">{isFiltered ? "لا توجد نتائج مطابقة" : "لا توجد أناشيد بعد"}</p>
+          <p className="p-8 text-center text-sm text-ink-4">{isFiltered ? "لا توجد نتائج مطابقة" : "لا توجد أناشيد بعد"}</p>
         ) : (
           items.map((item) => {
             if (selecting) {
               if (!item.canModify) {
                 // لا صلاحية لحذفه: يبقى ظاهرًا بلا تفاعل، فلا يغادر المستخدم وضع التحديد بلمسة.
                 return (
-                  <div key={item.id} aria-disabled="true" className="border-b border-[#f0f0ec] opacity-50">
+                  <div key={item.id} aria-disabled="true" className="border-b border-fill opacity-50">
                     <div className="flex min-h-16 items-center gap-3 px-5 py-3">
                       <span className="h-6 w-6 shrink-0" aria-hidden="true" />
                       <div className="min-w-0 flex-1">
                         <div className="truncate text-[17px] font-bold leading-[1.4]">{item.title}</div>
-                        <div className="mt-0.5 truncate text-[13px] text-[#6b7670]">
+                        <div className="mt-0.5 truncate text-[13px] text-ink-4">
                           {[item.artist, item.tags[0]].filter(Boolean).join(" · ")}
                         </div>
                       </div>
@@ -433,27 +433,27 @@ export function HomeScreen({
               }
               const isSelected = selected.has(item.id);
               return (
-                <SwipeToDelete key={item.id} title={item.title} onDelete={() => {}} disabled className="border-b border-[#f0f0ec]">
+                <SwipeToDelete key={item.id} title={item.title} onDelete={() => {}} disabled className="border-b border-fill">
                   <button
                     type="button"
                     role="checkbox"
                     aria-checked={isSelected}
                     onClick={() => toggleSelected(item.id)}
                     className={`flex min-h-16 w-full items-center gap-3 px-5 py-3 text-start transition-colors ${
-                      isSelected ? "bg-emerald-50" : "bg-white"
+                      isSelected ? "bg-emerald-50" : "bg-surface"
                     } focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-emerald-500`}
                   >
                     <span
                       aria-hidden="true"
                       className={`inline-flex h-6 w-6 shrink-0 items-center justify-center rounded-full border-2 transition-colors ${
-                        isSelected ? "border-emerald-700 bg-emerald-700 text-white" : "border-[#c8d1cc] bg-white"
+                        isSelected ? "border-emerald-700 bg-emerald-700 text-white" : "border-line-3 bg-surface"
                       }`}
                     >
                       {isSelected && <Check className="h-4 w-4" strokeWidth={3} />}
                     </span>
                     <span className="min-w-0 flex-1">
                       <span className="block truncate text-[17px] font-bold leading-[1.4]">{item.title}</span>
-                      <span className="mt-0.5 block truncate text-[13px] text-[#6b7670]">
+                      <span className="mt-0.5 block truncate text-[13px] text-ink-4">
                         {[item.artist, item.tags[0]].filter(Boolean).join(" · ")}
                       </span>
                     </span>
@@ -465,7 +465,7 @@ export function HomeScreen({
               <div className="flex min-h-16 items-center gap-2.5 px-5 py-3">
                 <Link href={`/lyrics/${item.id}`} draggable={false} className={`min-w-0 flex-1 rounded-sm ${focusRing}`}>
                   <div className="truncate text-[17px] font-bold leading-[1.4]">{item.title}</div>
-                  <div className="mt-0.5 truncate text-[13px] text-[#6b7670]">
+                  <div className="mt-0.5 truncate text-[13px] text-ink-4">
                     {[item.artist, item.tags[0]].filter(Boolean).join(" · ")}
                   </div>
                 </Link>
@@ -484,12 +484,12 @@ export function HomeScreen({
                 }}
                 peek={item.id === peekId}
                 onLongPress={() => startSelection(item.id)}
-                className="border-b border-[#f0f0ec]"
+                className="border-b border-fill"
               >
                 {row}
               </SwipeToDelete>
             ) : (
-              <div key={item.id} className="border-b border-[#f0f0ec]">
+              <div key={item.id} className="border-b border-fill">
                 {row}
               </div>
             );
@@ -499,19 +499,19 @@ export function HomeScreen({
         {hasMore && (
           <div ref={sentinelRef} className="flex items-center justify-center py-6">
             {error ? (
-              <div className="flex flex-col items-center gap-2 text-sm text-[#6b7670]" role="alert">
+              <div className="flex flex-col items-center gap-2 text-sm text-ink-4" role="alert">
                 <span>تعذّر تحميل المزيد. تحقّق من اتصالك ثم أعد المحاولة.</span>
-                <button type="button" onClick={retry} className={`rounded-full border border-[#e6e6e1] bg-white px-4 py-1.5 text-sm font-medium text-emerald-700 ${focusRing}`}>
+                <button type="button" onClick={retry} className={`rounded-full border border-line bg-surface px-4 py-1.5 text-sm font-medium text-accent ${focusRing}`}>
                   إعادة المحاولة
                 </button>
               </div>
             ) : (
-              <Spinner label="جارٍ تحميل المزيد…" className="text-sm text-[#6b7670]" />
+              <Spinner label="جارٍ تحميل المزيد…" className="text-sm text-ink-4" />
             )}
           </div>
         )}
         {!hasMore && !loading && items.length > 0 && (
-          <p className="py-6 text-center text-[13px] text-[#9aa39d]">— نهاية القائمة —</p>
+          <p className="py-6 text-center text-[13px] text-ink-6">— نهاية القائمة —</p>
         )}
       </div>
 

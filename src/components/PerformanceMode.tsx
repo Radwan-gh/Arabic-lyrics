@@ -59,7 +59,7 @@ export function PerformanceMode({
   return (
     <div
       dir="rtl"
-      className="fixed inset-0 z-50 flex flex-col bg-[#0e1613] text-[#f2f5f3]"
+      className="theme-dark fixed inset-0 z-50 flex flex-col bg-[#0e1613] text-[#f2f5f3]"
       onTouchStart={onTouchStart}
       onTouchEnd={onTouchEnd}
     >

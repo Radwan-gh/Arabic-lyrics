@@ -70,13 +70,13 @@ export function TagPicker({
         {value.map((tag) => (
           <span
             key={tag}
-            className="flex items-center gap-1 rounded-full bg-emerald-50 px-2.5 py-1 text-xs font-medium text-emerald-700"
+            className="flex items-center gap-1 rounded-full bg-emerald-50 px-2.5 py-1 text-xs font-medium text-accent"
           >
             #{tag}
             <button
               type="button"
               onClick={() => removeTag(tag)}
-              className={`inline-flex rounded-full leading-none text-emerald-600 hover:text-emerald-900 ${focusRing}`}
+              className={`inline-flex rounded-full leading-none text-accent hover:text-accent-deep ${focusRing}`}
               aria-label={`إزالة ${tag}`}
             >
               <X className="h-3.5 w-3.5" aria-hidden="true" />
@@ -97,7 +97,7 @@ export function TagPicker({
       </div>
 
       {open && (suggestions.length > 0 || (allowCreate && input.trim())) && (
-        <ul className="absolute z-30 mt-1 w-full overflow-hidden rounded-lg border border-neutral-200 bg-white shadow-lg">
+        <ul className="absolute z-30 mt-1 w-full overflow-hidden rounded-lg border border-neutral-200 bg-surface shadow-lg">
           {suggestions.map((tag) => (
             <li key={tag}>
               <button
@@ -114,7 +114,7 @@ export function TagPicker({
               <button
                 type="button"
                 onClick={() => addTag(input.trim())}
-                className={`block w-full px-3 py-2 text-start text-sm text-emerald-700 hover:bg-emerald-50 ${focusRing}`}
+                className={`block w-full px-3 py-2 text-start text-sm text-accent hover:bg-emerald-50 ${focusRing}`}
               >
                 إضافة وسم جديد: &quot;{input.trim()}&quot;
               </button>

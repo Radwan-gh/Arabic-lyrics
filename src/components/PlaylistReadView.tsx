@@ -20,7 +20,7 @@ export function PlaylistReadView({ id, title, description, isPublic, items }: Pr
       <div className="flex flex-col gap-2 border-b border-neutral-200 pb-4">
         <Link
           href={`/playlists/${id}`}
-          className={`inline-flex items-center gap-1 rounded-sm text-sm text-neutral-600 hover:text-emerald-700 ${focusRing}`}
+          className={`inline-flex items-center gap-1 rounded-sm text-sm text-neutral-600 hover:text-accent ${focusRing}`}
         >
           <ChevronRight className="h-4 w-4" aria-hidden="true" /> إدارة الوصلة
         </Link>

@@ -15,14 +15,14 @@ const chipCls: Record<Variant, string> = {
   card: "rounded-full bg-neutral-100 px-2 py-0.5 text-[11px] text-neutral-600 hover:bg-neutral-200",
   detail: "rounded-full bg-neutral-100 px-3 py-1 text-xs text-neutral-600 hover:bg-neutral-200",
   reader:
-    "inline-flex h-[30px] items-center rounded-full border border-[#e6e6e1] bg-white px-3 text-[13px] text-[#5c6660]",
+    "inline-flex h-[30px] items-center rounded-full border border-line bg-surface px-3 text-[13px] text-ink-3",
 };
 
 // شاشة القراءة بالمظهر الداكن (خلفية ‎#0e1613).
 const readerDarkChipCls =
   "inline-flex h-[30px] items-center rounded-full border border-white/15 bg-white/[0.06] px-3 text-[13px] text-[#c9d3ce]";
 const readerDarkAddCls = "border-emerald-400/60 text-emerald-300 hover:border-emerald-300 hover:bg-emerald-400/10";
-const addToneCls = "border-emerald-400 text-emerald-700 hover:border-emerald-600 hover:bg-emerald-50";
+const addToneCls = "border-emerald-400 text-accent hover:border-emerald-600 hover:bg-emerald-50";
 
 const addCls: Record<Variant, string> = {
   card: "h-[22px] px-2 text-[11px]",
@@ -167,7 +167,7 @@ export function QuickTagEditor({
       )}
 
       {!open && error && (
-        <span role="alert" className={`text-xs ${dark && sheet ? "text-red-300" : "text-red-600"}`}>
+        <span role="alert" className={`text-xs ${dark && sheet ? "text-red-300" : "text-danger"}`}>
           {error}
         </span>
       )}
@@ -177,7 +177,7 @@ export function QuickTagEditor({
           role="dialog"
           aria-label="إضافة وسوم"
           // ارتفاع ثابت: القائمة تُمرَّر داخله ولا يتغيّر حجم اللوح مع البحث.
-          className="absolute start-0 top-full z-20 mt-1 flex h-[22rem] w-72 flex-col rounded-xl border border-neutral-200 bg-white p-2 shadow-lg"
+          className="absolute start-0 top-full z-20 mt-1 flex h-[22rem] w-72 flex-col rounded-xl border border-neutral-200 bg-surface p-2 shadow-lg"
         >
           {panel}
         </div>

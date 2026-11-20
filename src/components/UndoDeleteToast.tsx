@@ -14,7 +14,7 @@ interface UndoDeleteToastProps {
 }
 
 const toastFocus =
-  "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-300 focus-visible:ring-offset-2 focus-visible:ring-offset-neutral-900";
+  "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-300 focus-visible:ring-offset-2 focus-visible:ring-offset-[#171717]";
 
 /** إشعار «حُذف النشيد — تراجع» بعد الحذف السريع من القائمة (راجع useUndoableDelete). */
 export function UndoDeleteToast({ toast, onUndo, onDismiss, className = "" }: UndoDeleteToastProps) {
@@ -28,7 +28,7 @@ export function UndoDeleteToast({ toast, onUndo, onDismiss, className = "" }: Un
   return (
     <div role="status" aria-live="polite" className={`pointer-events-none fixed z-40 ${className}`}>
       {toast && (
-        <div className="pointer-events-auto flex items-center gap-2 rounded-xl bg-neutral-900 py-1.5 pe-1.5 ps-4 text-sm text-white shadow-lg">
+        <div className="pointer-events-auto flex items-center gap-2 rounded-xl bg-[#171717] py-1.5 pe-1.5 ps-4 text-sm text-white shadow-lg dark:ring-1 dark:ring-white/10">
           <p className="min-w-0 flex-1 truncate">
             {toast.kind === "deleted" ? "حُذف" : "تعذّر حذف"}{" "}
             {toast.count > 1 ? (
@@ -49,13 +49,13 @@ export function UndoDeleteToast({ toast, onUndo, onDismiss, className = "" }: Un
               تراجع
             </button>
           ) : (
-            <span className="shrink-0 text-xs text-neutral-300">تحقّق من اتصالك</span>
+            <span className="shrink-0 text-xs text-[#d4d4d4]">تحقّق من اتصالك</span>
           )}
           <button
             type="button"
             onClick={onDismiss}
             aria-label="إغلاق الإشعار"
-            className={`inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-lg text-neutral-300 transition-colors hover:bg-white/10 hover:text-white ${toastFocus}`}
+            className={`inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-lg text-[#d4d4d4] transition-colors hover:bg-white/10 hover:text-white ${toastFocus}`}
           >
             <X className="h-5 w-5" aria-hidden="true" />
           </button>

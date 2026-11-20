@@ -72,9 +72,9 @@ export function AdminTagsScreen({ initialTags }: { initialTags: TagRow[] }) {
   const visible = q ? tags.filter((row) => row.tag.toLowerCase().includes(q)) : tags;
 
   return (
-    <div className="flex min-h-dvh flex-col bg-[#f7f7f4] text-[#14211c]">
+    <div className="flex min-h-dvh flex-col bg-canvas text-ink">
       <header className="flex items-center gap-2 px-3 pb-3 pt-2">
-        <button type="button" onClick={() => router.back()} aria-label="رجوع" className={`inline-flex h-11 w-11 items-center justify-center rounded-xl text-[#3c4a44] ${focusRing}`}>
+        <button type="button" onClick={() => router.back()} aria-label="رجوع" className={`inline-flex h-11 w-11 items-center justify-center rounded-xl text-ink-2 ${focusRing}`}>
           <ChevronRight className="h-[22px] w-[22px]" aria-hidden="true" />
         </button>
         <span className="text-xl font-extrabold">إدارة الوسوم</span>
@@ -84,21 +84,21 @@ export function AdminTagsScreen({ initialTags }: { initialTags: TagRow[] }) {
 
       <div className="px-5 pb-3.5">
         <div className="relative">
-          <Search className="pointer-events-none absolute inset-y-0 start-[14px] my-auto h-5 w-5 text-[#9aa39d]" aria-hidden="true" />
+          <Search className="pointer-events-none absolute inset-y-0 start-[14px] my-auto h-5 w-5 text-ink-6" aria-hidden="true" />
           <input
             type="search"
             value={query}
             onChange={(e) => setQuery(e.target.value)}
             placeholder="ابحث عن وسم..."
             aria-label="ابحث عن وسم"
-            className="h-12 w-full rounded-2xl border border-[#e6e6e1] bg-white ps-[44px] pe-3.5 text-base text-[#14211c] placeholder:text-[#9aa39d] focus:outline-none focus:ring-2 focus:ring-emerald-100"
+            className="h-12 w-full rounded-2xl border border-line bg-surface ps-[44px] pe-3.5 text-base text-ink placeholder:text-ink-6 focus:outline-none focus:ring-2 focus:ring-emerald-100"
           />
         </div>
       </div>
 
-      <div className="flex-1 border-t border-[#e6e6e1] bg-white">
+      <div className="flex-1 border-t border-line bg-surface">
         {visible.length === 0 ? (
-          <p className="p-8 text-center text-sm text-[#6b7670]">{q ? "لا وسوم مطابقة" : "لا توجد وسوم بعد"}</p>
+          <p className="p-8 text-center text-sm text-ink-4">{q ? "لا وسوم مطابقة" : "لا توجد وسوم بعد"}</p>
         ) : (
           visible.map((row) => {
             const busy = busyTag === row.tag;
@@ -106,7 +106,7 @@ export function AdminTagsScreen({ initialTags }: { initialTags: TagRow[] }) {
             return (
               <div
                 key={row.tag}
-                className={`flex min-h-16 items-center gap-2.5 border-b border-[#f0f0ec] px-5 py-3 ${editing ? "bg-[#fbfbf9]" : ""} ${busy ? "opacity-50" : ""}`}
+                className={`flex min-h-16 items-center gap-2.5 border-b border-fill px-5 py-3 ${editing ? "bg-raised" : ""} ${busy ? "opacity-50" : ""}`}
               >
                 {editing ? (
                   <>
@@ -119,7 +119,7 @@ export function AdminTagsScreen({ initialTags }: { initialTags: TagRow[] }) {
                         if (e.key === "Enter") submitRename(row.tag);
                         if (e.key === "Escape") setEditingTag(null);
                       }}
-                      className="h-11 min-w-0 flex-1 rounded-xl border border-emerald-700 bg-white px-3 text-base text-[#14211c] focus:outline-none"
+                      className="h-11 min-w-0 flex-1 rounded-xl border border-emerald-700 bg-surface px-3 text-base text-ink focus:outline-none"
                     />
                     <button
                       type="button"
@@ -134,14 +134,14 @@ export function AdminTagsScreen({ initialTags }: { initialTags: TagRow[] }) {
                   <>
                     <div className="min-w-0 flex-1">
                       <div className="truncate text-[17px] font-bold">{row.tag}</div>
-                      <div className="mt-0.5 text-[13px] text-[#6b7670]">{row.count.toLocaleString("ar-EG")} نشيداً</div>
+                      <div className="mt-0.5 text-[13px] text-ink-4">{row.count.toLocaleString("ar-EG")} نشيداً</div>
                     </div>
                     <button
                       type="button"
                       disabled={busy}
                       onClick={() => startRename(row.tag)}
                       aria-label={`إعادة تسمية ${row.tag}`}
-                      className={`inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-xl text-[#3c4a44] disabled:opacity-50 ${focusRing}`}
+                      className={`inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-xl text-ink-2 disabled:opacity-50 ${focusRing}`}
                     >
                       <Pencil className="h-[19px] w-[19px]" aria-hidden="true" />
                     </button>
@@ -160,7 +160,7 @@ export function AdminTagsScreen({ initialTags }: { initialTags: TagRow[] }) {
             );
           })
         )}
-        <p className="px-5 py-3.5 text-[13px] leading-[1.8] text-[#8a938d]">
+        <p className="px-5 py-3.5 text-[13px] leading-[1.8] text-ink-5">
           إعادة التسمية تُحدّث كل الأناشيد المرتبطة. الحذف يزيل الوسم منها جميعاً.
         </p>
       </div>

@@ -2,6 +2,110 @@
 @tailwind components;
 @tailwind utilities;
 
+/* ─────────────────────────────────────────────────────────────────────────────
+   ألوان الواجهة (قنوات RGB) — تقرؤها أدوات Tailwind (راجع tailwind.config.ts).
+   ‎html.dark‎ يقلبها للموقع كله؛ ‎.theme-light / .theme-dark‎ يثبّتان مظهرًا لجزء من
+   الصفحة بغضّ النظر عن مظهر الموقع (شاشة القراءة بمظهرها الخاص، وضع الأداء،
+   بطاقة تصدير الصورة).
+   ───────────────────────────────────────────────────────────────────────────── */
+:root,
+.theme-light {
+  color-scheme: light;
+  --c-surface: 255 255 255;
+  --c-canvas: 247 247 244;
+  --c-raised: 251 251 249;
+  --c-scrim: 20 33 28;
+  --c-ink: 20 33 28;
+  --c-ink-2: 60 74 68;
+  --c-ink-3: 92 102 96;
+  --c-ink-4: 107 118 112;
+  --c-ink-5: 138 147 141;
+  --c-ink-6: 154 163 157;
+  --c-ink-7: 195 201 197;
+  --c-line: 230 230 225;
+  --c-line-2: 217 217 211;
+  --c-line-3: 200 209 204;
+  --c-fill: 240 240 236;
+  --c-fill-2: 242 242 238;
+  --c-fill-3: 236 236 231;
+  --c-accent: 4 120 87;
+  --c-accent-strong: 6 95 70;
+  --c-accent-deep: 6 78 59;
+  --c-danger: 220 38 38;
+  --c-danger-strong: 185 28 28;
+  --c-warn: 180 83 9;
+  --c-warn-strong: 146 64 14;
+  --c-warn-deep: 120 53 15;
+  --c-neutral-50: 250 250 250;
+  --c-neutral-100: 245 245 245;
+  --c-neutral-200: 229 229 229;
+  --c-neutral-300: 212 212 212;
+  --c-neutral-400: 163 163 163;
+  --c-neutral-500: 115 115 115;
+  --c-neutral-600: 82 82 82;
+  --c-neutral-700: 64 64 64;
+  --c-neutral-800: 38 38 38;
+  --c-neutral-900: 23 23 23;
+  --c-neutral-950: 10 10 10;
+  --c-emerald-50: 236 253 245;
+  --c-emerald-100: 209 250 229;
+  --c-emerald-200: 167 243 208;
+  --c-red-50: 254 242 242;
+  --c-red-100: 254 226 226;
+  --c-amber-50: 255 251 235;
+  --c-amber-100: 254 243 199;
+  --c-amber-200: 253 230 138;
+}
+
+html.dark,
+.theme-dark {
+  color-scheme: dark;
+  --c-surface: 23 34 30;
+  --c-canvas: 14 22 19;
+  --c-raised: 30 43 38;
+  --c-scrim: 0 0 0;
+  --c-ink: 238 242 240;
+  --c-ink-2: 195 205 200;
+  --c-ink-3: 168 179 174;
+  --c-ink-4: 150 162 156;
+  --c-ink-5: 126 139 133;
+  --c-ink-6: 110 123 117;
+  --c-ink-7: 78 92 86;
+  --c-line: 38 51 45;
+  --c-line-2: 52 67 60;
+  --c-line-3: 62 79 71;
+  --c-fill: 30 42 37;
+  --c-fill-2: 32 45 40;
+  --c-fill-3: 38 51 45;
+  --c-accent: 52 211 153;
+  --c-accent-strong: 110 231 183;
+  --c-accent-deep: 167 243 208;
+  --c-danger: 248 113 113;
+  --c-danger-strong: 252 165 165;
+  --c-warn: 251 191 36;
+  --c-warn-strong: 252 211 77;
+  --c-warn-deep: 253 230 138;
+  --c-neutral-50: 18 28 24;
+  --c-neutral-100: 26 38 33;
+  --c-neutral-200: 38 51 45;
+  --c-neutral-300: 52 67 60;
+  --c-neutral-400: 107 122 115;
+  --c-neutral-500: 139 154 147;
+  --c-neutral-600: 165 178 172;
+  --c-neutral-700: 195 205 200;
+  --c-neutral-800: 217 224 220;
+  --c-neutral-900: 238 242 240;
+  --c-neutral-950: 247 249 248;
+  --c-emerald-50: 13 42 32;
+  --c-emerald-100: 17 56 42;
+  --c-emerald-200: 22 78 58;
+  --c-red-50: 46 20 20;
+  --c-red-100: 60 24 24;
+  --c-amber-50: 40 32 12;
+  --c-amber-100: 52 41 14;
+  --c-amber-200: 74 58 18;
+}
+
 html,
 body {
   height: 100%;
@@ -31,14 +135,16 @@ body {
 
 /* Blend Quill's Snow theme with the app's rounded/neutral-bordered inputs */
 .ql-toolbar.ql-snow {
-  border-color: rgb(212 212 212);
+  border-color: rgb(var(--c-neutral-300));
   border-top-left-radius: 0.5rem;
   border-top-right-radius: 0.5rem;
-  background: white;
+  background: rgb(var(--c-surface));
 }
 
 .ql-container.ql-snow {
-  border-color: rgb(212 212 212);
+  border-color: rgb(var(--c-neutral-300));
+  background: rgb(var(--c-surface));
+  color: rgb(var(--c-neutral-900));
   border-bottom-left-radius: 0.5rem;
   border-bottom-right-radius: 0.5rem;
   font-family: inherit;
@@ -56,7 +162,7 @@ body {
 
 .ql-editor.ql-blank::before {
   font-style: normal;
-  color: rgb(163 163 163);
+  color: rgb(var(--c-neutral-400));
   right: 15px !important;
   left: auto !important;
   text-align: right !important;
@@ -70,4 +176,25 @@ body {
 .ql-toolbar.ql-snow .ql-formats {
   margin-right: 0 !important;
   margin-left: 15px !important;
+}
+
+/* أيقونات شريط Quill مرسومة بألوان ثابتة (#444) — تتبع لون النص في الوضع الداكن. */
+.dark .ql-snow .ql-stroke {
+  stroke: rgb(var(--c-neutral-700));
+}
+.dark .ql-snow .ql-fill {
+  fill: rgb(var(--c-neutral-700));
+}
+.dark .ql-snow .ql-picker {
+  color: rgb(var(--c-neutral-700));
+}
+.dark .ql-snow .ql-picker-options {
+  background: rgb(var(--c-surface));
+}
+
+/* الحقول بلا خلفية صريحة تأخذ في الوضع الداكن رماديّ المتصفّح (color-scheme: dark)
+   فتبدو رقعةً غريبة — تُترك شفّافة لتأخذ لون حاويتها. ‎:where‎ يُبقي أولويتها صفرًا
+   فتغلبها أي أداة Tailwind (‎bg-surface‎ مثلًا). */
+:where(html.dark, .theme-dark) :where(input:not([type="checkbox"], [type="radio"], [type="range"]), textarea, select) {
+  background-color: transparent;
 }

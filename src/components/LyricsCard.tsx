@@ -38,11 +38,11 @@ export function LyricsCard({
   const [expanded, setExpanded] = useState(false);
 
   return (
-    <li className="relative rounded-xl border border-neutral-200 bg-white p-4 shadow-sm transition hover:-translate-y-0.5 hover:shadow-md focus-within:z-10 motion-reduce:transition-none motion-reduce:hover:translate-y-0">
+    <li className="relative rounded-xl border border-neutral-200 bg-surface p-4 shadow-sm transition hover:-translate-y-0.5 hover:shadow-md focus-within:z-10 motion-reduce:transition-none motion-reduce:hover:translate-y-0">
       <div className="flex items-start justify-between gap-2">
         <Link href={`/lyrics/${id}`} className={`block min-w-0 flex-1 rounded-sm ${focusRing}`}>
           <h2 className="truncate text-lg font-bold text-neutral-900 font-naskh">{title}</h2>
-          {artist && <p className="truncate text-sm text-emerald-700">{artist}</p>}
+          {artist && <p className="truncate text-sm text-accent">{artist}</p>}
           {album && <p className="truncate text-xs text-neutral-500">{album}</p>}
         </Link>
         {action}
@@ -63,7 +63,7 @@ export function LyricsCard({
         type="button"
         onClick={() => setExpanded((v) => !v)}
         aria-expanded={expanded}
-        className={`mt-2 inline-flex items-center gap-1 rounded-sm text-xs font-medium text-emerald-700 hover:underline ${focusRing}`}
+        className={`mt-2 inline-flex items-center gap-1 rounded-sm text-xs font-medium text-accent hover:underline ${focusRing}`}
       >
         {expanded ? "إخفاء الأنشودة" : "عرض الأنشودة كاملة"}
         {expanded ? (

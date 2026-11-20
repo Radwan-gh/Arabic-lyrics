@@ -17,6 +17,7 @@ import {
   X,
   User,
   ChevronDown,
+  Moon,
   type LucideIcon,
 } from "lucide-react";
 import type { SessionPayload } from "@/lib/jwt";
@@ -26,6 +27,8 @@ import { PWAInstallButton, PWAInstallMenuItem } from "@/components/PWAInstallBut
 import { OfflineStatusLine } from "@/components/OfflineStatusLine";
 import { useMenu } from "@/lib/menu-context";
 import { clearOfflineSession } from "@/lib/offline-sync";
+import { setSiteTheme } from "@/lib/theme";
+import { useSiteTheme } from "@/lib/use-site-theme";
 
 /**
  * `compact`: الشاشات الغامرة على الموبايل (راجع AppChrome) تُخفي شريط Navbar
@@ -42,6 +45,8 @@ export function Navbar({
   compact?: boolean;
 }) {
   const { open, setOpen } = useMenu();
+  // اشتراك دائم (Navbar مُركَّب في كل الصفحات) ليتبع الموقع تغيّر مظهر النظام حيًّا.
+  useSiteTheme();
   const headerRef = useRef<HTMLDivElement>(null);
   const router = useRouter();
 
@@ -88,12 +93,12 @@ export function Navbar({
   return (
     <div ref={headerRef}>
       <header
-        className={`sticky top-0 z-20 border-b border-neutral-200 bg-white/90 backdrop-blur ${compact ? "max-sm:hidden" : ""}`}
+        className={`sticky top-0 z-20 border-b border-neutral-200 bg-surface/90 backdrop-blur ${compact ? "max-sm:hidden" : ""}`}
       >
       <div className="mx-auto flex max-w-5xl items-center justify-between px-4 py-3">
         <Link
           href="/"
-          className={`rounded-sm text-emerald-800 ${focusRing}`}
+          className={`rounded-sm text-accent-strong ${focusRing}`}
           onClick={() => setOpen(false)}
         >
           <BrandLogo className="text-[28px]" />
@@ -117,7 +122,7 @@ export function Navbar({
           <div className="relative hidden sm:block">
             <button
               type="button"
-              className={`inline-flex h-11 items-center gap-2 rounded-lg border border-neutral-200 bg-white px-3 text-sm font-medium text-neutral-700 transition-colors hover:bg-neutral-50 hover:text-emerald-700 ${focusRing}`}
+              className={`inline-flex h-11 items-center gap-2 rounded-lg border border-neutral-200 bg-surface px-3 text-sm font-medium text-neutral-700 transition-colors hover:bg-neutral-50 hover:text-accent ${focusRing}`}
               onClick={() => setOpen((v) => !v)}
               aria-label={open ? "إغلاق القائمة" : "فتح القائمة"}
               aria-expanded={open}
@@ -134,7 +139,7 @@ export function Navbar({
             {open && (
               <nav
                 id="desktop-nav"
-                className="absolute end-0 top-full z-30 mt-2 flex w-60 origin-top animate-nav-drop flex-col gap-1 rounded-lg border border-neutral-200 bg-white p-2 shadow-lg"
+                className="absolute end-0 top-full z-30 mt-2 flex w-60 origin-top animate-nav-drop flex-col gap-1 rounded-lg border border-neutral-200 bg-surface p-2 shadow-lg"
               >
                 <NavLinks user={user} pendingUsers={pendingUsers} onLogout={handleLogout} mobile onNavigate={() => setOpen(false)} />
               </nav>
@@ -154,7 +159,7 @@ export function Navbar({
           <button
             type="button"
             aria-label="إغلاق القائمة"
-            className="absolute inset-0 bg-[#14211c]/35"
+            className="absolute inset-0 bg-scrim/35"
             onClick={() => setOpen(false)}
           />
           <nav
@@ -162,10 +167,10 @@ export function Navbar({
             role="dialog"
             aria-modal="true"
             aria-label="القائمة"
-            className="absolute inset-y-0 end-0 flex w-[300px] max-w-[85vw] flex-col bg-white p-5"
+            className="absolute inset-y-0 end-0 flex w-[300px] max-w-[85vw] flex-col bg-surface p-5"
           >
             <div className="flex items-center gap-3 border-b border-neutral-100 pb-[18px]">
-              <span className="inline-flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-emerald-50 text-lg font-extrabold text-emerald-700">
+              <span className="inline-flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-emerald-50 text-lg font-extrabold text-accent">
                 {user ? user.name.trim().charAt(0) : <User className="h-5 w-5" aria-hidden="true" />}
               </span>
               {user ? (
@@ -216,7 +221,7 @@ function NavLinks({
 }) {
   const linkCls = mobile
     ? `flex items-center gap-2.5 rounded-md px-3 py-2.5 hover:bg-neutral-100 ${focusRing}`
-    : `flex items-center gap-1.5 rounded-sm text-sm font-medium text-neutral-700 hover:text-emerald-700 ${focusRing}`;
+    : `flex items-center gap-1.5 rounded-sm text-sm font-medium text-neutral-700 hover:text-accent ${focusRing}`;
 
   const iconCls = mobile ? "h-5 w-5 text-neutral-500" : "h-4 w-4";
 
@@ -242,6 +247,7 @@ function NavLinks({
       {user && <NavItem href="/playlists" icon={ListMusic} label="وصلاتي" />}
       {user?.role === "ADMIN" && <NavItem href="/admin/users" icon={Users} label="إدارة المستخدمين" badge={pendingUsers} />}
       {user?.role === "ADMIN" && <NavItem href="/admin/tags" icon={Tags} label="إدارة الوسوم" />}
+      {mobile && <ThemeToggleItem className={linkCls} iconClassName={iconCls} />}
       {user ? (
         <>
           {mobile && <span className="my-1 border-t border-neutral-200" aria-hidden="true" />}
@@ -268,5 +274,37 @@ function NavLinks({
       {mobile && <PWAInstallMenuItem className={`sm:hidden ${linkCls}`} iconClassName={iconCls} onDone={onNavigate} />}
       {mobile && <OfflineStatusLine />}
     </>
+  );
+}
+
+/**
+ * مفتاح «الوضع الداكن» في القائمة: يقلب مظهر الموقع كله فورًا ويحفظ الاختيار.
+ * لا يُغلق القائمة، ليرى المستخدم الأثر ويتراجع بلمسة.
+ */
+function ThemeToggleItem({ className, iconClassName }: { className: string; iconClassName: string }) {
+  const dark = useSiteTheme() === "dark";
+  return (
+    <button
+      type="button"
+      role="switch"
+      aria-checked={dark}
+      onClick={() => setSiteTheme(dark ? "light" : "dark")}
+      className={`w-full text-start ${className}`}
+    >
+      <Moon className={iconClassName} aria-hidden="true" />
+      الوضع الداكن
+      <span
+        aria-hidden="true"
+        className={`ms-auto inline-flex h-6 w-11 shrink-0 items-center rounded-full p-0.5 transition-colors ${
+          dark ? "bg-emerald-700" : "bg-neutral-300"
+        }`}
+      >
+        <span
+          className={`h-5 w-5 rounded-full bg-white shadow-sm transition-transform motion-reduce:transition-none ${
+            dark ? "-translate-x-5" : "translate-x-0"
+          }`}
+        />
+      </span>
+    </button>
   );
 }

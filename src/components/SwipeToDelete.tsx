@@ -274,7 +274,7 @@ export function SwipeToDelete({
               }
             : undefined
         }
-        className={`relative bg-white ${onLongPress ? "select-none" : ""}`}
+        className={`relative bg-surface ${onLongPress ? "select-none" : ""}`}
         style={{
           touchAction: "pan-y",
           WebkitTouchCallout: onLongPress ? "none" : undefined,

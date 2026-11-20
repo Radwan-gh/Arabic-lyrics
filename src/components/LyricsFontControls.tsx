@@ -44,7 +44,7 @@ export function LyricsFontControls({ className = "" }: { className?: string }) {
   const isDefault = scale === LYRICS_SCALE_DEFAULT;
 
   const btnCls =
-    "inline-flex h-9 min-w-[2.25rem] items-center justify-center rounded-lg border border-neutral-300 bg-white leading-none text-neutral-700 transition-colors hover:bg-neutral-50 disabled:cursor-not-allowed disabled:opacity-40 " +
+    "inline-flex h-9 min-w-[2.25rem] items-center justify-center rounded-lg border border-neutral-300 bg-surface leading-none text-neutral-700 transition-colors hover:bg-neutral-50 disabled:cursor-not-allowed disabled:opacity-40 " +
     focusRing;
 
   return (
@@ -86,7 +86,7 @@ export function LyricsFontControls({ className = "" }: { className?: string }) {
       </button>
       <button
         type="button"
-        className={`${btnCls} px-2.5 text-xs font-medium text-emerald-700`}
+        className={`${btnCls} px-2.5 text-xs font-medium text-accent`}
         onClick={() => update(LYRICS_SCALE_DEFAULT)}
         disabled={isDefault}
         aria-label="إعادة حجم الخط الافتراضي"

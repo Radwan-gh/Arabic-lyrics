@@ -95,7 +95,7 @@ export function UserTable({ initialUsers, currentUserId }: { initialUsers: UserR
 
       <CreateUserForm onCreated={handleCreated} />
 
-      <div className="overflow-x-auto rounded-xl border border-neutral-200 bg-white shadow-sm">
+      <div className="overflow-x-auto rounded-xl border border-neutral-200 bg-surface shadow-sm">
         <table className="w-full min-w-[720px] text-sm">
           <thead className="bg-neutral-50 text-neutral-500">
             <tr>
@@ -136,7 +136,7 @@ export function UserTable({ initialUsers, currentUserId }: { initialUsers: UserR
                 </td>
                 <td className="px-4 py-3">
                   {u.id === currentUserId ? (
-                    <span className="text-emerald-700">مفعّل</span>
+                    <span className="text-accent">مفعّل</span>
                   ) : (
                     <button
                       type="button"
@@ -144,7 +144,7 @@ export function UserTable({ initialUsers, currentUserId }: { initialUsers: UserR
                       aria-pressed={u.isActive}
                       onClick={() => updateUser(u.id, { isActive: !u.isActive })}
                       className={`rounded-full px-3 py-1 text-xs font-medium transition-colors ${focusRing} ${
-                        u.isActive ? "bg-emerald-100 text-emerald-800" : "bg-neutral-100 text-neutral-600"
+                        u.isActive ? "bg-emerald-100 text-accent-strong" : "bg-neutral-100 text-neutral-600"
                       }`}
                     >
                       {u.isActive ? "مفعّل" : "معطّل"}
@@ -158,7 +158,7 @@ export function UserTable({ initialUsers, currentUserId }: { initialUsers: UserR
                       type="button"
                       disabled={busyId === u.id}
                       onClick={() => changePassword(u.id)}
-                      className={`inline-flex items-center gap-1 rounded-sm text-emerald-700 hover:underline disabled:opacity-50 ${focusRing}`}
+                      className={`inline-flex items-center gap-1 rounded-sm text-accent hover:underline disabled:opacity-50 ${focusRing}`}
                     >
                       <KeyRound className="h-4 w-4" aria-hidden="true" />
                       تغيير كلمة المرور
@@ -168,7 +168,7 @@ export function UserTable({ initialUsers, currentUserId }: { initialUsers: UserR
                         type="button"
                         disabled={busyId === u.id}
                         onClick={() => deleteUser(u.id)}
-                        className={`inline-flex items-center gap-1 rounded-sm text-red-600 hover:underline disabled:opacity-50 ${focusRing}`}
+                        className={`inline-flex items-center gap-1 rounded-sm text-danger hover:underline disabled:opacity-50 ${focusRing}`}
                       >
                         <Trash2 className="h-4 w-4" aria-hidden="true" />
                         حذف
@@ -223,11 +223,11 @@ export function CreateUserForm({ onCreated }: { onCreated: (user: UserRow) => vo
   return (
     <form
       onSubmit={handleSubmit}
-      className="flex flex-col gap-4 rounded-xl border border-neutral-200 bg-white p-6 shadow-sm"
+      className="flex flex-col gap-4 rounded-xl border border-neutral-200 bg-surface p-6 shadow-sm"
     >
       <h2 className="text-lg font-semibold">إنشاء حساب جديد</h2>
       {error && (
-        <p role="alert" className="rounded-md bg-red-50 px-3 py-2 text-sm text-red-700">
+        <p role="alert" className="rounded-md bg-red-50 px-3 py-2 text-sm text-danger-strong">
           {error}
         </p>
       )}

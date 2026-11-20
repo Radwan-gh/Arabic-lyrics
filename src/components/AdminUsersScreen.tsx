@@ -55,9 +55,9 @@ export function AdminUsersScreen({ initialUsers, currentUserId }: { initialUsers
   }
 
   return (
-    <div className="relative flex min-h-dvh flex-col bg-[#f7f7f4] text-[#14211c]">
+    <div className="relative flex min-h-dvh flex-col bg-canvas text-ink">
       <header className="flex items-center gap-2 px-3 pb-3 pt-2">
-        <button type="button" onClick={() => router.back()} aria-label="رجوع" className={`inline-flex h-11 w-11 items-center justify-center rounded-xl text-[#3c4a44] ${focusRing}`}>
+        <button type="button" onClick={() => router.back()} aria-label="رجوع" className={`inline-flex h-11 w-11 items-center justify-center rounded-xl text-ink-2 ${focusRing}`}>
           <ChevronRight className="h-[22px] w-[22px]" aria-hidden="true" />
         </button>
         <span className="text-xl font-extrabold">إدارة المستخدمين</span>
@@ -77,28 +77,28 @@ export function AdminUsersScreen({ initialUsers, currentUserId }: { initialUsers
             const isSelf = u.id === currentUserId;
             const busy = busyId === u.id;
             return (
-              <li key={u.id} className={`rounded-2xl border border-[#e6e6e1] bg-white p-4 ${busy ? "opacity-50" : ""}`}>
+              <li key={u.id} className={`rounded-2xl border border-line bg-surface p-4 ${busy ? "opacity-50" : ""}`}>
                 <div className="flex items-center justify-between gap-3">
                   <div className="min-w-0">
                     <div className="truncate text-[17px] font-bold">{u.name}</div>
-                    <div className="mt-0.5 truncate text-[13px] text-[#6b7670]">{u.email}</div>
+                    <div className="mt-0.5 truncate text-[13px] text-ink-4">{u.email}</div>
                   </div>
                   <span
                     className={`h-7 shrink-0 rounded-full px-2.5 text-xs font-bold leading-7 ${
-                      u.role === "ADMIN" ? "bg-[#ecfdf5] text-emerald-700" : "bg-[#f2f2ee] text-[#5c6660]"
+                      u.role === "ADMIN" ? "bg-emerald-50 text-accent" : "bg-fill-2 text-ink-3"
                     }`}
                   >
                     {MOBILE_ROLE_LABELS[u.role]}
                   </span>
                 </div>
                 {!isSelf && (
-                  <div className="mt-2.5 flex gap-2 border-t border-[#f0f0ec] pt-2.5">
+                  <div className="mt-2.5 flex gap-2 border-t border-fill pt-2.5">
                     <select
                       value={u.role}
                       disabled={busy}
                       aria-label={`دور ${u.name}`}
                       onChange={(e) => updateUser(u.id, { role: e.target.value as Role })}
-                      className="h-10 flex-1 rounded-[11px] border border-[#e6e6e1] bg-white px-2 text-sm text-[#3c4a44]"
+                      className="h-10 flex-1 rounded-[11px] border border-line bg-surface px-2 text-sm text-ink-2"
                     >
                       {(Object.keys(MOBILE_ROLE_LABELS) as Role[]).map((r) => (
                         <option key={r} value={r}>
@@ -110,7 +110,7 @@ export function AdminUsersScreen({ initialUsers, currentUserId }: { initialUsers
                       type="button"
                       disabled={busy}
                       onClick={() => changePassword(u.id)}
-                      className="h-10 flex-1 rounded-[11px] border border-[#e6e6e1] bg-white text-sm text-[#3c4a44] disabled:opacity-50"
+                      className="h-10 flex-1 rounded-[11px] border border-line bg-surface text-sm text-ink-2 disabled:opacity-50"
                     >
                       كلمة المرور
                     </button>
@@ -118,7 +118,7 @@ export function AdminUsersScreen({ initialUsers, currentUserId }: { initialUsers
                       type="button"
                       disabled={busy}
                       onClick={() => updateUser(u.id, { isActive: !u.isActive })}
-                      className="h-10 flex-1 rounded-[11px] border border-[#e6e6e1] bg-white text-sm text-[#3c4a44] disabled:opacity-50"
+                      className="h-10 flex-1 rounded-[11px] border border-line bg-surface text-sm text-ink-2 disabled:opacity-50"
                     >
                       {u.isActive ? "تعطيل" : "تفعيل"}
                     </button>
@@ -141,8 +141,8 @@ export function AdminUsersScreen({ initialUsers, currentUserId }: { initialUsers
 
       {createOpen && (
         <div className="fixed inset-0 z-50" role="dialog" aria-modal="true" aria-label="مستخدم جديد">
-          <button type="button" aria-label="إغلاق" onClick={() => setCreateOpen(false)} className="absolute inset-0 bg-[#14211c]/30" />
-          <div className="absolute inset-x-0 bottom-0 max-h-[85vh] overflow-y-auto rounded-t-3xl bg-white px-5 pb-8 pt-2.5 shadow-2xl">
+          <button type="button" aria-label="إغلاق" onClick={() => setCreateOpen(false)} className="absolute inset-0 bg-scrim/30" />
+          <div className="absolute inset-x-0 bottom-0 max-h-[85vh] overflow-y-auto rounded-t-3xl bg-surface px-5 pb-8 pt-2.5 shadow-2xl">
             <span aria-hidden="true" className="mx-auto block h-1.5 w-11 rounded-full bg-neutral-200" />
             <div className="flex items-center justify-between py-3">
               <span className="text-lg font-extrabold">مستخدم جديد</span>

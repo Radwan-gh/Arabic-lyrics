@@ -32,13 +32,13 @@ const segmentBtn =
 /** ألوان اللوح حسب المظهر: يتبع مظهر القراءة الداكن بدل البقاء أبيض. */
 const TONES = {
   light: {
-    backdrop: "bg-[#14211c]/30",
-    surface: "bg-white",
+    backdrop: "bg-scrim/30",
+    surface: "bg-surface",
     handle: "bg-neutral-200",
-    title: "text-[#14211c]",
+    title: "text-ink",
     muted: "text-neutral-500",
     track: "bg-neutral-200",
-    segment: "bg-[#f2f2ee] text-[#3c4a44]",
+    segment: "bg-fill-2 text-ink-2",
     divider: "border-neutral-100",
     ringOffset: "",
   },
@@ -193,7 +193,7 @@ export function ReaderTypeSheet({
             >
               <span
                 aria-hidden="true"
-                className={`absolute top-[3px] h-[26px] w-[26px] rounded-full bg-white transition-[inset-inline-start] ${keepAwakeEnabled ? "start-[23px]" : "start-[3px]"}`}
+                className={`absolute top-[3px] h-[26px] w-[26px] rounded-full bg-surface transition-[inset-inline-start] ${keepAwakeEnabled ? "start-[23px]" : "start-[3px]"}`}
               />
             </button>
           </div>

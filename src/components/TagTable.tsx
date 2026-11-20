@@ -77,7 +77,7 @@ export function TagTable({ initialTags }: { initialTags: TagRow[] }) {
   }
 
   return (
-    <div className="overflow-x-auto rounded-xl border border-neutral-200 bg-white shadow-sm">
+    <div className="overflow-x-auto rounded-xl border border-neutral-200 bg-surface shadow-sm">
       <table className="w-full min-w-[480px] text-sm">
         <thead className="bg-neutral-50 text-neutral-500">
           <tr>
@@ -115,7 +115,7 @@ export function TagTable({ initialTags }: { initialTags: TagRow[] }) {
                         type="button"
                         disabled={busyTag === row.tag}
                         onClick={() => submitRename(row.tag)}
-                        className={`inline-flex items-center gap-1 rounded-sm font-medium text-emerald-700 hover:underline disabled:opacity-50 ${focusRing}`}
+                        className={`inline-flex items-center gap-1 rounded-sm font-medium text-accent hover:underline disabled:opacity-50 ${focusRing}`}
                       >
                         <Check className="h-4 w-4" aria-hidden="true" />
                         حفظ
@@ -140,7 +140,7 @@ export function TagTable({ initialTags }: { initialTags: TagRow[] }) {
                     type="button"
                     disabled={busyTag === row.tag}
                     onClick={() => deleteTag(row.tag)}
-                    className={`inline-flex items-center gap-1 rounded-sm text-red-600 hover:underline disabled:opacity-50 ${focusRing}`}
+                    className={`inline-flex items-center gap-1 rounded-sm text-danger hover:underline disabled:opacity-50 ${focusRing}`}
                   >
                     <Trash2 className="h-4 w-4" aria-hidden="true" />
                     حذف

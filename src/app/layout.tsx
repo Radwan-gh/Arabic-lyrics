@@ -8,6 +8,7 @@ import { getCurrentUser } from "@/lib/session";
 import { prisma } from "@/lib/prisma";
 import { LYRICS_SCALE_NO_FLASH_SCRIPT } from "@/lib/lyrics-font";
 import { INSTALL_PROMPT_CAPTURE_SCRIPT } from "@/lib/install-prompt-script";
+import { THEME_NO_FLASH_SCRIPT } from "@/lib/theme";
 
 // خطّ الموقع كله (الواجهة ونصوص الأناشيد): «شهرزاد الجديد» — خطّ نسخ أوضح للتشكيل.
 // يُطبَّق افتراضيًا عبر font-sans على <body>، وتبقى font-naskh اسمًا مرادفًا له.
@@ -49,8 +50,11 @@ export default async function RootLayout({ children }: { children: React.ReactNo
     session?.role === "ADMIN" ? await prisma.user.count({ where: { isApproved: false } }).catch(() => 0) : 0;
 
   return (
-    <html lang="ar" dir="rtl" className={`${scheherazade.variable} ${arefRuqaa.variable}`}>
+    // suppressHydrationWarning: سكربت المظهر يضيف صنف `dark` على <html> قبل الـ hydration.
+    <html lang="ar" dir="rtl" className={`${scheherazade.variable} ${arefRuqaa.variable}`} suppressHydrationWarning>
       <head>
+        {/* يطبّق المظهر (فاتح/داكن) قبل الرسم لمنع وميض الصفحة الفاتحة. */}
+        <script dangerouslySetInnerHTML={{ __html: THEME_NO_FLASH_SCRIPT }} />
         {/* يطبّق حجم خط الأناشيد المحفوظ قبل الرسم لمنع وميض تغيّر الحجم. */}
         <script dangerouslySetInnerHTML={{ __html: LYRICS_SCALE_NO_FLASH_SCRIPT }} />
         {/* يلتقط حدث «تثبيت التطبيق» مبكرًا — قد يُطلَق قبل الـ hydration فيضيع. */}

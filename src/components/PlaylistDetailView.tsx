@@ -152,7 +152,7 @@ export function PlaylistDetailView({ playlist, shareUrl }: { playlist: PlaylistD
   return (
     <div className="flex flex-col gap-6">
       <div>
-        <Link href="/playlists" className={`inline-flex items-center gap-1 rounded-sm text-sm text-neutral-600 hover:text-emerald-700 ${focusRing}`}>
+        <Link href="/playlists" className={`inline-flex items-center gap-1 rounded-sm text-sm text-neutral-600 hover:text-accent ${focusRing}`}>
           <ChevronRight className="h-4 w-4" aria-hidden="true" /> العودة إلى وصلاتي
         </Link>
         <div className="mt-2">
@@ -171,7 +171,7 @@ export function PlaylistDetailView({ playlist, shareUrl }: { playlist: PlaylistD
         </Link>
       </div>
 
-      <section className="flex flex-col gap-3 rounded-xl border border-neutral-200 bg-white p-4 shadow-sm">
+      <section className="flex flex-col gap-3 rounded-xl border border-neutral-200 bg-surface p-4 shadow-sm">
         <div className="flex items-center justify-between gap-3">
           <div>
             <p className="text-sm font-semibold text-neutral-700">المشاركة</p>
@@ -205,7 +205,7 @@ export function PlaylistDetailView({ playlist, shareUrl }: { playlist: PlaylistD
             />
             <button type="button" onClick={copyLink} className={`${btnSecondary} px-4 py-2`}>
               {copied ? (
-                <Check className="h-4 w-4 text-emerald-700" aria-hidden="true" />
+                <Check className="h-4 w-4 text-accent" aria-hidden="true" />
               ) : (
                 <Copy className="h-4 w-4" aria-hidden="true" />
               )}
@@ -219,7 +219,7 @@ export function PlaylistDetailView({ playlist, shareUrl }: { playlist: PlaylistD
         )}
       </section>
 
-      <section className="flex flex-col gap-3 rounded-xl border border-neutral-200 bg-white p-4 shadow-sm">
+      <section className="flex flex-col gap-3 rounded-xl border border-neutral-200 bg-surface p-4 shadow-sm">
         <p className="text-sm font-semibold text-neutral-700">إضافة نشيد إلى الوصلة</p>
         <input
           type="search"
@@ -251,7 +251,7 @@ export function PlaylistDetailView({ playlist, shareUrl }: { playlist: PlaylistD
                       <li key={r.id} className="flex items-center justify-between gap-3 p-2.5">
                         <div className="min-w-0">
                           <p className="truncate text-sm font-medium">{r.title}</p>
-                          {r.artist && <p className="truncate text-xs text-emerald-700">{r.artist}</p>}
+                          {r.artist && <p className="truncate text-xs text-accent">{r.artist}</p>}
                         </div>
                         <button
                           type="button"
@@ -289,15 +289,15 @@ export function PlaylistDetailView({ playlist, shareUrl }: { playlist: PlaylistD
             {items.map((item, index) => (
               <li
                 key={item.lyricsId}
-                className="flex items-center justify-between gap-3 rounded-lg border border-neutral-200 bg-white p-3 shadow-sm"
+                className="flex items-center justify-between gap-3 rounded-lg border border-neutral-200 bg-surface p-3 shadow-sm"
               >
                 <div className="flex min-w-0 items-center gap-3">
                   <span className="w-6 shrink-0 text-center text-sm text-neutral-500">{index + 1}</span>
                   <div className="min-w-0">
-                    <Link href={`/lyrics/${item.lyricsId}`} className={`block truncate rounded-sm font-medium hover:text-emerald-700 ${focusRing}`}>
+                    <Link href={`/lyrics/${item.lyricsId}`} className={`block truncate rounded-sm font-medium hover:text-accent ${focusRing}`}>
                       {item.title}
                     </Link>
-                    {item.artist && <p className="truncate text-xs text-emerald-700">{item.artist}</p>}
+                    {item.artist && <p className="truncate text-xs text-accent">{item.artist}</p>}
                   </div>
                 </div>
                 <div className="flex shrink-0 items-center gap-1">
@@ -323,7 +323,7 @@ export function PlaylistDetailView({ playlist, shareUrl }: { playlist: PlaylistD
                     type="button"
                     onClick={() => removeItem(item.lyricsId)}
                     aria-label="إزالة من الوصلة"
-                    className={`inline-flex h-9 w-9 items-center justify-center rounded-lg border border-red-200 text-red-600 transition-colors hover:bg-red-50 ${focusRing}`}
+                    className={`inline-flex h-9 w-9 items-center justify-center rounded-lg border border-red-200 text-danger transition-colors hover:bg-red-50 ${focusRing}`}
                   >
                     <X className="h-4 w-4" aria-hidden="true" />
                   </button>

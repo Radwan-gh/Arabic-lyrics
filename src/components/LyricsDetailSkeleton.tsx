@@ -32,7 +32,7 @@ export function LyricsDetailSkeleton() {
         </div>
       </div>
 
-      <div className="hidden rounded-xl border border-neutral-200 bg-white px-3 py-5 shadow-sm sm:block sm:p-6">
+      <div className="hidden rounded-xl border border-neutral-200 bg-surface px-3 py-5 shadow-sm sm:block sm:p-6">
         <div className="mb-4 flex flex-col gap-2 border-b border-neutral-100 pb-4">
           <div className={`h-8 w-1/2 ${bar}`} />
           <div className={`h-4 w-1/4 ${bar}`} />

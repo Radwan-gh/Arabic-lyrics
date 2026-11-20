@@ -114,7 +114,7 @@ export function LyricsTextEditor({
         rows={10}
         placeholder="اكتب كلمات الأنشودة هنا، سطراً بسطر..."
         aria-label="كلمات الأنشودة"
-        className="w-full min-h-[16rem] resize-none overflow-hidden rounded-lg border border-neutral-300 bg-white px-4 py-3 text-base leading-loose text-neutral-900 placeholder:text-neutral-400 transition-colors focus:border-emerald-600 focus:outline-none focus:ring-2 focus:ring-emerald-100"
+        className="w-full min-h-[16rem] resize-none overflow-hidden rounded-lg border border-neutral-300 bg-surface px-4 py-3 text-base leading-loose text-neutral-900 placeholder:text-neutral-400 transition-colors focus:border-emerald-600 focus:outline-none focus:ring-2 focus:ring-emerald-100"
       />
     </div>
   );
@@ -137,7 +137,7 @@ function ToolbarButton({
       // Prevent the textarea from losing focus/selection when the button is pressed.
       onMouseDown={(e) => e.preventDefault()}
       onClick={onClick}
-      className="inline-flex h-11 w-11 items-center justify-center rounded-lg border border-neutral-300 bg-white text-neutral-700 transition-colors hover:bg-neutral-50 hover:text-neutral-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500 focus-visible:ring-offset-2 focus-visible:ring-offset-white"
+      className="inline-flex h-11 w-11 items-center justify-center rounded-lg border border-neutral-300 bg-surface text-neutral-700 transition-colors hover:bg-neutral-50 hover:text-neutral-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500 focus-visible:ring-offset-2 focus-visible:ring-offset-surface"
     >
       {children}
     </button>

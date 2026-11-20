@@ -88,9 +88,9 @@ export function AddToPlaylist({ lyricsId, variant = "button" }: { lyricsId: stri
 
   function StatusMark({ playlistId }: { playlistId: string }) {
     const st = status[playlistId];
-    if (st === "added") return <Check className="h-4 w-4 shrink-0 text-emerald-700" aria-hidden="true" />;
+    if (st === "added") return <Check className="h-4 w-4 shrink-0 text-accent" aria-hidden="true" />;
     if (st === "adding") return <span className="shrink-0 text-neutral-400">…</span>;
-    if (st === "error") return <X className="h-4 w-4 shrink-0 text-red-500" aria-hidden="true" />;
+    if (st === "error") return <X className="h-4 w-4 shrink-0 text-danger" aria-hidden="true" />;
     return null;
   }
 
@@ -102,7 +102,7 @@ export function AddToPlaylist({ lyricsId, variant = "button" }: { lyricsId: stri
     ) : playlists.length === 0 ? (
       <div className="p-2 text-sm text-neutral-500">
         لا توجد وصلات بعد.{" "}
-        <Link href="/playlists" className={`rounded-sm text-emerald-700 hover:underline ${focusRing}`}>
+        <Link href="/playlists" className={`rounded-sm text-accent hover:underline ${focusRing}`}>
           أنشئ وصلة
         </Link>
       </div>
@@ -139,7 +139,7 @@ export function AddToPlaylist({ lyricsId, variant = "button" }: { lyricsId: stri
         title="إضافة إلى وصلة"
         className={
           variant === "plain"
-            ? `inline-flex h-11 w-11 items-center justify-center rounded-xl bg-transparent text-[#3c4a44] transition-colors hover:bg-black/5 ${focusRing}`
+            ? `inline-flex h-11 w-11 items-center justify-center rounded-xl bg-transparent text-ink-2 transition-colors hover:bg-ink/5 ${focusRing}`
             : `${btnSecondary} h-11 w-11 !p-0`
         }
       >
@@ -149,16 +149,16 @@ export function AddToPlaylist({ lyricsId, variant = "button" }: { lyricsId: stri
       {open && (
         <>
           {/* سطح المكتب: لوح منسدل صغير بجانب الزر. */}
-          <div role="menu" className="absolute z-10 mt-1 hidden max-h-72 w-64 overflow-auto rounded-lg border border-neutral-200 bg-white p-2 shadow-lg sm:block">
+          <div role="menu" className="absolute z-10 mt-1 hidden max-h-72 w-64 overflow-auto rounded-lg border border-neutral-200 bg-surface p-2 shadow-lg sm:block">
             {body}
           </div>
 
           {/* الموبايل: لوح منبثق من الأسفل (bottom sheet). */}
           <div className="fixed inset-0 z-50 sm:hidden" role="dialog" aria-modal="true" aria-label="إضافة إلى وصلة">
-            <button type="button" aria-label="إغلاق" onClick={() => setOpen(false)} className="absolute inset-0 bg-[#14211c]/30" />
-            <div className="absolute inset-x-0 bottom-0 flex max-h-[80vh] flex-col gap-3.5 overflow-y-auto rounded-t-3xl bg-white px-5 pb-8 pt-2.5 shadow-2xl">
+            <button type="button" aria-label="إغلاق" onClick={() => setOpen(false)} className="absolute inset-0 bg-scrim/30" />
+            <div className="absolute inset-x-0 bottom-0 flex max-h-[80vh] flex-col gap-3.5 overflow-y-auto rounded-t-3xl bg-surface px-5 pb-8 pt-2.5 shadow-2xl">
               <span aria-hidden="true" className="mx-auto h-1.5 w-11 rounded-full bg-neutral-200" />
-              <span className="text-lg font-extrabold text-[#14211c]">إضافة إلى وصلة</span>
+              <span className="text-lg font-extrabold text-ink">إضافة إلى وصلة</span>
 
               {playlists === null ? (
                 <div className="p-2 text-sm text-neutral-500">
@@ -170,7 +170,7 @@ export function AddToPlaylist({ lyricsId, variant = "button" }: { lyricsId: stri
                     const st = status[p.id];
                     const checked = st === "added";
                     return (
-                      <li key={p.id} className="border-b border-[#f0f0ec] last:border-0">
+                      <li key={p.id} className="border-b border-fill last:border-0">
                         <button
                           type="button"
                           onClick={() => add(p.id)}
@@ -179,19 +179,19 @@ export function AddToPlaylist({ lyricsId, variant = "button" }: { lyricsId: stri
                         >
                           <span
                             className={`inline-flex h-6 w-6 shrink-0 items-center justify-center rounded-lg ${
-                              checked ? "bg-emerald-700 text-white" : "border-[1.5px] border-[#d6dad7]"
+                              checked ? "bg-emerald-700 text-white" : "border-[1.5px] border-line-2"
                             }`}
                           >
                             {checked && <Check className="h-[15px] w-[15px]" strokeWidth={3} aria-hidden="true" />}
                           </span>
                           <span className="flex-1">
-                            <span className="block text-base font-bold text-[#14211c]">{p.title}</span>
-                            <span className="block text-[13px] text-[#6b7670]">
+                            <span className="block text-base font-bold text-ink">{p.title}</span>
+                            <span className="block text-[13px] text-ink-4">
                               {(p.itemCount + (checked ? 1 : 0)).toLocaleString("ar-EG")} نشيداً
                             </span>
                           </span>
                           {st === "adding" && <span className="shrink-0 text-neutral-400">…</span>}
-                          {st === "error" && <X className="h-4 w-4 shrink-0 text-red-500" aria-hidden="true" />}
+                          {st === "error" && <X className="h-4 w-4 shrink-0 text-danger" aria-hidden="true" />}
                         </button>
                       </li>
                     );
@@ -208,14 +208,14 @@ export function AddToPlaylist({ lyricsId, variant = "button" }: { lyricsId: stri
                     placeholder="اسم الوصلة"
                     aria-label="اسم الوصلة الجديدة"
                     disabled={creating}
-                    className="h-12 rounded-2xl border border-[#e6e6e1] bg-white px-3.5 text-base focus:outline-none focus:ring-2 focus:ring-emerald-100"
+                    className="h-12 rounded-2xl border border-line bg-surface px-3.5 text-base focus:outline-none focus:ring-2 focus:ring-emerald-100"
                   />
                 )}
                 <button
                   type={showCreateField ? "submit" : "button"}
                   onClick={() => !showCreateField && setShowCreateField(true)}
                   disabled={creating}
-                  className="inline-flex h-[52px] items-center justify-center gap-2 rounded-2xl border border-dashed border-[#c8d1cc] bg-white text-base font-semibold text-emerald-700 disabled:opacity-60"
+                  className="inline-flex h-[52px] items-center justify-center gap-2 rounded-2xl border border-dashed border-line-3 bg-surface text-base font-semibold text-accent disabled:opacity-60"
                 >
                   <Plus className="h-[18px] w-[18px]" aria-hidden="true" />
                   {creating ? <Spinner label="جارٍ الإنشاء…" /> : "وصلة جديدة"}

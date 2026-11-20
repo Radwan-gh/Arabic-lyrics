@@ -5,6 +5,8 @@
 // ووضع الأداء (لا يُطبَّق كمتغيّر CSS عالمي كحجم الخط، فتأثيره أخفّ ولا يمسّ بقية الموقع).
 // ─────────────────────────────────────────────────────────────────────────────
 
+import { getSiteTheme } from "@/lib/theme";
+
 export const LINE_SPACING_LEVELS = ["compact", "comfortable", "wide"] as const;
 export type LineSpacing = (typeof LINE_SPACING_LEVELS)[number];
 export const LINE_SPACING_DEFAULT: LineSpacing = "comfortable";
@@ -27,11 +29,14 @@ export const READING_APPEARANCE_LABELS: Record<ReadingAppearance, string> = {
   dark: "داكن",
   paper: "ورقي",
 };
-/** خلفية/لون نص شاشة القراءة الغامرة لكل مظهر. */
+/**
+ * خلفية/لون نص شاشة القراءة الغامرة لكل مظهر. صنف theme-light/theme-dark يثبّت
+ * ألوان الواجهة داخل الشاشة على مظهر القراءة المختار، بغضّ النظر عن مظهر الموقع.
+ */
 export const READING_APPEARANCE_CLS: Record<ReadingAppearance, string> = {
-  light: "bg-[#f7f7f4] text-[#14211c]",
-  dark: "bg-[#0e1613] text-[#f2f5f3]",
-  paper: "bg-[#f3ecda] text-[#2b2417]",
+  light: "theme-light bg-[#f7f7f4] text-[#14211c]",
+  dark: "theme-dark bg-[#0e1613] text-[#f2f5f3]",
+  paper: "theme-light bg-[#f3ecda] text-[#2b2417]",
 };
 
 const LINE_SPACING_KEY = "arabic-lyrics:line-spacing";
@@ -61,8 +66,10 @@ export function persistLineSpacing(value: LineSpacing): void {
   persistEnum(LINE_SPACING_KEY, value);
 }
 
+/** بلا اختيار محفوظ: يتبع مظهر الموقع (داكن ← داكن، وإلا فاتح). */
 export function readStoredReadingAppearance(): ReadingAppearance {
-  return readEnum(APPEARANCE_KEY, READING_APPEARANCES, READING_APPEARANCE_DEFAULT);
+  const fallback: ReadingAppearance = getSiteTheme() === "dark" ? "dark" : READING_APPEARANCE_DEFAULT;
+  return readEnum(APPEARANCE_KEY, READING_APPEARANCES, fallback);
 }
 export function persistReadingAppearance(value: ReadingAppearance): void {
   persistEnum(APPEARANCE_KEY, value);

@@ -61,7 +61,7 @@ export function FavoriteButton({
         aria-label={label}
         title={label}
         className={`inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-lg leading-none transition-colors disabled:opacity-50 ${
-          favorited ? "text-emerald-700 hover:bg-emerald-50" : "text-neutral-400 hover:bg-neutral-100 hover:text-neutral-600"
+          favorited ? "text-accent hover:bg-emerald-50" : "text-neutral-400 hover:bg-neutral-100 hover:text-neutral-600"
         } ${focusRing}`}
       >
         <Heart className={`h-5 w-5 ${favorited ? "fill-current" : ""}`} aria-hidden="true" />
@@ -79,7 +79,7 @@ export function FavoriteButton({
         aria-label={label}
         title={label}
         className={`inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-transparent leading-none transition-colors disabled:opacity-50 ${
-          favorited ? "text-emerald-700 hover:bg-emerald-50" : "text-[#3c4a44] hover:bg-black/5"
+          favorited ? "text-accent hover:bg-emerald-50" : "text-ink-2 hover:bg-ink/5"
         } ${focusRing}`}
       >
         <Heart className={`h-5 w-5 ${favorited ? "fill-current" : ""}`} aria-hidden="true" />
@@ -95,7 +95,7 @@ export function FavoriteButton({
       aria-pressed={favorited}
       aria-label={label}
       title={label}
-      className={`${btnSecondary} h-11 w-11 !p-0 ${favorited ? "border-emerald-300 text-emerald-700 hover:bg-emerald-50" : ""}`}
+      className={`${btnSecondary} h-11 w-11 !p-0 ${favorited ? "border-emerald-300 text-accent hover:bg-emerald-50" : ""}`}
     >
       <Heart className={`h-6 w-6 ${favorited ? "fill-current" : ""}`} aria-hidden="true" />
     </button>

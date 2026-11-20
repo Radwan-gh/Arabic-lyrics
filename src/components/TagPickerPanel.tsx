@@ -23,19 +23,19 @@ const GROUP_LABELS: Record<Group, string> = {
 const TONES = {
   light: {
     input:
-      "border-neutral-300 bg-white text-neutral-900 placeholder:text-neutral-400 focus:border-emerald-600 focus:ring-emerald-100",
+      "border-neutral-300 bg-surface text-neutral-900 placeholder:text-neutral-400 focus:border-emerald-600 focus:ring-emerald-100",
     icon: "text-neutral-400",
     active: "bg-emerald-50",
     box: "border-neutral-300",
     text: "text-neutral-800",
-    create: "text-emerald-800",
-    plus: "text-emerald-700",
+    create: "text-accent-strong",
+    plus: "text-accent",
     count: "text-neutral-400",
     muted: "text-neutral-500",
     hint: "text-neutral-400",
-    error: "text-red-600",
-    ok: "text-emerald-700",
-    warn: "text-amber-700",
+    error: "text-danger",
+    ok: "text-accent",
+    warn: "text-warn",
   },
   dark: {
     input:
