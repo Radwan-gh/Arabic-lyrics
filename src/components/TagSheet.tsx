@@ -81,7 +81,7 @@ export function TagSheet({ title, onClose, dark = false, children }: TagSheetPro
         aria-label="إغلاق"
         tabIndex={-1}
         onClick={onClose}
-        className={`absolute inset-0 ${dark ? "bg-black/50" : "bg-[#14211c]/30"}`}
+        className={`absolute inset-0 ${dark ? "bg-black/50" : "bg-scrim/30"}`}
       />
       <div
         ref={panelRef}
@@ -89,21 +89,21 @@ export function TagSheet({ title, onClose, dark = false, children }: TagSheetPro
         style={keyboardOpen ? { bottom: vp.inset, maxHeight: vp.height - 12 } : undefined}
         className={`absolute inset-x-0 bottom-0 flex h-[min(36rem,80dvh)] flex-col gap-3 rounded-t-3xl px-5 pt-2.5 shadow-2xl outline-none ${
           keyboardOpen ? "pb-3" : "pb-[max(1.25rem,env(safe-area-inset-bottom))]"
-        } ${dark ? "bg-[#17221e]" : "bg-white"}`}
+        } ${dark ? "bg-[#17221e]" : "bg-surface"}`}
       >
         <span
           aria-hidden="true"
           className={`mx-auto h-1.5 w-11 shrink-0 rounded-full ${dark ? "bg-white/20" : "bg-neutral-200"}`}
         />
         <div className="flex shrink-0 items-center justify-between gap-3">
-          <span className={`truncate text-lg font-extrabold ${dark ? "text-[#f2f5f3]" : "text-[#14211c]"}`}>
+          <span className={`truncate text-lg font-extrabold ${dark ? "text-[#f2f5f3]" : "text-ink"}`}>
             {title}
           </span>
           <button
             type="button"
             onClick={onClose}
             className={`inline-flex h-11 shrink-0 items-center rounded-lg px-3 text-sm font-semibold ${
-              dark ? "text-emerald-300 focus-visible:ring-offset-[#17221e]" : "text-emerald-700"
+              dark ? "text-emerald-300 focus-visible:ring-offset-[#17221e]" : "text-accent"
             } ${focusRing}`}
           >
             تم

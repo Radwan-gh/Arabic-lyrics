@@ -99,7 +99,7 @@ export default async function DiscoverPage({
             {items.map((p) => (
               <li
                 key={p.shareToken}
-                className="rounded-xl border border-neutral-200 bg-white p-4 shadow-sm transition hover:-translate-y-0.5 hover:shadow-md motion-reduce:transition-none motion-reduce:hover:translate-y-0"
+                className="rounded-xl border border-neutral-200 bg-surface p-4 shadow-sm transition hover:-translate-y-0.5 hover:shadow-md motion-reduce:transition-none motion-reduce:hover:translate-y-0"
               >
                 <Link href={`/p/${p.shareToken}`} className={`block rounded-sm ${focusRing}`}>
                   <h2 className="truncate text-lg font-bold text-neutral-900">{p.title}</h2>

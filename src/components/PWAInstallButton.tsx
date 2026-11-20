@@ -19,7 +19,7 @@ export function PWAInstallButton() {
       type="button"
       onClick={install}
       disabled={installing}
-      className={`inline-flex items-center gap-2 rounded-lg border border-emerald-200 bg-emerald-50 px-3 py-2.5 text-sm font-semibold text-emerald-800 transition-colors hover:bg-emerald-100 disabled:cursor-not-allowed disabled:opacity-50 ${focusRing}`}
+      className={`inline-flex items-center gap-2 rounded-lg border border-emerald-200 bg-emerald-50 px-3 py-2.5 text-sm font-semibold text-accent-strong transition-colors hover:bg-emerald-100 disabled:cursor-not-allowed disabled:opacity-50 ${focusRing}`}
     >
       <svg
         aria-hidden="true"
@@ -62,9 +62,9 @@ export function PWAInstallMenuItem({
         onDone?.();
       }}
       disabled={installing}
-      className={`text-start font-semibold text-emerald-800 disabled:cursor-not-allowed disabled:opacity-50 ${className}`}
+      className={`text-start font-semibold text-accent-strong disabled:cursor-not-allowed disabled:opacity-50 ${className}`}
     >
-      <Download className={`${iconClassName} !text-emerald-700`} aria-hidden="true" />
+      <Download className={`${iconClassName} !text-accent`} aria-hidden="true" />
       تثبيت التطبيق
     </button>
   );
@@ -84,7 +84,7 @@ export function PWAInstallFloating() {
 
   return (
     <div className="fixed inset-x-0 bottom-24 z-20 flex justify-center px-4 pointer-events-none">
-      <div className="pointer-events-auto inline-flex items-center gap-1 rounded-full border border-emerald-200 bg-white p-1 shadow-[0_10px_24px_rgba(4,120,87,0.25)]">
+      <div className="pointer-events-auto inline-flex items-center gap-1 rounded-full border border-emerald-200 bg-surface p-1 shadow-[0_10px_24px_rgba(4,120,87,0.25)]">
         <button
           type="button"
           onClick={install}

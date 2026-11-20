@@ -34,18 +34,18 @@ export function FavoritesReorderList({
       {items.map((item, index) => (
         <li
           key={item.lyricsId}
-          className="flex items-center justify-between gap-3 rounded-lg border border-neutral-200 bg-white p-3 shadow-sm"
+          className="flex items-center justify-between gap-3 rounded-lg border border-neutral-200 bg-surface p-3 shadow-sm"
         >
           <div className="flex min-w-0 items-center gap-3">
             <span className="w-6 shrink-0 text-center text-sm text-neutral-500">{index + 1}</span>
             <div className="min-w-0">
               <Link
                 href={`/lyrics/${item.lyricsId}`}
-                className={`block truncate rounded-sm font-medium hover:text-emerald-700 ${focusRing}`}
+                className={`block truncate rounded-sm font-medium hover:text-accent ${focusRing}`}
               >
                 {item.title}
               </Link>
-              {item.artist && <p className="truncate text-xs text-emerald-700">{item.artist}</p>}
+              {item.artist && <p className="truncate text-xs text-accent">{item.artist}</p>}
               {item.album && <p className="truncate text-xs text-neutral-500">{item.album}</p>}
             </div>
           </div>

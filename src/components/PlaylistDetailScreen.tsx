@@ -162,24 +162,24 @@ export function PlaylistDetailScreen({ id, title: initialTitle, description, isP
   const visibleResults = (results ?? []).filter((r) => !inPlaylist.has(r.id));
 
   return (
-    <div className="flex min-h-dvh flex-col bg-[#f7f7f4] text-[#14211c]">
+    <div className="flex min-h-dvh flex-col bg-canvas text-ink">
       <header className="flex items-center justify-between px-3 pt-2">
         <div className="flex gap-0.5">
-          <button type="button" onClick={() => router.back()} aria-label="رجوع" className={`inline-flex h-11 w-11 items-center justify-center rounded-xl text-[#3c4a44] ${focusRing}`}>
+          <button type="button" onClick={() => router.back()} aria-label="رجوع" className={`inline-flex h-11 w-11 items-center justify-center rounded-xl text-ink-2 ${focusRing}`}>
             <ChevronRight className="h-[22px] w-[22px]" aria-hidden="true" />
           </button>
           <MenuButton />
         </div>
         <div className="flex gap-0.5">
-          <button type="button" onClick={copyLink} aria-label="مشاركة الوصلة" className={`inline-flex h-11 w-11 items-center justify-center rounded-xl text-[#3c4a44] ${focusRing}`}>
-            {copied ? <Check className="h-5 w-5 text-emerald-700" aria-hidden="true" /> : <Upload className="h-5 w-5" aria-hidden="true" />}
+          <button type="button" onClick={copyLink} aria-label="مشاركة الوصلة" className={`inline-flex h-11 w-11 items-center justify-center rounded-xl text-ink-2 ${focusRing}`}>
+            {copied ? <Check className="h-5 w-5 text-accent" aria-hidden="true" /> : <Upload className="h-5 w-5" aria-hidden="true" />}
           </button>
           <div className="relative" ref={moreRef}>
-            <button type="button" onClick={() => setMoreOpen((v) => !v)} aria-haspopup="menu" aria-expanded={moreOpen} aria-label="المزيد" className={`inline-flex h-11 w-11 items-center justify-center rounded-xl text-[#3c4a44] ${focusRing}`}>
+            <button type="button" onClick={() => setMoreOpen((v) => !v)} aria-haspopup="menu" aria-expanded={moreOpen} aria-label="المزيد" className={`inline-flex h-11 w-11 items-center justify-center rounded-xl text-ink-2 ${focusRing}`}>
               <MoreVertical className="h-5 w-5" aria-hidden="true" />
             </button>
             {moreOpen && (
-              <div role="menu" className="absolute end-0 top-full z-10 mt-1 w-64 rounded-2xl border border-neutral-200 bg-white p-2 shadow-lg">
+              <div role="menu" className="absolute end-0 top-full z-10 mt-1 w-64 rounded-2xl border border-neutral-200 bg-surface p-2 shadow-lg">
                 <button
                   type="button"
                   onClick={togglePublic}
@@ -213,12 +213,12 @@ export function PlaylistDetailScreen({ id, title: initialTitle, description, isP
           title={title}
           onSaved={setTitle}
           titleClassName="text-[26px] font-extrabold"
-          inputClassName="h-11 rounded-xl border border-[#e6e6e1] bg-white px-3 text-lg font-bold focus:border-emerald-600 focus:outline-none focus:ring-2 focus:ring-emerald-100"
+          inputClassName="h-11 rounded-xl border border-line bg-surface px-3 text-lg font-bold focus:border-emerald-600 focus:outline-none focus:ring-2 focus:ring-emerald-100"
         />
-        <div className="mt-1 text-sm text-[#6b7670]">
+        <div className="mt-1 text-sm text-ink-4">
           {items.length.toLocaleString("ar-EG")} نشيداً · {isPublic ? "عامة · رابط مشاركة فعّال" : "خاصة"}
         </div>
-        {description && <p className="mt-1 text-sm text-[#6b7670]">{description}</p>}
+        {description && <p className="mt-1 text-sm text-ink-4">{description}</p>}
         <div className="mt-3.5 flex gap-2">
           {items.length > 0 ? (
             <Link
@@ -238,32 +238,32 @@ export function PlaylistDetailScreen({ id, title: initialTitle, description, isP
             onClick={() => setAddOpen((v) => !v)}
             aria-expanded={addOpen}
             aria-label="إضافة نشيد إلى الوصلة"
-            className={`inline-flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl border border-[#e6e6e1] bg-white text-[#3c4a44] ${focusRing}`}
+            className={`inline-flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl border border-line bg-surface text-ink-2 ${focusRing}`}
           >
             <Plus className="h-5 w-5" aria-hidden="true" />
           </button>
         </div>
 
         {addOpen && (
-          <div className="mt-3 rounded-2xl border border-[#e6e6e1] bg-white p-3">
+          <div className="mt-3 rounded-2xl border border-line bg-surface p-3">
             <input
               type="search"
               value={query}
               onChange={(e) => setQuery(e.target.value)}
               placeholder="ابحث عن نشيد بالعنوان أو المنشد..."
               aria-label="ابحث عن نشيد لإضافته إلى الوصلة"
-              className="h-11 w-full rounded-xl border border-[#e6e6e1] bg-white px-3 text-base focus:outline-none focus:ring-2 focus:ring-emerald-100"
+              className="h-11 w-full rounded-xl border border-line bg-surface px-3 text-base focus:outline-none focus:ring-2 focus:ring-emerald-100"
             />
             {query.trim() && (
-              <ul className="mt-2 flex max-h-56 flex-col divide-y divide-[#f0f0ec] overflow-y-auto">
+              <ul className="mt-2 flex max-h-56 flex-col divide-y divide-fill overflow-y-auto">
                 {visibleResults.length === 0 ? (
-                  <li className="p-2.5 text-sm text-[#6b7670]">لا نتائج</li>
+                  <li className="p-2.5 text-sm text-ink-4">لا نتائج</li>
                 ) : (
                   visibleResults.map((r) => (
                     <li key={r.id} className="flex items-center justify-between gap-2 py-2.5">
                       <div className="min-w-0">
                         <p className="truncate text-sm font-semibold">{r.title}</p>
-                        {r.artist && <p className="truncate text-xs text-emerald-700">{r.artist}</p>}
+                        {r.artist && <p className="truncate text-xs text-accent">{r.artist}</p>}
                       </div>
                       <button
                         type="button"
@@ -282,9 +282,9 @@ export function PlaylistDetailScreen({ id, title: initialTitle, description, isP
         )}
       </div>
 
-      <div className="flex-1 border-t border-[#e6e6e1] bg-white">
+      <div className="flex-1 border-t border-line bg-surface">
         {items.length === 0 ? (
-          <p className="p-8 text-center text-sm text-[#6b7670]">الوصلة فارغة. استخدم زر + بالأعلى لإضافة أناشيد.</p>
+          <p className="p-8 text-center text-sm text-ink-4">الوصلة فارغة. استخدم زر + بالأعلى لإضافة أناشيد.</p>
         ) : (
           <>
             {items.map((item, index) => (
@@ -301,7 +301,7 @@ export function PlaylistDetailScreen({ id, title: initialTitle, description, isP
                 onRemove={() => removeItem(item.lyricsId)}
               />
             ))}
-            <p className="px-4 py-3.5 text-[13px] text-[#8a938d]">اسحب العنصر لليسار للإزالة · اسحب المقبض للترتيب</p>
+            <p className="px-4 py-3.5 text-[13px] text-ink-5">اسحب العنصر لليسار للإزالة · اسحب المقبض للترتيب</p>
           </>
         )}
       </div>
@@ -352,8 +352,8 @@ function PlaylistRow({
   return (
     <div
       data-drag-row
-      className="relative overflow-hidden border-b border-[#f0f0ec]"
-      style={dragging ? { transform: `translateY(${dragOffsetY}px)`, position: "relative", zIndex: 10, background: "#fbfbf9", boxShadow: "0 6px 16px rgba(20,33,28,0.08)" } : undefined}
+      className="relative overflow-hidden border-b border-fill"
+      style={dragging ? { transform: `translateY(${dragOffsetY}px)`, position: "relative", zIndex: 10, background: "rgb(var(--c-raised))", boxShadow: "0 6px 16px rgba(20,33,28,0.08)" } : undefined}
     >
       <button
         type="button"
@@ -366,21 +366,21 @@ function PlaylistRow({
         إزالة
       </button>
       <div
-        className="flex min-h-16 items-center gap-3 bg-white px-4 py-3 transition-transform"
+        className="flex min-h-16 items-center gap-3 bg-surface px-4 py-3 transition-transform"
         style={{ transform: `translateX(${swipeX}px)` }}
         onTouchStart={onTouchStart}
         onTouchMove={onTouchMove}
         onTouchEnd={onTouchEnd}
       >
-        <span className="w-6 shrink-0 text-center text-sm text-[#9aa39d]">{(index + 1).toLocaleString("ar-EG")}</span>
+        <span className="w-6 shrink-0 text-center text-sm text-ink-6">{(index + 1).toLocaleString("ar-EG")}</span>
         <Link href={`/lyrics/${item.lyricsId}`} className={`min-w-0 flex-1 rounded-sm ${focusRing}`}>
           <div className="truncate text-[17px] font-bold">{item.title}</div>
-          {item.artist && <div className="mt-0.5 truncate text-[13px] text-[#6b7670]">{item.artist}</div>}
+          {item.artist && <div className="mt-0.5 truncate text-[13px] text-ink-4">{item.artist}</div>}
         </Link>
         <button
           type="button"
           aria-label="إعادة ترتيب — اسحب أو استخدم مفاتيح الأسهم"
-          className={`inline-flex h-11 w-6 shrink-0 items-center justify-center text-[#c3c9c5] ${dragging ? "text-emerald-700" : ""} ${focusRing}`}
+          className={`inline-flex h-11 w-6 shrink-0 items-center justify-center text-ink-7 ${dragging ? "text-accent" : ""} ${focusRing}`}
           style={{ touchAction: "none" }}
           onPointerDown={onDragStart}
           onPointerMove={onDragMove}

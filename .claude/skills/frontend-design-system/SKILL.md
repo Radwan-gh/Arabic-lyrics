@@ -19,13 +19,32 @@ designed by one person, not assembled from parts.
 
 Stay inside a small, deliberate scale so screens feel unified.
 
-- **Neutrals / surfaces:** `bg-neutral-50` (page), `bg-white` (cards/inputs),
-  borders `border-neutral-200` / `border-neutral-300`. Text `text-neutral-900`
-  (primary), `text-neutral-600` (secondary), `text-neutral-400` (muted/placeholder).
-- **Accent:** pick **one** brand hue and reuse it for primary actions, links, and
-  focus rings — do not mix `blue`, `indigo`, `emerald` on one screen. Match whatever
-  the existing components already use; grep before introducing a new color.
-- **Danger:** `red-600` for destructive actions and error text only.
+- **Light & dark themes are automatic.** Colors are CSS-variable tokens
+  (`tailwind.config.ts` + `src/app/globals.css`) that flip when `<html>` has the
+  `dark` class (toggled from the side menu, see `src/lib/theme.ts`). Use the tokens
+  below and dark mode comes for free — **don't** add `dark:` variants per element,
+  and **never** hardcode hex values (`bg-[#fff]`) or `bg-white` for surfaces: they
+  won't flip.
+- **Surfaces:** `bg-surface` (cards, inputs, sheets, drawers), `bg-canvas`
+  (mobile screen background), `bg-neutral-50` (desktop page), `bg-raised` (an item
+  being dragged), `bg-scrim/30` (backdrop behind sheets).
+- **Text:** `text-ink` (primary) → `text-ink-2` … `text-ink-7` (fainter), or the
+  `neutral-*` scale (`text-neutral-900` primary, `-600` secondary, `-400` muted).
+- **Lines & fills:** `border-line` / `border-line-2` / `border-line-3`,
+  `border-neutral-200/300`; subtle fills `bg-fill`, `bg-fill-2`, hover `bg-fill-3`
+  or `hover:bg-ink/5`.
+- **Accent:** emerald. Solid actions `bg-emerald-700 text-white hover:bg-emerald-800`
+  (stay the same in both themes). Accent **text/icons** use `text-accent`,
+  `text-accent-strong`, `text-accent-deep` (they lighten on dark) — not
+  `text-emerald-700`. Tints: `bg-emerald-50/100`, `border-emerald-200`.
+- **`text-white`** only on solid colored backgrounds (emerald/red/amber). It does
+  not flip.
+- **Fixed-appearance areas:** add `theme-light` or `theme-dark` to a container to
+  pin the tokens inside it regardless of the site theme (reader appearances,
+  performance mode, the exported lyrics image).
+- **Danger:** `bg-red-600` for destructive solid buttons; `text-danger` /
+  `text-danger-strong` for error text and destructive links; tint `bg-red-50`.
+  Warnings: `text-warn*` on `bg-amber-50/100`.
 - **Radius:** `rounded-lg` for inputs/buttons/cards, `rounded-full` for pills/avatars.
   Be consistent — the existing inputs use `rounded-lg` (see `globals.css`).
 - **Spacing:** stick to Tailwind's scale in steps of 2 (`gap-2 gap-3 gap-4 gap-6`).
@@ -55,12 +74,12 @@ start/end — it breaks in RTL.
 ## Component patterns
 
 - **Buttons:** one primary style (solid accent, white text), one secondary
-  (white bg, `border-neutral-300`), one ghost/text, one danger. Reuse them; do not
+  (`bg-surface`, `border-neutral-300`), one ghost/text, one danger. Reuse them; do not
   re-style buttons ad hoc per screen.
 - **Inputs:** `w-full rounded-lg border border-neutral-300 px-3 py-2` with a visible
   focus ring (`focus:ring-2 focus:ring-<accent>-500 focus:border-<accent>-500
   focus:outline-none`). Always pair with a `<label>`.
-- **Cards:** `rounded-lg border border-neutral-200 bg-white p-4` — lean on borders,
+- **Cards:** `rounded-lg border border-neutral-200 bg-surface p-4` — lean on borders,
   not heavy shadows. If you use shadow, keep it soft (`shadow-sm`) and consistent.
 - **Never leave interactive elements without a visible `:hover` and `:focus-visible`
   state.** Add a `transition-colors` for polish.
@@ -87,7 +106,8 @@ For any list/data view or async action, design **all** states, not just the happ
 ## Before you finish
 
 - No physical-direction classes where logical ones belong.
-- Colors/spacing/radius stay within the tokens above.
+- Colors/spacing/radius stay within the tokens above; checked in **both** light
+  and dark mode (toggle «الوضع الداكن» in the side menu).
 - Hover + focus-visible states present on every interactive element.
 - Loading / empty / error states handled.
 - `npm run lint` is clean.

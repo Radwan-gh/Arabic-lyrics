@@ -51,7 +51,7 @@ interface ReaderScreenProps {
 }
 
 const iconBtn =
-  "inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-xl border-0 bg-transparent text-[#3c4a44] transition-colors hover:bg-black/5 " +
+  "inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-xl border-0 bg-transparent text-ink-2 transition-colors hover:bg-ink/5 " +
   focusRing;
 
 /**
@@ -195,7 +195,7 @@ export function ReaderScreen({
           {moreOpen && (
             <div
               role="menu"
-              className="absolute end-0 top-full z-10 mt-1 flex w-56 flex-wrap gap-2 rounded-2xl border border-neutral-200 bg-white p-3 shadow-lg"
+              className="absolute end-0 top-full z-10 mt-1 flex w-56 flex-wrap gap-2 rounded-2xl border border-neutral-200 bg-surface p-3 shadow-lg"
             >
               <ShareLyrics shareUrl={shareUrl} title={title} shareText={shareText} />
               <ExportLyricsImage
@@ -212,7 +212,7 @@ export function ReaderScreen({
                     href={editHref}
                     aria-label="تعديل"
                     title="تعديل"
-                    className={`inline-flex h-11 w-11 items-center justify-center rounded-lg border border-neutral-300 bg-white text-neutral-800 hover:bg-neutral-50 ${focusRing}`}
+                    className={`inline-flex h-11 w-11 items-center justify-center rounded-lg border border-neutral-300 bg-surface text-neutral-800 hover:bg-neutral-50 ${focusRing}`}
                   >
                     <Pencil className="h-5 w-5" aria-hidden="true" />
                   </Link>
@@ -226,7 +226,7 @@ export function ReaderScreen({
 
       <div className="flex-1 overflow-y-auto px-6 pb-4 pt-1" onTouchStart={onTouchStart} onTouchEnd={onTouchEnd}>
         <h1 className="font-naskh text-[30px] font-extrabold leading-[1.35]">{title}</h1>
-        <div className="mt-1.5 text-[15px] text-[#6b7670]">
+        <div className="mt-1.5 text-[15px] text-ink-4">
           {[artist, album, viewCount > 0 ? `${viewCount.toLocaleString("ar-EG")} قراءة` : null]
             .filter(Boolean)
             .join(" · ")}
@@ -250,20 +250,20 @@ export function ReaderScreen({
       {/* شريط الوصلة: التنقّل ووضع الأداء يخصّان القراءة ضمن وصلة فقط. */}
       {playlist && (
         <div className="px-3 pb-5 pt-2">
-          <div className="flex items-center justify-between gap-2 rounded-[18px] border border-[#e6e6e1] bg-white p-1.5">
+          <div className="flex items-center justify-between gap-2 rounded-[18px] border border-line bg-surface p-1.5">
             <button
               type="button"
               onClick={() => goTo(playlist.prevId)}
               disabled={!playlist.prevId}
               aria-label="النشيد السابق"
-              className={`inline-flex h-11 w-11 items-center justify-center rounded-xl text-[#3c4a44] disabled:opacity-30 ${focusRing}`}
+              className={`inline-flex h-11 w-11 items-center justify-center rounded-xl text-ink-2 disabled:opacity-30 ${focusRing}`}
             >
               <ChevronRight className="h-5 w-5" aria-hidden="true" />
             </button>
             <button
               type="button"
               onClick={() => setPerformanceMode(true)}
-              className={`inline-flex h-11 items-center gap-2 whitespace-nowrap rounded-xl bg-[#ecfdf5] px-4 text-[15px] font-semibold text-emerald-700 ${focusRing}`}
+              className={`inline-flex h-11 items-center gap-2 whitespace-nowrap rounded-xl bg-emerald-50 px-4 text-[15px] font-semibold text-accent ${focusRing}`}
             >
               <Moon className="h-[18px] w-[18px]" aria-hidden="true" />
               وضع الأداء
@@ -273,12 +273,12 @@ export function ReaderScreen({
               onClick={() => goTo(playlist.nextId)}
               disabled={!playlist.nextId}
               aria-label="النشيد التالي"
-              className={`inline-flex h-11 w-11 items-center justify-center rounded-xl text-[#3c4a44] disabled:opacity-30 ${focusRing}`}
+              className={`inline-flex h-11 w-11 items-center justify-center rounded-xl text-ink-2 disabled:opacity-30 ${focusRing}`}
             >
               <ChevronLeft className="h-5 w-5" aria-hidden="true" />
             </button>
           </div>
-          <p className="mt-2 text-center text-xs text-[#8a938d]">
+          <p className="mt-2 text-center text-xs text-ink-5">
             اسحب يميناً أو يساراً للتنقل داخل الوصلة · {playlist.position.toLocaleString("ar-EG")} من{" "}
             {playlist.total.toLocaleString("ar-EG")}
           </p>

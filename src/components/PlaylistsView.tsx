@@ -61,7 +61,7 @@ export function PlaylistsView({ initial }: { initial: PlaylistSummary[] }) {
 
       <form
         onSubmit={createPlaylist}
-        className="flex flex-col gap-3 rounded-xl border border-neutral-200 bg-white p-4 shadow-sm"
+        className="flex flex-col gap-3 rounded-xl border border-neutral-200 bg-surface p-4 shadow-sm"
       >
         <span className="text-sm font-semibold text-neutral-700">إنشاء وصلة جديدة</span>
         <input
@@ -83,7 +83,7 @@ export function PlaylistsView({ initial }: { initial: PlaylistSummary[] }) {
           className={inputSm}
         />
         {error && (
-          <p role="alert" className="text-sm text-red-600">
+          <p role="alert" className="text-sm text-danger">
             {error}
           </p>
         )}
@@ -108,17 +108,17 @@ export function PlaylistsView({ initial }: { initial: PlaylistSummary[] }) {
           {playlists.map((p) => (
             <li
               key={p.id}
-              className="flex flex-col gap-3 rounded-xl border border-neutral-200 bg-white p-4 shadow-sm sm:flex-row sm:items-start sm:justify-between"
+              className="flex flex-col gap-3 rounded-xl border border-neutral-200 bg-surface p-4 shadow-sm sm:flex-row sm:items-start sm:justify-between"
             >
               <div className="min-w-0">
-                <Link href={`/playlists/${p.id}`} className={`rounded-sm text-lg font-bold hover:text-emerald-700 ${focusRing}`}>
+                <Link href={`/playlists/${p.id}`} className={`rounded-sm text-lg font-bold hover:text-accent ${focusRing}`}>
                   {p.title}
                 </Link>
                 {p.description && <p className="mt-0.5 text-sm text-neutral-500">{p.description}</p>}
                 <p className="mt-1 text-xs text-neutral-500">
                   {p.itemCount} نشيد · {formatDate(new Date(p.createdAt))} ·{" "}
                   {p.isPublic ? (
-                    <span className="font-medium text-emerald-700">عامة</span>
+                    <span className="font-medium text-accent">عامة</span>
                   ) : (
                     <span>خاصة</span>
                   )}

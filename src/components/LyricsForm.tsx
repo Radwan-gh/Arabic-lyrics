@@ -44,10 +44,10 @@ export function LyricsForm({
 
       <form
         onSubmit={handleSubmit}
-        className={`${mode === "create" ? "hidden sm:flex" : "flex"} flex-col gap-4 rounded-xl border border-neutral-200 bg-white p-6 shadow-sm`}
+        className={`${mode === "create" ? "hidden sm:flex" : "flex"} flex-col gap-4 rounded-xl border border-neutral-200 bg-surface p-6 shadow-sm`}
       >
         {error && (
-          <p role="alert" className="rounded-md bg-red-50 px-3 py-2 text-sm text-red-700">
+          <p role="alert" className="rounded-md bg-red-50 px-3 py-2 text-sm text-danger-strong">
             {error}
           </p>
         )}
@@ -79,7 +79,7 @@ export function LyricsForm({
               <ul
                 id="title-suggestions"
                 role="listbox"
-                className="absolute inset-x-0 top-full z-20 mt-1 max-h-72 overflow-auto rounded-lg border border-neutral-200 bg-white py-1 shadow-lg"
+                className="absolute inset-x-0 top-full z-20 mt-1 max-h-72 overflow-auto rounded-lg border border-neutral-200 bg-surface py-1 shadow-lg"
               >
                 <li className="px-3 py-1 text-xs font-normal text-neutral-400">أناشيد موجودة قد تطابق بحثك</li>
                 {suggestions.map((s) => (
@@ -108,10 +108,10 @@ export function LyricsForm({
           <div
             id="duplicate-warning"
             role="alert"
-            className="rounded-lg border border-amber-300 bg-amber-50 p-4 text-sm text-amber-900"
+            className="rounded-lg border border-amber-300 bg-amber-50 p-4 text-sm text-warn-deep"
           >
             <p className="font-semibold">⚠️ يوجد نشيد بنفس العنوان مسبقاً</p>
-            <p className="mt-1 text-amber-800">
+            <p className="mt-1 text-warn-strong">
               تحقّق من القائمة أدناه قبل الإضافة لتجنّب التكرار:
             </p>
             <ul className="mt-2 flex flex-col gap-1.5">
@@ -120,12 +120,12 @@ export function LyricsForm({
                   <Link
                     href={`/lyrics/${d.id}`}
                     target="_blank"
-                    className="font-medium text-amber-900 underline decoration-amber-400 underline-offset-2 hover:text-amber-950"
+                    className="font-medium text-warn-deep underline decoration-amber-400 underline-offset-2 hover:text-warn-deep"
                   >
                     {d.title}
                   </Link>
                   {(d.artist || d.album) && (
-                    <span className="text-amber-700">
+                    <span className="text-warn">
                       {" — "}
                       {[d.artist, d.album].filter(Boolean).join(" · ")}
                     </span>
@@ -174,7 +174,7 @@ export function LyricsForm({
               type="button"
               disabled={loading}
               onClick={() => void submit(true)}
-              className="inline-flex items-center justify-center gap-2 rounded-lg border border-amber-400 bg-amber-100 px-4 py-2.5 text-sm font-semibold text-amber-900 transition-colors hover:bg-amber-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-500 focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+              className="inline-flex items-center justify-center gap-2 rounded-lg border border-amber-400 bg-amber-100 px-4 py-2.5 text-sm font-semibold text-warn-deep transition-colors hover:bg-amber-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-500 focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
             >
               {loading ? (
                 <Spinner label="جارٍ الحفظ…" />

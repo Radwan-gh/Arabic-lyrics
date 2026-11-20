@@ -59,11 +59,11 @@ export function LoginForm({ googleEnabled }: { googleEnabled: boolean }) {
   return (
     <>
       {/* الموبايل: شاشة غامرة تتمركز عمودياً، تطابق التصميم. */}
-      <div className="flex min-h-dvh flex-col justify-center gap-[22px] bg-[#f7f7f4] px-7 text-[#14211c] sm:hidden">
+      <div className="flex min-h-dvh flex-col justify-center gap-[22px] bg-canvas px-7 text-ink sm:hidden">
         <div className="flex flex-col items-start gap-2">
-          <BrandLogo className="text-[44px] text-emerald-800" />
+          <BrandLogo className="text-[44px] text-accent-strong" />
           <h1 className="mt-2 text-[28px] font-extrabold">أهلاً بك</h1>
-          <p className="text-[15px] leading-[1.8] text-[#6b7670]">
+          <p className="text-[15px] leading-[1.8] text-ink-4">
             سجّل الدخول للوصول إلى مفضلتك ووصلاتك.{" "}
             {googleEnabled
               ? "ليس لديك حساب؟ أنشئه عبر Google ويُفعَّل بعد موافقة الإدارة."
@@ -75,19 +75,19 @@ export function LoginForm({ googleEnabled }: { googleEnabled: boolean }) {
 
         {googleEnabled && (
           <>
-            <GoogleButton href={googleHref} className="h-[54px] rounded-2xl border-[#e6e6e1] text-base" />
+            <GoogleButton href={googleHref} className="h-[54px] rounded-2xl border-line text-base" />
             <OrDivider />
           </>
         )}
 
         <form onSubmit={handleSubmit} className="flex flex-col gap-3">
           {error && (
-            <p role="alert" className="rounded-xl bg-red-50 px-3 py-2 text-sm text-red-700">
+            <p role="alert" className="rounded-xl bg-red-50 px-3 py-2 text-sm text-danger-strong">
               {error}
             </p>
           )}
 
-          <label className="flex flex-col gap-1.5 text-sm font-semibold text-[#3c4a44]">
+          <label className="flex flex-col gap-1.5 text-sm font-semibold text-ink-2">
             البريد الإلكتروني
             <input
               type="email"
@@ -95,11 +95,11 @@ export function LoginForm({ googleEnabled }: { googleEnabled: boolean }) {
               placeholder="name@example.com"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              className="h-[52px] w-full box-border rounded-2xl border border-[#e6e6e1] bg-white px-3.5 text-base text-[#14211c] placeholder:text-[#9aa39d] focus:outline-none focus:ring-2 focus:ring-emerald-100"
+              className="h-[52px] w-full box-border rounded-2xl border border-line bg-surface px-3.5 text-base text-ink placeholder:text-ink-6 focus:outline-none focus:ring-2 focus:ring-emerald-100"
             />
           </label>
 
-          <label className="flex flex-col gap-1.5 text-sm font-semibold text-[#3c4a44]">
+          <label className="flex flex-col gap-1.5 text-sm font-semibold text-ink-2">
             كلمة المرور
             <div className="relative">
               <input
@@ -107,13 +107,13 @@ export function LoginForm({ googleEnabled }: { googleEnabled: boolean }) {
                 required
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                className="h-[52px] w-full box-border rounded-2xl border border-[#e6e6e1] bg-white px-3.5 pe-11 text-base text-[#14211c] focus:outline-none focus:ring-2 focus:ring-emerald-100"
+                className="h-[52px] w-full box-border rounded-2xl border border-line bg-surface px-3.5 pe-11 text-base text-ink focus:outline-none focus:ring-2 focus:ring-emerald-100"
               />
               <button
                 type="button"
                 onClick={() => setShowPassword((v) => !v)}
                 aria-label={showPassword ? "إخفاء كلمة المرور" : "إظهار كلمة المرور"}
-                className={`absolute inset-y-0 end-3 my-auto inline-flex h-6 w-6 items-center justify-center text-[#9aa39d] ${focusRing}`}
+                className={`absolute inset-y-0 end-3 my-auto inline-flex h-6 w-6 items-center justify-center text-ink-6 ${focusRing}`}
               >
                 {showPassword ? <EyeOff className="h-5 w-5" aria-hidden="true" /> : <Eye className="h-5 w-5" aria-hidden="true" />}
               </button>
@@ -125,7 +125,7 @@ export function LoginForm({ googleEnabled }: { googleEnabled: boolean }) {
           </button>
         </form>
 
-        <Link href="/" className={`self-start text-[15px] font-semibold text-emerald-700 ${focusRing}`}>
+        <Link href="/" className={`self-start text-[15px] font-semibold text-accent ${focusRing}`}>
           تصفح المجموعة دون تسجيل ←
         </Link>
       </div>
@@ -134,9 +134,9 @@ export function LoginForm({ googleEnabled }: { googleEnabled: boolean }) {
       <div className="mx-auto hidden max-w-sm sm:block">
         <h1 className="mb-4 text-xl font-bold">تسجيل الدخول</h1>
         {pending && <PendingNotice className="mb-4 rounded-md" />}
-        <form onSubmit={handleSubmit} className="flex flex-col gap-4 rounded-xl border border-neutral-200 bg-white p-6 shadow-sm">
+        <form onSubmit={handleSubmit} className="flex flex-col gap-4 rounded-xl border border-neutral-200 bg-surface p-6 shadow-sm">
           {error && (
-            <p role="alert" className="rounded-md bg-red-50 px-3 py-2 text-sm text-red-700">
+            <p role="alert" className="rounded-md bg-red-50 px-3 py-2 text-sm text-danger-strong">
               {error}
             </p>
           )}
@@ -191,7 +191,7 @@ export function LoginForm({ googleEnabled }: { googleEnabled: boolean }) {
 
 function PendingNotice({ className }: { className: string }) {
   return (
-    <p role="status" className={`flex items-start gap-2 bg-amber-50 px-3 py-2 text-sm leading-6 text-amber-800 ${className}`}>
+    <p role="status" className={`flex items-start gap-2 bg-amber-50 px-3 py-2 text-sm leading-6 text-warn-strong ${className}`}>
       <Clock className="mt-0.5 h-4 w-4 shrink-0" aria-hidden="true" />
       {PENDING_MESSAGE}
     </p>
@@ -213,7 +213,7 @@ function GoogleButton({ href, className }: { href: string; className: string }) 
   return (
     <a
       href={href}
-      className={`inline-flex items-center justify-center gap-2.5 border bg-white font-semibold text-neutral-800 transition-colors hover:bg-neutral-50 ${focusRing} ${className}`}
+      className={`inline-flex items-center justify-center gap-2.5 border bg-surface font-semibold text-neutral-800 transition-colors hover:bg-neutral-50 ${focusRing} ${className}`}
     >
       <GoogleLogo />
       المتابعة باستخدام Google

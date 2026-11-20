@@ -147,11 +147,11 @@ function LyricsDetailView({ data, loggedIn }: { data: LyricsDetailData; loggedIn
         />
       </div>
 
-      <article className="hidden rounded-xl border border-neutral-200 bg-white px-3 py-5 shadow-sm sm:block sm:p-6">
+      <article className="hidden rounded-xl border border-neutral-200 bg-surface px-3 py-5 shadow-sm sm:block sm:p-6">
       <header className="mb-4 flex flex-col gap-4 border-b border-neutral-100 pb-4 sm:flex-row sm:items-start sm:justify-between">
         <div className="flex flex-col gap-1">
           <h1 className="text-2xl font-extrabold font-naskh">{data.title}</h1>
-          {data.artist && <p className="text-emerald-700">{data.artist}</p>}
+          {data.artist && <p className="text-accent">{data.artist}</p>}
           {data.album && <p className="text-sm text-neutral-500">{data.album}</p>}
           <p className="text-xs text-neutral-500">
             أضافها {data.createdByName ?? "مستخدم محذوف"} · {formatDate(new Date(data.createdAt))} · {data.viewCount} مشاهدة

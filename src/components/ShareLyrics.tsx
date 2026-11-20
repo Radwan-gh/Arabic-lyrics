@@ -57,7 +57,7 @@ export function ShareLyrics({ shareUrl, title, shareText }: ShareLyricsProps) {
         className={`${btnSecondary} h-11 w-11 !p-0`}
       >
         {shared ? (
-          <Check className="h-6 w-6 text-emerald-700" aria-hidden="true" />
+          <Check className="h-6 w-6 text-accent" aria-hidden="true" />
         ) : (
           <Share2 className="h-6 w-6" aria-hidden="true" />
         )}
@@ -68,10 +68,10 @@ export function ShareLyrics({ shareUrl, title, shareText }: ShareLyricsProps) {
         onClick={copyLyrics}
         aria-label="نسخ الأنشودة"
         title={copied ? "تم النسخ" : "نسخ الأنشودة (منسّقة لواتساب)"}
-        className={`${btnSecondary} h-11 w-11 !p-0 ${copied ? "border-emerald-300 text-emerald-700" : ""}`}
+        className={`${btnSecondary} h-11 w-11 !p-0 ${copied ? "border-emerald-300 text-accent" : ""}`}
       >
         {copied ? (
-          <Check className="h-6 w-6 text-emerald-700" aria-hidden="true" />
+          <Check className="h-6 w-6 text-accent" aria-hidden="true" />
         ) : (
           <Copy className="h-6 w-6" aria-hidden="true" />
         )}

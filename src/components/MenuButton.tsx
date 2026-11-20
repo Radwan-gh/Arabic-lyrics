@@ -19,7 +19,7 @@ export function MenuButton({ className }: { className?: string }) {
       aria-label="فتح القائمة"
       className={
         className ??
-        `inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-xl text-[#3c4a44] transition-colors hover:bg-black/5 ${focusRing}`
+        `inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-xl text-ink-2 transition-colors hover:bg-ink/5 ${focusRing}`
       }
     >
       <Menu className="h-[22px] w-[22px]" aria-hidden="true" />

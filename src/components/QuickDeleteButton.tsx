@@ -19,7 +19,7 @@ export function QuickDeleteButton({ title, onDelete }: QuickDeleteButtonProps) {
       onClick={(e) => onDelete(e.detail === 0)}
       aria-label={`حذف «${title}»`}
       title="حذف"
-      className={`inline-flex shrink-0 items-center justify-center leading-none transition-colors hover:bg-red-50 hover:text-red-600 active:text-red-600 h-9 w-9 rounded-lg text-neutral-400 ${focusRing}`}
+      className={`inline-flex shrink-0 items-center justify-center leading-none transition-colors hover:bg-red-50 hover:text-danger active:text-danger h-9 w-9 rounded-lg text-neutral-400 ${focusRing}`}
     >
       <Trash2 className="h-5 w-5" aria-hidden="true" />
     </button>

@@ -43,7 +43,7 @@ export function PlaylistCollapsibleBody({ items }: { items: PlaylistBodyItem[] }
   return (
     <>
       {/* Collapsible summary / index of nasheed titles */}
-      <section className="rounded-xl border border-neutral-200 bg-white shadow-sm">
+      <section className="rounded-xl border border-neutral-200 bg-surface shadow-sm">
         <button
           type="button"
           onClick={() => setSummaryOpen((v) => !v)}
@@ -66,7 +66,7 @@ export function PlaylistCollapsibleBody({ items }: { items: PlaylistBodyItem[] }
                 >
                   <span className="w-6 shrink-0 text-center text-neutral-400">{index + 1}</span>
                   <span className="truncate font-medium text-neutral-800">{item.title}</span>
-                  {item.artist && <span className="truncate text-xs text-emerald-700">— {item.artist}</span>}
+                  {item.artist && <span className="truncate text-xs text-accent">— {item.artist}</span>}
                 </button>
               </li>
             ))}
@@ -82,7 +82,7 @@ export function PlaylistCollapsibleBody({ items }: { items: PlaylistBodyItem[] }
             <li
               key={item.lyricsId}
               id={`nasheed-${item.lyricsId}`}
-              className="scroll-mt-20 rounded-xl border border-neutral-200 bg-white px-3 py-5 shadow-sm sm:p-5"
+              className="scroll-mt-20 rounded-xl border border-neutral-200 bg-surface px-3 py-5 shadow-sm sm:p-5"
             >
               <button
                 type="button"
@@ -93,8 +93,8 @@ export function PlaylistCollapsibleBody({ items }: { items: PlaylistBodyItem[] }
                 <span className="flex items-baseline gap-2">
                   <span className="text-sm text-neutral-400">{index + 1}</span>
                   <span>
-                    <span className="text-xl font-bold font-naskh hover:text-emerald-700">{item.title}</span>
-                    {item.artist && <span className="mr-2 text-sm text-emerald-700">{item.artist}</span>}
+                    <span className="text-xl font-bold font-naskh hover:text-accent">{item.title}</span>
+                    {item.artist && <span className="mr-2 text-sm text-accent">{item.artist}</span>}
                   </span>
                 </span>
                 <span aria-hidden className="shrink-0 text-neutral-400">

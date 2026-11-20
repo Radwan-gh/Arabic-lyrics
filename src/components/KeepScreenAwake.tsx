@@ -24,10 +24,10 @@ export function KeepScreenAwake({ className = "" }: { className?: string }) {
       aria-pressed={enabled}
       aria-label={enabled ? "إيقاف إبقاء الشاشة مضيئة" : "إبقاء الشاشة مضيئة أثناء القراءة"}
       title={enabled ? "الشاشة مضيئة — اضغط للإيقاف" : "إبقاء الشاشة مضيئة أثناء القراءة"}
-      className={`${btnSecondary} h-11 px-4 ${enabled ? "border-emerald-300 text-emerald-700 hover:bg-emerald-50" : ""} ${className}`}
+      className={`${btnSecondary} h-11 px-4 ${enabled ? "border-emerald-300 text-accent hover:bg-emerald-50" : ""} ${className}`}
     >
       {enabled ? (
-        <Sun className="h-5 w-5 text-emerald-700" aria-hidden="true" />
+        <Sun className="h-5 w-5 text-accent" aria-hidden="true" />
       ) : (
         <Moon className="h-5 w-5" aria-hidden="true" />
       )}

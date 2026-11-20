@@ -85,7 +85,7 @@ export function EditablePlaylistTitle({ playlistId, title, onSaved, titleClassNa
           onClick={start}
           aria-label="تعديل اسم الوصلة"
           title="تعديل اسم الوصلة"
-          className={`mt-0.5 inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-lg text-neutral-500 transition-colors hover:bg-neutral-100 hover:text-emerald-700 ${focusRing}`}
+          className={`mt-0.5 inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-lg text-neutral-500 transition-colors hover:bg-neutral-100 hover:text-accent ${focusRing}`}
         >
           <Pencil className="h-4 w-4" aria-hidden="true" />
         </button>
@@ -132,13 +132,13 @@ export function EditablePlaylistTitle({ playlistId, title, onSaved, titleClassNa
           onClick={cancel}
           disabled={saving}
           aria-label="إلغاء التعديل"
-          className={`inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-lg border border-neutral-300 bg-white text-neutral-700 transition-colors hover:bg-neutral-50 disabled:opacity-50 ${focusRing}`}
+          className={`inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-lg border border-neutral-300 bg-surface text-neutral-700 transition-colors hover:bg-neutral-50 disabled:opacity-50 ${focusRing}`}
         >
           <X className="h-4 w-4" aria-hidden="true" />
         </button>
       </div>
       {error && (
-        <p id={`playlist-title-error-${playlistId}`} role="alert" className="text-sm text-red-700">
+        <p id={`playlist-title-error-${playlistId}`} role="alert" className="text-sm text-danger-strong">
           {error}
         </p>
       )}

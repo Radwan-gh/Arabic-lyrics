@@ -11,11 +11,11 @@ import { focusRing } from "@/lib/ui";
 
 const LyricsTextEditor = dynamic(() => import("./LyricsTextEditor").then((m) => m.LyricsTextEditor), {
   ssr: false,
-  loading: () => <div className="min-h-[12rem] rounded-2xl border border-[#e6e6e1] bg-white" />,
+  loading: () => <div className="min-h-[12rem] rounded-2xl border border-line bg-surface" />,
 });
 
 const fieldInput =
-  "h-[50px] w-full min-w-0 box-border rounded-2xl border border-[#e6e6e1] bg-white px-3.5 text-base text-[#14211c] placeholder:text-[#9aa39d] focus:outline-none focus:ring-2 focus:ring-emerald-100";
+  "h-[50px] w-full min-w-0 box-border rounded-2xl border border-line bg-surface px-3.5 text-base text-ink placeholder:text-ink-6 focus:outline-none focus:ring-2 focus:ring-emerald-100";
 
 /** شاشة «أنشودة جديدة» الغامرة على الموبايل — نفس منطق LyricsForm (ممرَّر عبر
  * `form`)، بترويسة وتخطيط مطابقَين للتصميم. لا تُستخدم في وضع التعديل. */
@@ -30,10 +30,10 @@ export function NewLyricScreen({ form }: { form: ReturnType<typeof useLyricsForm
   }
 
   return (
-    <div className="flex min-h-dvh flex-col bg-[#f7f7f4] text-[#14211c]">
+    <div className="flex min-h-dvh flex-col bg-canvas text-ink">
       <header className="flex items-center justify-between gap-2 px-3 pb-2 pt-2">
         <div className="flex items-center gap-1">
-          <button type="button" onClick={() => router.back()} aria-label="إلغاء" className={`inline-flex h-11 w-11 items-center justify-center rounded-xl text-[#3c4a44] ${focusRing}`}>
+          <button type="button" onClick={() => router.back()} aria-label="إلغاء" className={`inline-flex h-11 w-11 items-center justify-center rounded-xl text-ink-2 ${focusRing}`}>
             <X className="h-[22px] w-[22px]" aria-hidden="true" />
           </button>
           <span className="text-lg font-extrabold">أنشودة جديدة</span>
@@ -50,7 +50,7 @@ export function NewLyricScreen({ form }: { form: ReturnType<typeof useLyricsForm
       </header>
 
       {error && (
-        <p role="alert" className="mx-5 mb-2 rounded-xl bg-red-50 px-3 py-2 text-sm text-red-700">
+        <p role="alert" className="mx-5 mb-2 rounded-xl bg-red-50 px-3 py-2 text-sm text-danger-strong">
           {error}
         </p>
       )}
@@ -65,7 +65,7 @@ export function NewLyricScreen({ form }: { form: ReturnType<typeof useLyricsForm
             className={fieldInput}
           />
           {duplicates.length > 0 && (
-            <div role="alert" className="flex items-start gap-2 rounded-xl bg-[#fef3c7] p-2.5 text-[13px] leading-[1.7] text-[#92400e]">
+            <div role="alert" className="flex items-start gap-2 rounded-xl bg-amber-100 p-2.5 text-[13px] leading-[1.7] text-warn-strong">
               <TriangleAlert className="mt-0.5 h-4 w-4 shrink-0" aria-hidden="true" />
               <span>
                 يوجد نشيد بعنوان مطابق:{" "}
@@ -78,26 +78,26 @@ export function NewLyricScreen({ form }: { form: ReturnType<typeof useLyricsForm
                   type="button"
                   onClick={() => void submit(true)}
                   disabled={loading}
-                  className={`mt-2 flex h-9 items-center justify-center rounded-lg border border-amber-400 bg-amber-100 px-3 text-[13px] font-bold text-amber-900 disabled:opacity-60 ${focusRing}`}
+                  className={`mt-2 flex h-9 items-center justify-center rounded-lg border border-amber-400 bg-amber-100 px-3 text-[13px] font-bold text-warn-deep disabled:opacity-60 ${focusRing}`}
                 >
                   {loading ? "…" : "نشر رغم وجود المشابه"}
                 </button>
               </span>
             </div>
           )}
-          {checking && <span className="text-xs font-normal text-[#9aa39d]">جارٍ التحقق من التكرار…</span>}
+          {checking && <span className="text-xs font-normal text-ink-6">جارٍ التحقق من التكرار…</span>}
           {/* تطابق جزئي (العنوان أو الكلمات) — نفس اقتراحات نموذج سطح المكتب، لكشف
               الأنشودة الموجودة حين لا يُكتب عنوانها حرفياً. */}
           {suggestions.length > 0 && (
-            <div className="rounded-xl border border-[#e6e6e1] bg-white p-2.5 text-[13px] font-normal">
-              <p className="mb-1 text-[#6b7670]">أناشيد موجودة قد تطابق ما تكتب:</p>
+            <div className="rounded-xl border border-line bg-surface p-2.5 text-[13px] font-normal">
+              <p className="mb-1 text-ink-4">أناشيد موجودة قد تطابق ما تكتب:</p>
               <ul className="flex flex-col">
                 {suggestions.slice(0, 5).map((s) => (
                   <li key={s.id}>
                     <Link href={`/lyrics/${s.id}`} target="_blank" className={`block rounded-lg px-1.5 py-1.5 ${focusRing}`}>
-                      <span className="font-semibold text-[#14211c]">{s.title}</span>
+                      <span className="font-semibold text-ink">{s.title}</span>
                       {(s.artist || s.album) && (
-                        <span className="text-[#6b7670]"> — {[s.artist, s.album].filter(Boolean).join(" · ")}</span>
+                        <span className="text-ink-4"> — {[s.artist, s.album].filter(Boolean).join(" · ")}</span>
                       )}
                     </Link>
                   </li>
@@ -135,7 +135,7 @@ export function NewLyricScreen({ form }: { form: ReturnType<typeof useLyricsForm
         </Field>
 
         <div className="flex flex-1 flex-col gap-1.5">
-          <span className="text-sm font-semibold text-[#3c4a44]">الكلمات</span>
+          <span className="text-sm font-semibold text-ink-2">الكلمات</span>
           <LyricsTextEditor
             content={form.initialContentHtml}
             onChange={(html) => setValues((v) => ({ ...v, content: html }))}
@@ -148,7 +148,7 @@ export function NewLyricScreen({ form }: { form: ReturnType<typeof useLyricsForm
 
 function Field({ label, children }: { label: string; children: React.ReactNode }) {
   return (
-    <label className="flex flex-col gap-1.5 text-sm font-semibold text-[#3c4a44]">
+    <label className="flex flex-col gap-1.5 text-sm font-semibold text-ink-2">
       {label}
       {children}
     </label>

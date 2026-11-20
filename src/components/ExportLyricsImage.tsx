@@ -246,12 +246,12 @@ export function ExportLyricsImage({
         disabled={busy}
         aria-label="تصدير الأنشودة كصورة"
         title={error ? error : busy ? "جارٍ التصدير…" : done ? "تم" : "تصدير الأنشودة كصورة PNG"}
-        className={`${btnSecondary} h-11 w-11 !p-0 ${error ? "border-red-300 text-red-700" : ""}`}
+        className={`${btnSecondary} h-11 w-11 !p-0 ${error ? "border-red-300 text-danger-strong" : ""}`}
       >
         {busy ? (
           <Loader2 className="h-6 w-6 animate-spin motion-reduce:animate-none" aria-hidden="true" />
         ) : done ? (
-          <Check className="h-6 w-6 text-emerald-700" aria-hidden="true" />
+          <Check className="h-6 w-6 text-accent" aria-hidden="true" />
         ) : (
           <ImageDown className="h-6 w-6" aria-hidden="true" />
         )}
@@ -265,7 +265,7 @@ export function ExportLyricsImage({
         <div
           ref={cardRef}
           dir="rtl"
-          className="font-sans"
+          className="theme-light font-sans"
           style={{ width: CARD_WIDTH, backgroundColor: "#ffffff", color: "#171717" }}
         >
           {/* شريط علوي بلون العلامة (على كلّ الشرائح) */}
