@@ -11,7 +11,7 @@ description: >-
 # Frontend design system
 
 This project is an Arabic (RTL) lyrics manager: **Next.js 15 App Router, React 19,
-Tailwind CSS 3**. The root layout sets `lang="ar" dir="rtl"` and the Tajawal font
+Tailwind CSS 3**. The root layout sets `lang="ar" dir="rtl"` and the Scheherazade New font
 (`font-sans`). Every screen is right-to-left first. Build UI that looks like it was
 designed by one person, not assembled from parts.
 

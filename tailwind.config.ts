@@ -5,9 +5,9 @@ const config: Config = {
   theme: {
     extend: {
       fontFamily: {
-        sans: ["var(--font-tajawal)", "Tahoma", "Arial", "sans-serif"],
+        sans: ["var(--font-scheherazade)", "Amiri", "Tahoma", "serif"],
         naskh: ["var(--font-scheherazade)", "Amiri", "serif"],
-        ruqaa: ["var(--font-ruqaa)", "var(--font-tajawal)", "serif"],
+        ruqaa: ["var(--font-ruqaa)", "var(--font-scheherazade)", "serif"],
       },
     },
   },

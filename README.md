@@ -7,7 +7,7 @@ user accounts and role-based permissions.
 
 - **Next.js 15** (App Router) + **React 19** + **TypeScript**
 - **Tailwind CSS** for styling — mobile-first, RTL-aware (logical `start`/`end`
-  utilities), `dir="rtl" lang="ar"` throughout, Tajawal Arabic font
+  utilities), `dir="rtl" lang="ar"` throughout, Scheherazade New Arabic font
 - **PostgreSQL** via **Prisma ORM**
 - Custom cookie-based auth (JWT signed with `jose`, passwords hashed with
   `bcryptjs`) — no external auth provider required
