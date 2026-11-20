@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import { usePathname, useSearchParams } from "next/navigation";
 import { Pencil } from "lucide-react";
@@ -12,6 +12,7 @@ import { ExportLyricsImage } from "@/components/ExportLyricsImage";
 import { LyricsFontControls } from "@/components/LyricsFontControls";
 import { LyricsProse } from "@/components/LyricsProse";
 import { KeepScreenAwake } from "@/components/KeepScreenAwake";
+import { QuickTagEditor } from "@/components/QuickTagEditor";
 import { ReaderScreen } from "@/components/ReaderScreen";
 import { OfflinePageFallback } from "@/components/OfflinePageFallback";
 import { LyricsDetailSkeleton } from "@/components/LyricsDetailSkeleton";
@@ -116,6 +117,8 @@ function selectPlaylistNav(dataset: OfflineDataset, playlistId: string, lyricsId
 }
 
 function LyricsDetailView({ data, loggedIn }: { data: LyricsDetailData; loggedIn: boolean }) {
+  // الوسوم قابلة للتعديل السريع من الصفحة نفسها، فتُحفظ هنا لتبقى نسختا الموبايل وسطح المكتب متطابقتين.
+  const [tags, setTags] = useState(data.tags);
   // دون اتصال يأتي الهيكل بلا عنوان من الخادم، فيُضبط هنا ليطابق الصفحة المتصلة.
   useEffect(() => {
     document.title = `${data.title} · نفحات`;
@@ -131,7 +134,8 @@ function LyricsDetailView({ data, loggedIn }: { data: LyricsDetailData; loggedIn
           artist={data.artist}
           album={data.album}
           viewCount={data.viewCount}
-          tags={data.tags}
+          tags={tags}
+          onTagsChange={setTags}
           contentHtml={data.contentHtml}
           favorited={data.favorited}
           loggedIn={loggedIn}
@@ -152,6 +156,14 @@ function LyricsDetailView({ data, loggedIn }: { data: LyricsDetailData; loggedIn
           <p className="text-xs text-neutral-500">
             أضافها {data.createdByName ?? "مستخدم محذوف"} · {formatDate(new Date(data.createdAt))} · {data.viewCount} مشاهدة
           </p>
+          <QuickTagEditor
+            lyricsId={data.id}
+            tags={tags}
+            canModify={data.canModify}
+            onTagsChange={setTags}
+            variant="detail"
+            className="mt-2"
+          />
         </div>
         <div className="flex flex-shrink-0 flex-wrap items-center gap-2">
           {loggedIn && <FavoriteButton lyricsId={data.id} initialFavorited={data.favorited} />}
@@ -161,7 +173,7 @@ function LyricsDetailView({ data, loggedIn }: { data: LyricsDetailData; loggedIn
             artist={data.artist}
             album={data.album}
             contentHtml={data.contentHtml}
-            tags={data.tags}
+            tags={tags}
             siteLabel={data.siteLabel}
           />
           {loggedIn && <AddToPlaylist lyricsId={data.id} />}
@@ -188,20 +200,6 @@ function LyricsDetailView({ data, loggedIn }: { data: LyricsDetailData; loggedIn
       </div>
 
       <LyricsProse html={data.contentHtml} />
-
-      {data.tags.length > 0 && (
-        <div className="mt-4 flex flex-wrap gap-2">
-          {data.tags.map((tag) => (
-            <Link
-              key={tag}
-              href={`/?tags=${encodeURIComponent(tag)}`}
-              className={`rounded-full bg-neutral-100 px-3 py-1 text-xs text-neutral-600 hover:bg-neutral-200 ${focusRing}`}
-            >
-              #{tag}
-            </Link>
-          ))}
-        </div>
-      )}
       </article>
     </>
   );

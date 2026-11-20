@@ -6,6 +6,7 @@ import { ChevronUp, ChevronDown } from "lucide-react";
 import { lyricsProseFormatCls } from "@/lib/lyrics-prose";
 import { formatDate } from "@/lib/format";
 import { focusRing } from "@/lib/ui";
+import { QuickTagEditor } from "./QuickTagEditor";
 
 interface LyricsCardProps {
   id: string;
@@ -17,13 +18,27 @@ interface LyricsCardProps {
   contentHtml: string;
   /** Optional action rendered at the card's inline-end (e.g. a favorite toggle). */
   action?: ReactNode;
+  /** يملك المستخدم تعديل النشيد: تظهر شريحة «+ وسم» للتعديل السريع. */
+  canModify?: boolean;
+  onTagsChange?: (tags: string[]) => void;
 }
 
-export function LyricsCard({ id, title, artist, album, tags, createdAt, contentHtml, action }: LyricsCardProps) {
+export function LyricsCard({
+  id,
+  title,
+  artist,
+  album,
+  tags,
+  createdAt,
+  contentHtml,
+  action,
+  canModify = false,
+  onTagsChange,
+}: LyricsCardProps) {
   const [expanded, setExpanded] = useState(false);
 
   return (
-    <li className="rounded-xl border border-neutral-200 bg-white p-4 shadow-sm transition hover:-translate-y-0.5 hover:shadow-md motion-reduce:transition-none motion-reduce:hover:translate-y-0">
+    <li className="relative rounded-xl border border-neutral-200 bg-white p-4 shadow-sm transition hover:-translate-y-0.5 hover:shadow-md focus-within:z-10 motion-reduce:transition-none motion-reduce:hover:translate-y-0">
       <div className="flex items-start justify-between gap-2">
         <Link href={`/lyrics/${id}`} className={`block min-w-0 flex-1 rounded-sm ${focusRing}`}>
           <h2 className="truncate text-lg font-bold text-neutral-900 font-naskh">{title}</h2>
@@ -35,19 +50,14 @@ export function LyricsCard({ id, title, artist, album, tags, createdAt, contentH
 
       <p className="mt-1 text-xs text-neutral-500">{formatDate(createdAt)}</p>
 
-      {tags.length > 0 && (
-        <div className="mt-2 flex flex-wrap gap-1.5">
-          {tags.map((t) => (
-            <Link
-              key={t}
-              href={`/?tags=${encodeURIComponent(t)}`}
-              className={`rounded-full bg-neutral-100 px-2 py-0.5 text-[11px] text-neutral-600 hover:bg-neutral-200 ${focusRing}`}
-            >
-              #{t}
-            </Link>
-          ))}
-        </div>
-      )}
+      <QuickTagEditor
+        lyricsId={id}
+        tags={tags}
+        canModify={canModify}
+        onTagsChange={onTagsChange}
+        variant="card"
+        className="mt-2"
+      />
 
       <button
         type="button"
