@@ -18,15 +18,12 @@ import { LYRICS_SCALE_DEFAULT, readStoredLyricsScale, setLyricsScale } from "@/l
 import {
   LINE_SPACING_CLS,
   LINE_SPACING_DEFAULT,
-  READING_APPEARANCE_CLS,
-  READING_APPEARANCE_DEFAULT,
   readStoredLineSpacing,
-  readStoredReadingAppearance,
   persistLineSpacing,
-  persistReadingAppearance,
   type LineSpacing,
-  type ReadingAppearance,
 } from "@/lib/lyrics-reading-prefs";
+import { setSiteTheme } from "@/lib/theme";
+import { useSiteTheme } from "@/lib/use-site-theme";
 import { useKeepScreenAwake } from "@/lib/use-keep-screen-awake";
 import { focusRing } from "@/lib/ui";
 import type { PlaylistNavContext } from "@/lib/playlists";
@@ -79,7 +76,9 @@ export function ReaderScreen({
   const router = useRouter();
   const [scale, setScale] = useState(LYRICS_SCALE_DEFAULT);
   const [lineSpacing, setLineSpacing] = useState<LineSpacing>(LINE_SPACING_DEFAULT);
-  const [appearance, setAppearance] = useState<ReadingAppearance>(READING_APPEARANCE_DEFAULT);
+  // مظهر العرض هو مظهر الموقع نفسه: ألوان الشاشة تأتي من CSS (bg-canvas/text-ink) فتُرسم
+  // بالمظهر الصحيح من أول إطار؛ هذه القيمة لتمييز الخيار المحدَّد في لوح الضبط فقط.
+  const appearance = useSiteTheme();
   const [sheetOpen, setSheetOpen] = useState(false);
   const [performanceMode, setPerformanceMode] = useState(false);
   const [moreOpen, setMoreOpen] = useState(false);
@@ -90,7 +89,6 @@ export function ReaderScreen({
   useEffect(() => {
     setScale(readStoredLyricsScale());
     setLineSpacing(readStoredLineSpacing());
-    setAppearance(readStoredReadingAppearance());
   }, []);
 
   useEffect(() => {
@@ -127,10 +125,6 @@ export function ReaderScreen({
     setLineSpacing(next);
     persistLineSpacing(next);
   }
-  function updateAppearance(next: ReadingAppearance) {
-    setAppearance(next);
-    persistReadingAppearance(next);
-  }
 
   const editHref = `/lyrics/${lyricsId}/edit`;
 
@@ -161,7 +155,7 @@ export function ReaderScreen({
   }
 
   return (
-    <div className={`flex min-h-dvh flex-col ${READING_APPEARANCE_CLS[appearance]}`}>
+    <div className="flex min-h-dvh flex-col bg-canvas text-ink">
       <header className="flex items-center gap-1 px-3 py-2">
         <button type="button" onClick={() => router.back()} aria-label="رجوع" className={iconBtn}>
           <ChevronRight className="h-[22px] w-[22px]" aria-hidden="true" />
@@ -237,7 +231,6 @@ export function ReaderScreen({
           canModify={canModify}
           onTagsChange={onTagsChange}
           variant="reader"
-          dark={appearance === "dark"}
           className="mt-[14px]"
         />
         <div
@@ -293,7 +286,7 @@ export function ReaderScreen({
         lineSpacing={lineSpacing}
         onLineSpacingChange={updateLineSpacing}
         appearance={appearance}
-        onAppearanceChange={updateAppearance}
+        onAppearanceChange={setSiteTheme}
         keepAwakeSupported={keepAwake.supported}
         keepAwakeEnabled={keepAwake.enabled}
         onToggleKeepAwake={keepAwake.toggle}

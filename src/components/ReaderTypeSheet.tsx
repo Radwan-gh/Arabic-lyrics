@@ -2,14 +2,8 @@
 
 import { useEffect } from "react";
 import { LYRICS_SCALE_LEVELS } from "@/lib/lyrics-font";
-import {
-  LINE_SPACING_LEVELS,
-  LINE_SPACING_LABELS,
-  READING_APPEARANCES,
-  READING_APPEARANCE_LABELS,
-  type LineSpacing,
-  type ReadingAppearance,
-} from "@/lib/lyrics-reading-prefs";
+import { LINE_SPACING_LEVELS, LINE_SPACING_LABELS, type LineSpacing } from "@/lib/lyrics-reading-prefs";
+import { SITE_THEMES, SITE_THEME_LABELS, type SiteTheme } from "@/lib/theme";
 import { focusRing } from "@/lib/ui";
 
 interface ReaderTypeSheetProps {
@@ -19,8 +13,9 @@ interface ReaderTypeSheetProps {
   onScaleChange: (next: number) => void;
   lineSpacing: LineSpacing;
   onLineSpacingChange: (next: LineSpacing) => void;
-  appearance: ReadingAppearance;
-  onAppearanceChange: (next: ReadingAppearance) => void;
+  /** مظهر العرض للموقع كله (فاتح/داكن/ورقي) — يُغيَّر من هنا ومن القائمة الجانبية. */
+  appearance: SiteTheme;
+  onAppearanceChange: (next: SiteTheme) => void;
   keepAwakeSupported: boolean;
   keepAwakeEnabled: boolean;
   onToggleKeepAwake: () => void;
@@ -29,30 +24,17 @@ interface ReaderTypeSheetProps {
 const segmentBtn =
   "flex-1 inline-flex h-12 items-center justify-center rounded-2xl text-sm transition-colors " + focusRing;
 
-/** ألوان اللوح حسب المظهر: يتبع مظهر القراءة الداكن بدل البقاء أبيض. */
-const TONES = {
-  light: {
-    backdrop: "bg-scrim/30",
-    surface: "bg-surface",
-    handle: "bg-neutral-200",
-    title: "text-ink",
-    muted: "text-neutral-500",
-    track: "bg-neutral-200",
-    segment: "bg-fill-2 text-ink-2",
-    divider: "border-neutral-100",
-    ringOffset: "",
-  },
-  dark: {
-    backdrop: "bg-black/50",
-    surface: "bg-[#17221e]",
-    handle: "bg-white/20",
-    title: "text-[#f2f5f3]",
-    muted: "text-[#9aa8a1]",
-    track: "bg-white/15",
-    segment: "bg-white/[0.08] text-[#c9d3ce]",
-    divider: "border-white/10",
-    ringOffset: "focus-visible:ring-offset-[#17221e]",
-  },
+/** ألوان اللوح: رموز تتبدّل مع مظهر الموقع (راجع globals.css). */
+const t = {
+  backdrop: "bg-scrim/30",
+  surface: "bg-surface",
+  handle: "bg-neutral-200",
+  title: "text-ink",
+  muted: "text-neutral-500",
+  track: "bg-neutral-200",
+  segment: "bg-fill-2 text-ink-2",
+  divider: "border-neutral-100",
+  ringOffset: "",
 };
 
 /**
@@ -84,7 +66,6 @@ export function ReaderTypeSheet({
 
   if (!open) return null;
 
-  const t = TONES[appearance === "dark" ? "dark" : "light"];
   const levelIndex = Math.max(0, LYRICS_SCALE_LEVELS.indexOf(scale as (typeof LYRICS_SCALE_LEVELS)[number]));
 
   return (
@@ -160,8 +141,8 @@ export function ReaderTypeSheet({
 
         <div className="flex flex-col gap-2.5">
           <span className={`text-[15px] font-bold ${t.title}`}>المظهر</span>
-          <div className="flex gap-2" role="group" aria-label="مظهر القراءة">
-            {READING_APPEARANCES.map((value) => (
+          <div className="flex gap-2" role="group" aria-label="مظهر العرض">
+            {SITE_THEMES.map((value) => (
               <button
                 key={value}
                 type="button"
@@ -171,7 +152,7 @@ export function ReaderTypeSheet({
                   value === appearance ? "bg-emerald-700 font-semibold text-white" : t.segment
                 }`}
               >
-                {READING_APPEARANCE_LABELS[value]}
+                {SITE_THEME_LABELS[value]}
               </button>
             ))}
           </div>

@@ -17,7 +17,7 @@ import {
   X,
   User,
   ChevronDown,
-  Moon,
+  Palette,
   type LucideIcon,
 } from "lucide-react";
 import type { SessionPayload } from "@/lib/jwt";
@@ -27,7 +27,7 @@ import { PWAInstallButton, PWAInstallMenuItem } from "@/components/PWAInstallBut
 import { OfflineStatusLine } from "@/components/OfflineStatusLine";
 import { useMenu } from "@/lib/menu-context";
 import { clearOfflineSession } from "@/lib/offline-sync";
-import { setSiteTheme } from "@/lib/theme";
+import { SITE_THEMES, SITE_THEME_LABELS, setSiteTheme } from "@/lib/theme";
 import { useSiteTheme } from "@/lib/use-site-theme";
 
 /**
@@ -247,7 +247,7 @@ function NavLinks({
       {user && <NavItem href="/playlists" icon={ListMusic} label="وصلاتي" />}
       {user?.role === "ADMIN" && <NavItem href="/admin/users" icon={Users} label="إدارة المستخدمين" badge={pendingUsers} />}
       {user?.role === "ADMIN" && <NavItem href="/admin/tags" icon={Tags} label="إدارة الوسوم" />}
-      {mobile && <ThemeToggleItem className={linkCls} iconClassName={iconCls} />}
+      {mobile && <ThemePicker iconClassName={iconCls} />}
       {user ? (
         <>
           {mobile && <span className="my-1 border-t border-neutral-200" aria-hidden="true" />}
@@ -278,33 +278,35 @@ function NavLinks({
 }
 
 /**
- * مفتاح «الوضع الداكن» في القائمة: يقلب مظهر الموقع كله فورًا ويحفظ الاختيار.
- * لا يُغلق القائمة، ليرى المستخدم الأثر ويتراجع بلمسة.
+ * «مظهر العرض» في القائمة: فاتح / داكن / ورقي — يقلب مظهر الموقع كله فورًا (بما فيه
+ * شاشة القراءة) ويحفظ الاختيار. لا يُغلق القائمة، ليرى المستخدم الأثر ويبدّل بلمسة.
  */
-function ThemeToggleItem({ className, iconClassName }: { className: string; iconClassName: string }) {
-  const dark = useSiteTheme() === "dark";
+function ThemePicker({ iconClassName }: { iconClassName: string }) {
+  const theme = useSiteTheme();
   return (
-    <button
-      type="button"
-      role="switch"
-      aria-checked={dark}
-      onClick={() => setSiteTheme(dark ? "light" : "dark")}
-      className={`w-full text-start ${className}`}
-    >
-      <Moon className={iconClassName} aria-hidden="true" />
-      الوضع الداكن
-      <span
-        aria-hidden="true"
-        className={`ms-auto inline-flex h-6 w-11 shrink-0 items-center rounded-full p-0.5 transition-colors ${
-          dark ? "bg-emerald-700" : "bg-neutral-300"
-        }`}
-      >
-        <span
-          className={`h-5 w-5 rounded-full bg-white shadow-sm transition-transform motion-reduce:transition-none ${
-            dark ? "-translate-x-5" : "translate-x-0"
-          }`}
-        />
+    <div className="flex flex-col gap-2 px-3 py-2.5">
+      <span id="theme-picker-label" className="flex items-center gap-2.5">
+        <Palette className={iconClassName} aria-hidden="true" />
+        مظهر العرض
       </span>
-    </button>
+      <div role="group" aria-labelledby="theme-picker-label" className="flex gap-1 rounded-xl bg-fill-2 p-1">
+        {SITE_THEMES.map((value) => {
+          const active = value === theme;
+          return (
+            <button
+              key={value}
+              type="button"
+              aria-pressed={active}
+              onClick={() => setSiteTheme(value)}
+              className={`inline-flex h-10 flex-1 items-center justify-center rounded-lg text-sm transition-colors ${focusRing} ${
+                active ? "bg-emerald-700 font-semibold text-white" : "text-ink-2 hover:bg-ink/5"
+              }`}
+            >
+              {SITE_THEME_LABELS[value]}
+            </button>
+          );
+        })}
+      </div>
+    </div>
   );
 }

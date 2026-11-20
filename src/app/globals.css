@@ -4,9 +4,9 @@
 
 /* ─────────────────────────────────────────────────────────────────────────────
    ألوان الواجهة (قنوات RGB) — تقرؤها أدوات Tailwind (راجع tailwind.config.ts).
-   ‎html.dark‎ يقلبها للموقع كله؛ ‎.theme-light / .theme-dark‎ يثبّتان مظهرًا لجزء من
-   الصفحة بغضّ النظر عن مظهر الموقع (شاشة القراءة بمظهرها الخاص، وضع الأداء،
-   بطاقة تصدير الصورة).
+   ‎html.dark / html.paper‎ يبدّلانها للموقع كله (راجع src/lib/theme.ts)؛
+   ‎.theme-light / .theme-dark / .theme-paper‎ تثبّت مظهرًا لجزء من الصفحة بغضّ النظر
+   عن مظهر الموقع (وضع الأداء داكن دائمًا، وبطاقة تصدير الصورة فاتحة دائمًا).
    ───────────────────────────────────────────────────────────────────────────── */
 :root,
 .theme-light {
@@ -106,6 +106,40 @@ html.dark,
   --c-amber-200: 74 58 18;
 }
 
+/* الورقي: ألوان دافئة بلون الورق القديم لقراءة مريحة نهارًا. */
+html.paper,
+.theme-paper {
+  color-scheme: light;
+  --c-surface: 251 246 234;
+  --c-canvas: 243 236 218;
+  --c-raised: 247 240 222;
+  --c-scrim: 43 36 23;
+  --c-ink: 43 36 23;
+  --c-ink-2: 74 63 44;
+  --c-ink-3: 99 87 67;
+  --c-ink-4: 117 104 79;
+  --c-ink-5: 143 130 105;
+  --c-ink-6: 163 150 119;
+  --c-ink-7: 201 188 157;
+  --c-line: 228 217 191;
+  --c-line-2: 216 203 171;
+  --c-line-3: 205 191 156;
+  --c-fill: 236 226 201;
+  --c-fill-2: 235 225 199;
+  --c-fill-3: 229 217 188;
+  --c-neutral-50: 246 239 223;
+  --c-neutral-100: 239 230 209;
+  --c-neutral-200: 228 217 191;
+  --c-neutral-300: 211 197 164;
+  --c-neutral-400: 168 154 123;
+  --c-neutral-500: 125 112 90;
+  --c-neutral-600: 95 84 66;
+  --c-neutral-700: 74 64 51;
+  --c-neutral-800: 54 46 36;
+  --c-neutral-900: 43 36 23;
+  --c-neutral-950: 29 24 15;
+}
+
 html,
 body {
   height: 100%;
@@ -192,9 +226,9 @@ body {
   background: rgb(var(--c-surface));
 }
 
-/* الحقول بلا خلفية صريحة تأخذ في الوضع الداكن رماديّ المتصفّح (color-scheme: dark)
+/* الحقول بلا خلفية صريحة تأخذ لون المتصفّح (رماديّ في الداكن، أبيض في الورقي)
    فتبدو رقعةً غريبة — تُترك شفّافة لتأخذ لون حاويتها. ‎:where‎ يُبقي أولويتها صفرًا
    فتغلبها أي أداة Tailwind (‎bg-surface‎ مثلًا). */
-:where(html.dark, .theme-dark) :where(input:not([type="checkbox"], [type="radio"], [type="range"]), textarea, select) {
+:where(html.dark, html.paper, .theme-dark, .theme-paper) :where(input:not([type="checkbox"], [type="radio"], [type="range"]), textarea, select) {
   background-color: transparent;
 }
