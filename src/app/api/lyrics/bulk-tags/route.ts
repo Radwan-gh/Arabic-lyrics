@@ -3,8 +3,8 @@ import { z } from "zod";
 import { prisma } from "@/lib/prisma";
 import { getCurrentUser } from "@/lib/session";
 import { canModifyLyrics } from "@/lib/lyrics-permissions";
-import { getAllTags } from "@/lib/tags";
-import { MAX_TAGS, applyTagChanges, quickTagField } from "@/lib/tag-rules";
+import { getAllTags, recordRecentTags } from "@/lib/tags";
+import { MAX_TAGS, applyTagChanges, quickTagField, resolveTag } from "@/lib/tag-rules";
 
 /** حدّ أعلى لعدد الأناشيد في طلب واحد (كما في bulk-delete). */
 const MAX_IDS = 500;
@@ -62,7 +62,13 @@ export async function POST(req: Request) {
     writes.push(prisma.lyrics.update({ where: { id }, data: { tags }, select: { id: true } }));
   }
 
-  if (writes.length > 0) await prisma.$transaction(writes);
+  if (writes.length > 0) {
+    await prisma.$transaction(writes);
+    await recordRecentTags(
+      session.userId,
+      parsed.data.add.map((t) => resolveTag(t, known)),
+    );
+  }
 
   return NextResponse.json({ updated, failed });
 }

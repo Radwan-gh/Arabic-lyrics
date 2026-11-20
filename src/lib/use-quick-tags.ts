@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
-import { applyTagChanges, hasTag } from "@/lib/tag-rules";
+import { applyTagChanges, hasTag, tagKey } from "@/lib/tag-rules";
 import { rememberTag } from "@/lib/use-tag-suggestions";
 
 /**
@@ -46,7 +46,8 @@ export function useQuickTags(lyricsId: string, initialTags: string[], onSaved?: 
         });
         const data = await res.json().catch(() => ({}));
         if (!res.ok) throw new Error(data.error ?? "تعذّر حفظ الوسم");
-        if (!removing) rememberTag(tag);
+        // بالصيغة المحفوظة (قد يكون الخادم وحّدها مع وسم موجود).
+        if (!removing) rememberTag((data.tags as string[]).find((t) => tagKey(t) === tagKey(tag)) ?? tag);
         if (id === seq.current) {
           setTags(data.tags);
           onSavedRef.current?.(data.tags);

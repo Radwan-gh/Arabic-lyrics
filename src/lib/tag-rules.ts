@@ -64,3 +64,15 @@ export function applyTagChanges(
   }
   return { tags, overflow };
 }
+
+/** عدد الوسوم الأخيرة المحفوظة لكل مستخدم. */
+export const MAX_RECENT_TAGS = 12;
+
+/** يضع `used` في مقدّمة قائمة الأخيرة (الأحدث أولاً) دون تكرار، ويقصّها إلى MAX_RECENT_TAGS. */
+export function pushRecentTags(recent: readonly string[], used: readonly string[]): string[] {
+  const out: string[] = [];
+  for (const tag of [...used, ...recent]) {
+    if (!hasTag(out, tag)) out.push(tag);
+  }
+  return out.slice(0, MAX_RECENT_TAGS);
+}

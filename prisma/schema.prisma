@@ -25,6 +25,8 @@ model User {
   isActive     Boolean  @default(true)
   // الحسابات المُنشأة ذاتياً عبر Google تبقى بانتظار موافقة الأدمن قبل الدخول.
   isApproved   Boolean  @default(true)
+  // آخر الوسوم التي أضافها المستخدم (الأحدث أولاً) — تتصدّر اقتراحات إضافة الوسم.
+  recentTags   String[] @default([])
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
 
