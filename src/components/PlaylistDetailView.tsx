@@ -15,7 +15,8 @@ import {
   ChevronDown,
   X,
 } from "lucide-react";
-import { btnPrimary, btnSecondary, inputSm, focusRing } from "@/lib/ui";
+import { btnPrimary, btnSecondary, inputSm, inputCls, focusRing } from "@/lib/ui";
+import { EditablePlaylistTitle } from "@/components/EditablePlaylistTitle";
 
 interface Item {
   lyricsId: string;
@@ -41,6 +42,7 @@ interface PlaylistData {
 
 export function PlaylistDetailView({ playlist, shareUrl }: { playlist: PlaylistData; shareUrl: string }) {
   const [items, setItems] = useState(playlist.items);
+  const [title, setTitle] = useState(playlist.title);
   const [isPublic, setIsPublic] = useState(playlist.isPublic);
   const [copied, setCopied] = useState(false);
   const [busy, setBusy] = useState(false);
@@ -153,7 +155,15 @@ export function PlaylistDetailView({ playlist, shareUrl }: { playlist: PlaylistD
         <Link href="/playlists" className={`inline-flex items-center gap-1 rounded-sm text-sm text-neutral-600 hover:text-emerald-700 ${focusRing}`}>
           <ChevronRight className="h-4 w-4" aria-hidden="true" /> العودة إلى وصلاتي
         </Link>
-        <h1 className="mt-2 text-2xl font-extrabold">{playlist.title}</h1>
+        <div className="mt-2">
+          <EditablePlaylistTitle
+            playlistId={playlist.id}
+            title={title}
+            onSaved={setTitle}
+            titleClassName="text-2xl font-extrabold"
+            inputClassName={`${inputCls} text-lg font-bold`}
+          />
+        </div>
         {playlist.description && <p className="mt-1 text-neutral-500">{playlist.description}</p>}
         <Link href={`/playlists/${playlist.id}/view`} className={`mt-2 inline-flex ${btnSecondary} px-3 py-1.5`}>
           <Eye className="h-4 w-4" aria-hidden="true" />

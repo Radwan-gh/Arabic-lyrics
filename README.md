@@ -221,7 +221,7 @@ access token that it renews automatically (refresh tokens last 90 days).
 
 | Tool | Access |
 |------|--------|
-| `search_lyrics`, `get_lyrics`, `list_tags`, `list_my_playlists`, `create_playlist`, `add_to_playlist` | Any signed-in user (own playlists only) |
+| `search_lyrics`, `get_lyrics`, `list_tags`, `list_my_playlists`, `create_playlist`, `update_playlist`, `add_to_playlist` | Any signed-in user (own playlists only) |
 | `get_playlist` | Owner, or anyone for a public playlist |
 | `add_lyrics` | Editor / Admin |
 | `update_lyrics` | Admin, or the Editor who created the lyric |

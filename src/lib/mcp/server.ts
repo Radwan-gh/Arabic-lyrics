@@ -277,6 +277,38 @@ export function buildMcpServer(user: McpUser, origin: string): McpServer {
   );
 
   server.registerTool(
+    "update_playlist",
+    {
+      title: "Update playlist",
+      description:
+        "Rename one of your playlists (وصلات) and/or change its description. Only the fields you pass change; pass an empty description to clear it.",
+      inputSchema: {
+        id: z.string().min(1),
+        title: z.string().trim().min(1).max(120).optional(),
+        description: z.string().trim().max(500).optional(),
+      },
+      annotations: { idempotentHint: true },
+    },
+    async ({ id, title, description }) => {
+      if (title === undefined && description === undefined) return fail("لا يوجد ما يُعدَّل: مرّر title أو description");
+
+      const playlist = await prisma.playlist.findUnique({ where: { id }, select: { ownerId: true } });
+      if (!playlist || playlist.ownerId !== user.userId) return fail("الوصلة غير موجودة");
+
+      const data: { title?: string; description?: string | null } = {};
+      if (title !== undefined) data.title = title;
+      if (description !== undefined) data.description = description || null;
+
+      const updated = await prisma.playlist.update({
+        where: { id },
+        data,
+        select: { id: true, title: true, description: true },
+      });
+      return json({ ...updated, url: `${origin}/playlists/${id}` });
+    },
+  );
+
+  server.registerTool(
     "add_to_playlist",
     {
       title: "Add to playlist",

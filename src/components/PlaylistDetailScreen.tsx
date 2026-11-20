@@ -21,6 +21,7 @@ import { useReorderableList } from "@/lib/use-reorderable-list";
 import { useDragReorder } from "@/lib/use-drag-reorder";
 import { MenuButton } from "@/components/MenuButton";
 import { focusRing } from "@/lib/ui";
+import { EditablePlaylistTitle } from "@/components/EditablePlaylistTitle";
 
 interface Item {
   lyricsId: string;
@@ -48,8 +49,9 @@ const REMOVE_WIDTH = 72;
 
 /** شاشة إدارة الوصلة الغامرة على الموبايل: تنقّل بالسحب للترتيب (مقبض) وللإزالة
  * (سحب الصف لليسار). سطح المكتب يبقى على PlaylistDetailView الحالي دون تغيير. */
-export function PlaylistDetailScreen({ id, title, description, isPublic: initialPublic, items: initialItems, shareUrl }: PlaylistDetailScreenProps) {
+export function PlaylistDetailScreen({ id, title: initialTitle, description, isPublic: initialPublic, items: initialItems, shareUrl }: PlaylistDetailScreenProps) {
   const router = useRouter();
+  const [title, setTitle] = useState(initialTitle);
   const [isPublic, setIsPublic] = useState(initialPublic);
   const [copied, setCopied] = useState(false);
   const [busy, setBusy] = useState(false);
@@ -206,7 +208,13 @@ export function PlaylistDetailScreen({ id, title, description, isPublic: initial
       </header>
 
       <div className="px-5 pb-4 pt-1">
-        <h1 className="text-[26px] font-extrabold">{title}</h1>
+        <EditablePlaylistTitle
+          playlistId={id}
+          title={title}
+          onSaved={setTitle}
+          titleClassName="text-[26px] font-extrabold"
+          inputClassName="h-11 rounded-xl border border-[#e6e6e1] bg-white px-3 text-lg font-bold focus:border-emerald-600 focus:outline-none focus:ring-2 focus:ring-emerald-100"
+        />
         <div className="mt-1 text-sm text-[#6b7670]">
           {items.length.toLocaleString("ar-EG")} نشيداً · {isPublic ? "عامة · رابط مشاركة فعّال" : "خاصة"}
         </div>
