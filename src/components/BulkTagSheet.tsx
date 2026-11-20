@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { TagPickerPanel } from "./TagPickerPanel";
 import { rememberTag } from "@/lib/use-tag-suggestions";
+import { tagKey } from "@/lib/tag-rules";
 import { focusRing } from "@/lib/ui";
 
 interface BulkTagSheetProps {
@@ -40,7 +41,9 @@ export function BulkTagSheet({ ids, onClose, onUpdated }: BulkTagSheetProps) {
       const updated: { id: string; tags: string[] }[] = data.updated ?? [];
       const failed: { reason: string }[] = data.failed ?? [];
       onUpdated(updated);
-      rememberTag(tag, updated.length);
+      // بالصيغة المحفوظة (قد يكون الخادم وحّدها مع وسم موجود).
+      const saved = updated[0]?.tags.find((t) => tagKey(t) === tagKey(tag)) ?? tag;
+      rememberTag(saved, updated.length);
       setApplied((prev) => [...prev, tag]);
       const done = updated.length.toLocaleString("ar-EG");
       if (failed.length === 0) {

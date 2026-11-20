@@ -3,8 +3,8 @@ import { z } from "zod";
 import { prisma } from "@/lib/prisma";
 import { getCurrentUser } from "@/lib/session";
 import { canModifyLyrics } from "@/lib/lyrics-permissions";
-import { getAllTags } from "@/lib/tags";
-import { MAX_TAGS, applyTagChanges, quickTagField } from "@/lib/tag-rules";
+import { getAllTags, recordRecentTags } from "@/lib/tags";
+import { MAX_TAGS, applyTagChanges, hasTag, quickTagField, resolveTag } from "@/lib/tag-rules";
 
 const schema = z
   .object({
@@ -47,5 +47,12 @@ export async function PATCH(req: Request, { params }: { params: Promise<{ id: st
   }
 
   const updated = await prisma.lyrics.update({ where: { id }, data: { tags }, select: { tags: true } });
+
+  // الوسوم المضافة فعلاً (بصيغتها المحفوظة) تتصدّر اقتراحات هذا المستخدم لاحقًا.
+  if (session && parsed.data.add?.length) {
+    const used = parsed.data.add.map((t) => resolveTag(t, tags)).filter((t) => hasTag(tags, t));
+    await recordRecentTags(session.userId, used);
+  }
+
   return NextResponse.json({ tags: updated.tags });
 }

@@ -1,6 +1,6 @@
 "use client";
 
-import { useId, useMemo, useState, type KeyboardEvent } from "react";
+import { Fragment, useId, useMemo, useState, type KeyboardEvent } from "react";
 import { Check, Plus, Search } from "lucide-react";
 import { Spinner } from "./Spinner";
 import { useTagSuggestions } from "@/lib/use-tag-suggestions";
@@ -8,6 +8,15 @@ import { MAX_TAGS, MAX_TAG_LEN, cleanTag, hasTag, tagKey } from "@/lib/tag-rules
 
 /** عدد الاقتراحات الظاهرة في القائمة. */
 const VISIBLE = 8;
+/** عدد «آخر ما استخدمته» الظاهرة أعلى القائمة قبل الكتابة. */
+const RECENT_VISIBLE = 6;
+
+type Group = "recent" | "current" | "popular";
+const GROUP_LABELS: Record<Group, string> = {
+  recent: "استخدمتَها مؤخرًا",
+  current: "وسوم الأنشودة",
+  popular: "الأكثر استخدامًا",
+};
 
 /** ألوان المنتقي: الفاتح افتراضيًا، والداكن داخل شاشة القراءة بالمظهر الداكن. */
 const TONES = {
@@ -50,6 +59,8 @@ interface Option {
   count: number | null;
   checked: boolean;
   create: boolean;
+  /** مجموعة الخيار قبل الكتابة (تظهر عناوينها)؛ لا مجموعات أثناء البحث. */
+  group?: Group;
 }
 
 interface TagPickerPanelProps {
@@ -95,26 +106,39 @@ export function TagPickerPanel({
   const full = mode === "single" && selected.length >= MAX_TAGS;
 
   const options = useMemo<Option[]>(() => {
-    const counts = new Map((suggestions ?? []).map((s) => [tagKey(s.tag), s.count]));
+    const all = suggestions?.tags ?? [];
+    const recent = suggestions?.recent ?? [];
+    const counts = new Map(all.map((s) => [tagKey(s.tag), s.count]));
+    const recentRank = new Map(recent.map((t, i) => [tagKey(t), i]));
     const cleaned = cleanTag(query);
     const key = tagKey(cleaned);
-
-    const selectedOpts: Option[] = selected.map((tag) => ({
+    const toOption = (tag: string, group?: Group): Option => ({
       tag,
       count: counts.get(tagKey(tag)) ?? null,
-      checked: true,
+      checked: hasTag(selected, tag),
       create: false,
-    }));
-    const others: Option[] = (suggestions ?? [])
-      .filter((s) => !hasTag(selected, s.tag))
-      .map((s) => ({ tag: s.tag, count: s.count, checked: false, create: false }));
+      group,
+    });
 
-    if (!key) return [...selectedOpts, ...others.slice(0, VISIBLE)];
+    if (!key) {
+      // قبل الكتابة: آخر ما استخدمه المستخدم أولاً، ثم بقية وسوم الأنشودة، ثم الأكثر استخدامًا.
+      const recentOpts = recent.slice(0, RECENT_VISIBLE).map((t) => toOption(t, "recent"));
+      const shown = recentOpts.map((o) => o.tag);
+      const currentOpts = selected.filter((t) => !hasTag(shown, t)).map((t) => toOption(t, "current"));
+      shown.push(...currentOpts.map((o) => o.tag));
+      const popularOpts = all
+        .filter((s) => !hasTag(shown, s.tag))
+        .slice(0, Math.max(0, VISIBLE - recentOpts.filter((o) => !o.checked).length))
+        .map((s) => toOption(s.tag, "popular"));
+      return [...recentOpts, ...currentOpts, ...popularOpts];
+    }
 
-    const matches = [...selectedOpts, ...others].filter((o) => tagKey(o.tag).includes(key));
-    // التطابق التام أولاً ثم ما يبدأ بالنص ثم ما يحتويه.
+    const pool = [...selected, ...all.map((s) => s.tag).filter((t) => !hasTag(selected, t))];
+    const matches = pool.filter((t) => tagKey(t).includes(key)).map((t) => toOption(t));
+    // التطابق التام أولاً ثم ما يبدأ بالنص ثم ما يحتويه؛ وداخل كلٍّ الأحدث استخدامًا أولاً.
     const rank = (o: Option) => (tagKey(o.tag) === key ? 0 : tagKey(o.tag).startsWith(key) ? 1 : 2);
-    matches.sort((a, b) => rank(a) - rank(b));
+    const recency = (o: Option) => recentRank.get(tagKey(o.tag)) ?? RECENT_VISIBLE * 10;
+    matches.sort((a, b) => rank(a) - rank(b) || recency(a) - recency(b));
     const list = matches.slice(0, VISIBLE);
     const exact = matches.some((o) => tagKey(o.tag) === key);
     if (!exact && cleaned.length <= MAX_TAG_LEN) {
@@ -221,39 +245,49 @@ export function TagPickerPanel({
         <ul id={listId} role="listbox" aria-multiselectable="true" aria-label="الوسوم" className="flex flex-col">
           {options.map((o, i) => {
             const disabled = (o.checked && mode === "bulk") || (!o.checked && full);
+            const heading = o.group && o.group !== options[i - 1]?.group ? GROUP_LABELS[o.group] : null;
             return (
-              <li
-                key={(o.create ? "+" : "") + o.tag}
-                id={`${listId}-${i}`}
-                role="option"
-                aria-selected={o.checked}
-                aria-disabled={disabled || undefined}
-                onMouseDown={(e) => e.preventDefault()}
-                onClick={() => choose(o)}
-                onMouseEnter={() => setActive(i)}
-                className={`flex cursor-pointer items-center gap-2.5 rounded-md ${rowCls} ${
-                  i === activeIndex ? t.active : ""
-                } ${disabled ? "cursor-not-allowed opacity-50" : ""}`}
-              >
-                {o.create ? (
-                  <Plus className={`h-4 w-4 shrink-0 ${t.plus}`} aria-hidden="true" />
-                ) : (
-                  <span
-                    aria-hidden="true"
-                    className={`inline-flex h-[18px] w-[18px] shrink-0 items-center justify-center rounded ${
-                      o.checked ? "bg-emerald-700 text-white" : `border-[1.5px] ${t.box}`
-                    }`}
+              <Fragment key={(o.create ? "+" : "") + o.tag}>
+                {heading && (
+                  <li
+                    role="presentation"
+                    className={`px-1 pb-1 text-xs font-semibold ${i > 0 ? "pt-2.5" : ""} ${t.muted}`}
                   >
-                    {o.checked && <Check className="h-3 w-3" strokeWidth={3} />}
+                    {heading}
+                  </li>
+                )}
+                <li
+                  id={`${listId}-${i}`}
+                  role="option"
+                  aria-selected={o.checked}
+                  aria-disabled={disabled || undefined}
+                  onMouseDown={(e) => e.preventDefault()}
+                  onClick={() => choose(o)}
+                  onMouseEnter={() => setActive(i)}
+                  className={`flex cursor-pointer items-center gap-2.5 rounded-md ${rowCls} ${
+                    i === activeIndex ? t.active : ""
+                  } ${disabled ? "cursor-not-allowed opacity-50" : ""}`}
+                >
+                  {o.create ? (
+                    <Plus className={`h-4 w-4 shrink-0 ${t.plus}`} aria-hidden="true" />
+                  ) : (
+                    <span
+                      aria-hidden="true"
+                      className={`inline-flex h-[18px] w-[18px] shrink-0 items-center justify-center rounded ${
+                        o.checked ? "bg-emerald-700 text-white" : `border-[1.5px] ${t.box}`
+                      }`}
+                    >
+                      {o.checked && <Check className="h-3 w-3" strokeWidth={3} />}
+                    </span>
+                  )}
+                  <span className={`flex-1 truncate ${o.create ? `font-semibold ${t.create}` : t.text}`}>
+                    {o.create ? `إنشاء «${o.tag}»` : o.tag}
                   </span>
-                )}
-                <span className={`flex-1 truncate ${o.create ? `font-semibold ${t.create}` : t.text}`}>
-                  {o.create ? `إنشاء «${o.tag}»` : o.tag}
-                </span>
-                {o.count !== null && !o.create && (
-                  <span className={`shrink-0 text-xs ${t.count}`}>{o.count.toLocaleString("ar-EG")}</span>
-                )}
-              </li>
+                  {o.count !== null && !o.create && (
+                    <span className={`shrink-0 text-xs ${t.count}`}>{o.count.toLocaleString("ar-EG")}</span>
+                  )}
+                </li>
+              </Fragment>
             );
           })}
         </ul>
