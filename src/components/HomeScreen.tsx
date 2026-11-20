@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useCallback, useEffect, useRef, useState } from "react";
-import { ArrowRight, Check, Plus, Search, Trash2, X } from "lucide-react";
+import { ArrowRight, Check, Plus, Search, Tag, Trash2, X } from "lucide-react";
 import { BrandLogo } from "@/components/BrandLogo";
 import { FavoriteButton } from "@/components/FavoriteButton";
 import { MenuButton } from "@/components/MenuButton";
@@ -12,6 +12,7 @@ import { Spinner } from "@/components/Spinner";
 import { RecentSearches } from "@/components/RecentSearches";
 import { SwipeToDelete } from "@/components/SwipeToDelete";
 import { UndoDeleteToast } from "@/components/UndoDeleteToast";
+import { BulkTagSheet } from "@/components/BulkTagSheet";
 import { useUndoableDelete } from "@/lib/use-undoable-delete";
 import { useSwipeHint } from "@/lib/use-swipe-hint";
 import { useRecentSearches } from "@/lib/recent-searches";
@@ -67,8 +68,20 @@ export function HomeScreen({
   const [recentOpen, setRecentOpen] = useState(false);
   const showRecent = recentOpen && !search.trim() && recent.items.length > 0;
   const closeRecent = useCallback(() => setRecentOpen(false), []);
-  const { items, hasMore, total, loading, error, retry, sentinelRef, removedCount, removeItem, restoreItem, confirmRemoved } =
-    useLyricsFeed({
+  const {
+    items,
+    hasMore,
+    total,
+    loading,
+    error,
+    retry,
+    sentinelRef,
+    removedCount,
+    removeItem,
+    restoreItem,
+    confirmRemoved,
+    updateItem,
+  } = useLyricsFeed({
       filters,
       initialFilters,
       initialItems,
@@ -83,6 +96,8 @@ export function HomeScreen({
   // لمسة تحديد نشيد، ويُحذف المحدَّد دفعة واحدة مع إمكانية التراجع.
   const [selecting, setSelecting] = useState(false);
   const [selected, setSelected] = useState<Set<string>>(() => new Set());
+  // لوح وسم المحدَّد (إضافة وسم لعدة أناشيد دفعة واحدة).
+  const [bulkTagOpen, setBulkTagOpen] = useState(false);
   const selectableIds = items.filter((i) => i.canModify).map((i) => i.id);
   const allSelected = selectableIds.length > 0 && selectableIds.every((id) => selected.has(id));
   // التلميح لمن يملك حذف نشيد ظاهر فقط، ويتحرّك أول صفّ قابل للحذف لتوضيحه.
@@ -133,7 +148,8 @@ export function HomeScreen({
   useEffect(() => {
     if (!selecting) return;
     const onKey = (e: KeyboardEvent) => {
-      if (e.key === "Escape") exitSelection();
+      // Escape داخل لوح الوسوم يُغلق اللوح وحده (يُعلَّم defaultPrevented).
+      if (e.key === "Escape" && !e.defaultPrevented) exitSelection();
     };
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
@@ -228,6 +244,16 @@ export function HomeScreen({
               className={`inline-flex h-11 shrink-0 items-center rounded-xl px-3 text-sm font-semibold text-emerald-700 transition-colors hover:bg-emerald-50 disabled:opacity-50 ${focusRing}`}
             >
               {allSelected ? "إلغاء الكل" : "تحديد الكل"}
+            </button>
+            <button
+              type="button"
+              onClick={() => setBulkTagOpen(true)}
+              disabled={selected.size === 0}
+              aria-label={selected.size > 0 ? `وسم المحدَّد (${formatLyricsCount(selected.size)})` : "وسم المحدَّد"}
+              title="وسم المحدَّد"
+              className={`inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-xl border border-emerald-600 text-emerald-700 transition-colors hover:bg-emerald-50 disabled:cursor-not-allowed disabled:border-emerald-200 disabled:text-emerald-300 ${focusRing}`}
+            >
+              <Tag className="h-5 w-5" aria-hidden="true" />
             </button>
             <button
               type="button"
@@ -499,6 +525,14 @@ export function HomeScreen({
         onDismiss={quickDelete.dismiss}
         className="inset-x-5 bottom-[104px]"
       />
+
+      {bulkTagOpen && (
+        <BulkTagSheet
+          ids={items.filter((i) => selected.has(i.id)).map((i) => i.id)}
+          onClose={() => setBulkTagOpen(false)}
+          onUpdated={(updates) => updates.forEach((u) => updateItem(u.id, { tags: u.tags }))}
+        />
+      )}
     </div>
   );
 }

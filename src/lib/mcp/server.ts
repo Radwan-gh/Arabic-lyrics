@@ -2,6 +2,7 @@ import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import type { CallToolResult } from "@modelcontextprotocol/sdk/types.js";
 import type { Role } from "@prisma/client";
 import { z } from "zod";
+import { MAX_TAGS, MAX_TAG_LEN } from "@/lib/tag-rules";
 import { prisma } from "@/lib/prisma";
 import { buildLyricsWhere, buildLyricsOrderBy, LYRICS_PAGE_SIZE } from "@/lib/lyrics-search";
 import { buildLyricsWriteData, findDuplicateLyrics, getLyrics } from "@/lib/lyrics";
@@ -35,7 +36,7 @@ const textField = z
   .min(1)
   .max(20000)
   .describe("Lyrics as plain text, one verse line per line; blank line between stanzas. *bold* and _italic_ markers are supported.");
-const tagsField = z.array(z.string().trim().min(1).max(30)).max(10);
+const tagsField = z.array(z.string().trim().min(1).max(MAX_TAG_LEN)).max(MAX_TAGS);
 
 function json(data: unknown): CallToolResult {
   return { content: [{ type: "text", text: JSON.stringify(data, null, 2) }] };

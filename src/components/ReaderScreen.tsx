@@ -12,6 +12,7 @@ import { DeleteLyricsButton } from "@/components/DeleteLyricsButton";
 import { ReaderTypeSheet } from "@/components/ReaderTypeSheet";
 import { PerformanceMode } from "@/components/PerformanceMode";
 import { MenuButton } from "@/components/MenuButton";
+import { QuickTagEditor } from "@/components/QuickTagEditor";
 import { lyricsProseFormatCls } from "@/lib/lyrics-prose";
 import { LYRICS_SCALE_DEFAULT, readStoredLyricsScale, setLyricsScale } from "@/lib/lyrics-font";
 import {
@@ -37,6 +38,8 @@ interface ReaderScreenProps {
   album: string | null;
   viewCount: number;
   tags: string[];
+  /** بعد تعديل الوسوم السريع من شاشة القراءة. */
+  onTagsChange?: (tags: string[]) => void;
   contentHtml: string;
   favorited: boolean;
   loggedIn: boolean;
@@ -63,6 +66,7 @@ export function ReaderScreen({
   album,
   viewCount,
   tags,
+  onTagsChange,
   contentHtml,
   favorited,
   loggedIn,
@@ -227,19 +231,14 @@ export function ReaderScreen({
             .filter(Boolean)
             .join(" · ")}
         </div>
-        {tags.length > 0 && (
-          <div className="mt-[14px] flex flex-wrap gap-2">
-            {tags.map((tag) => (
-              <Link
-                key={tag}
-                href={`/?tags=${encodeURIComponent(tag)}`}
-                className={`inline-flex h-[30px] items-center rounded-full border border-[#e6e6e1] bg-white px-3 text-[13px] text-[#5c6660] ${focusRing}`}
-              >
-                #{tag}
-              </Link>
-            ))}
-          </div>
-        )}
+        <QuickTagEditor
+          lyricsId={lyricsId}
+          tags={tags}
+          canModify={canModify}
+          onTagsChange={onTagsChange}
+          variant="reader"
+          className="mt-[14px]"
+        />
         <div
           className={`mt-[22px] ${lyricsProseFormatCls} ${LINE_SPACING_CLS[lineSpacing]}`}
           style={{ fontSize: `calc(1.4375rem * ${scale})` }}

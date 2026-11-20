@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
+import { tagsInputField } from "@/lib/tag-rules";
 import { prisma } from "@/lib/prisma";
 import { getCurrentUser } from "@/lib/session";
 import { getFavoritedLyricsIds } from "@/lib/favorites";
@@ -80,7 +81,7 @@ const lyricsSchema = z.object({
   artist: z.string().trim().max(200).optional().or(z.literal("")),
   album: z.string().trim().max(200).optional().or(z.literal("")),
   content: z.string().min(1, "نص الأنشودة مطلوب").max(20000),
-  tags: z.array(z.string().trim().max(30)).max(10).optional(),
+  tags: tagsInputField.optional(),
   // عند true يتجاوز المستخدم تحذير التكرار ويُضيف عمداً.
   allowDuplicate: z.boolean().optional(),
 });

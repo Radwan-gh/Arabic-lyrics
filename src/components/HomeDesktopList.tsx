@@ -44,7 +44,20 @@ export function HomeDesktopList({
   const filters = useHomeFilters(initialFilters);
   const { query, tags: selectedTags, sort } = filters;
   const isFiltered = Boolean(query) || selectedTags.length > 0;
-  const { items, hasMore, total, loading, error, retry, sentinelRef, removedCount, removeItem, restoreItem, confirmRemoved } =
+  const {
+    items,
+    hasMore,
+    total,
+    loading,
+    error,
+    retry,
+    sentinelRef,
+    removedCount,
+    removeItem,
+    restoreItem,
+    confirmRemoved,
+    updateItem,
+  } =
     useLyricsFeed({
       filters,
       initialFilters,
@@ -93,6 +106,8 @@ export function HomeDesktopList({
               tags={item.tags}
               createdAt={new Date(item.createdAt)}
               contentHtml={item.contentHtml}
+              canModify={item.canModify}
+              onTagsChange={(tags) => updateItem(item.id, { tags })}
               action={
                 loggedIn ? (
                   <div className="flex shrink-0 items-center gap-1">

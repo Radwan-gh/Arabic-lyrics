@@ -1,12 +1,15 @@
 import { NextResponse } from "next/server";
-import { prisma } from "@/lib/prisma";
+import { getAllTags, getTagCounts } from "@/lib/tags";
 
-export async function GET() {
-  const rows = await prisma.$queryRaw<{ tag: string }[]>`
-    SELECT DISTINCT tag
-    FROM "Lyrics", unnest(tags) AS tag
-    ORDER BY tag ASC
-  `;
-
-  return NextResponse.json({ tags: rows.map((r) => r.tag) });
+/**
+ * قائمة الوسوم. افتراضيًا `{tags: string[]}` أبجديًا (منتقي الوسوم وشريط التصفية).
+ * مع `?withCounts=1` تُعاد `{tags: {tag, count}[]}` الأكثر استخدامًا أولاً
+ * (اقتراحات التعديل السريع للوسوم).
+ */
+export async function GET(req: Request) {
+  const withCounts = new URL(req.url).searchParams.get("withCounts") === "1";
+  if (withCounts) {
+    return NextResponse.json({ tags: await getTagCounts() });
+  }
+  return NextResponse.json({ tags: await getAllTags() });
 }
