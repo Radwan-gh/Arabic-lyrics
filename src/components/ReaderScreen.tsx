@@ -101,9 +101,11 @@ export function ReaderScreen({
     return () => document.removeEventListener("mousedown", onClick);
   }, [moreOpen]);
 
+  // التنقّل داخل الوصلة يستبدل المدخل الحالي في السجل بدل إضافة مدخل جديد، فيعود
+  // زر الرجوع (في الشريط أو في الجهاز) إلى الصفحة التي فُتحت منها الوصلة لا إلى النشيد السابق.
   function goTo(id: string | null) {
     if (!id || !playlist) return;
-    router.push(`/lyrics/${id}?playlist=${playlist.playlistId}`);
+    router.replace(`/lyrics/${id}?playlist=${playlist.playlistId}`);
   }
 
   function onTouchStart(e: React.TouchEvent) {

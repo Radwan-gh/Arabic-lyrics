@@ -290,6 +290,7 @@ export function PlaylistDetailScreen({ id, title: initialTitle, description, isP
             {items.map((item, index) => (
               <PlaylistRow
                 key={item.lyricsId}
+                playlistId={id}
                 item={item}
                 index={index}
                 dragging={draggingIndex === index}
@@ -310,6 +311,7 @@ export function PlaylistDetailScreen({ id, title: initialTitle, description, isP
 }
 
 function PlaylistRow({
+  playlistId,
   item,
   index,
   dragging,
@@ -320,6 +322,7 @@ function PlaylistRow({
   onDragKeyDown,
   onRemove,
 }: {
+  playlistId: string;
   item: Item;
   index: number;
   dragging: boolean;
@@ -373,7 +376,7 @@ function PlaylistRow({
         onTouchEnd={onTouchEnd}
       >
         <span className="w-6 shrink-0 text-center text-sm text-ink-6">{(index + 1).toLocaleString("ar-EG")}</span>
-        <Link href={`/lyrics/${item.lyricsId}`} className={`min-w-0 flex-1 rounded-sm ${focusRing}`}>
+        <Link href={`/lyrics/${item.lyricsId}?playlist=${playlistId}`} className={`min-w-0 flex-1 rounded-sm ${focusRing}`}>
           <div className="truncate text-[17px] font-bold">{item.title}</div>
           {item.artist && <div className="mt-0.5 truncate text-[13px] text-ink-4">{item.artist}</div>}
         </Link>

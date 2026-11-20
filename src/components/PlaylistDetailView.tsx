@@ -294,7 +294,7 @@ export function PlaylistDetailView({ playlist, shareUrl }: { playlist: PlaylistD
                 <div className="flex min-w-0 items-center gap-3">
                   <span className="w-6 shrink-0 text-center text-sm text-neutral-500">{index + 1}</span>
                   <div className="min-w-0">
-                    <Link href={`/lyrics/${item.lyricsId}`} className={`block truncate rounded-sm font-medium hover:text-accent ${focusRing}`}>
+                    <Link href={`/lyrics/${item.lyricsId}?playlist=${playlist.id}`} className={`block truncate rounded-sm font-medium hover:text-accent ${focusRing}`}>
                       {item.title}
                     </Link>
                     {item.artist && <p className="truncate text-xs text-accent">{item.artist}</p>}
