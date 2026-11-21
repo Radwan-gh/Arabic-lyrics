@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 import {
+  BookOpen,
   ChevronRight,
   Play,
   Plus,
@@ -221,16 +222,25 @@ export function PlaylistDetailScreen({ id, title: initialTitle, description, isP
         {description && <p className="mt-1 text-sm text-ink-4">{description}</p>}
         <div className="mt-3.5 flex gap-2">
           {items.length > 0 ? (
-            <Link
-              href={`/lyrics/${items[0].lyricsId}?playlist=${id}`}
-              className="inline-flex h-12 flex-1 items-center justify-center gap-2 rounded-2xl bg-emerald-700 text-base font-semibold text-white"
-            >
-              <Play className="h-[18px] w-[18px] fill-current" aria-hidden="true" />
-              ابدأ العرض
-            </Link>
+            <>
+              <Link
+                href={`/playlists/${id}/view`}
+                className={`inline-flex h-12 flex-1 items-center justify-center gap-2 rounded-2xl bg-emerald-700 text-base font-semibold text-white transition-colors hover:bg-emerald-800 ${focusRing}`}
+              >
+                <BookOpen className="h-[18px] w-[18px]" aria-hidden="true" />
+                اقرأ الكل
+              </Link>
+              <Link
+                href={`/lyrics/${items[0].lyricsId}?playlist=${id}`}
+                className={`inline-flex h-12 flex-1 items-center justify-center gap-2 rounded-2xl border border-line bg-surface text-base font-semibold text-ink-2 transition-colors hover:bg-fill-3 ${focusRing}`}
+              >
+                <Play className="h-[18px] w-[18px] fill-current" aria-hidden="true" />
+                ابدأ العرض
+              </Link>
+            </>
           ) : (
             <span className="inline-flex h-12 flex-1 items-center justify-center rounded-2xl bg-neutral-200 text-base font-semibold text-neutral-400">
-              ابدأ العرض
+              أضف أناشيد للبدء
             </span>
           )}
           <button

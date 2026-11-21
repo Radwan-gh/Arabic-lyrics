@@ -17,6 +17,7 @@ const IMMERSIVE_MOBILE_ROUTES = [
   /^\/favorites$/,
   /^\/playlists$/,
   /^\/playlists\/[^/]+$/,
+  /^\/playlists\/[^/]+\/view$/,
   /^\/discover$/,
   /^\/p\/[^/]+$/,
   /^\/login$/,

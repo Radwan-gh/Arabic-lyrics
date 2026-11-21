@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { ChevronLeft } from "lucide-react";
 import { focusRing } from "@/lib/ui";
-import { PlaylistCollapsibleBody, type PlaylistBodyItem } from "@/components/PlaylistCollapsibleBody";
+import { PlaylistStackedBody, type PlaylistBodyItem } from "@/components/PlaylistStackedBody";
 import { ReadingControlsBar } from "@/components/ReadingControlsBar";
 
 interface Props {
@@ -27,7 +27,7 @@ export function PublicPlaylistView({ title, description, ownerName, items }: Pro
 
       <ReadingControlsBar />
 
-      <PlaylistCollapsibleBody items={items} />
+      <PlaylistStackedBody items={items} />
 
       <footer className="pt-2 text-center text-sm text-neutral-500">
         <Link href="/" className={`inline-flex items-center gap-1 rounded-sm hover:text-accent ${focusRing}`}>
