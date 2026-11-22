@@ -9,22 +9,12 @@ import { AddToPlaylist } from "@/components/AddToPlaylist";
 import { ShareLyrics } from "@/components/ShareLyrics";
 import { ExportLyricsImage } from "@/components/ExportLyricsImage";
 import { DeleteLyricsButton } from "@/components/DeleteLyricsButton";
-import { ReaderTypeSheet } from "@/components/ReaderTypeSheet";
+import { ReadingSettingsButton, useReadingPrefs } from "@/components/ReadingSettingsButton";
 import { PerformanceMode } from "@/components/PerformanceMode";
 import { MenuButton } from "@/components/MenuButton";
 import { QuickTagEditor } from "@/components/QuickTagEditor";
 import { lyricsProseFormatCls } from "@/lib/lyrics-prose";
-import { LYRICS_SCALE_DEFAULT, readStoredLyricsScale, setLyricsScale } from "@/lib/lyrics-font";
-import {
-  LINE_SPACING_CLS,
-  LINE_SPACING_DEFAULT,
-  readStoredLineSpacing,
-  persistLineSpacing,
-  type LineSpacing,
-} from "@/lib/lyrics-reading-prefs";
-import { setSiteTheme } from "@/lib/theme";
-import { useSiteTheme } from "@/lib/use-site-theme";
-import { useKeepScreenAwake } from "@/lib/use-keep-screen-awake";
+import { LINE_SPACING_CLS } from "@/lib/lyrics-reading-prefs";
 import { focusRing } from "@/lib/ui";
 import type { PlaylistNavContext } from "@/lib/playlists";
 
@@ -74,22 +64,13 @@ export function ReaderScreen({
   playlist,
 }: ReaderScreenProps) {
   const router = useRouter();
-  const [scale, setScale] = useState(LYRICS_SCALE_DEFAULT);
-  const [lineSpacing, setLineSpacing] = useState<LineSpacing>(LINE_SPACING_DEFAULT);
-  // مظهر العرض هو مظهر الموقع نفسه: ألوان الشاشة تأتي من CSS (bg-canvas/text-ink) فتُرسم
-  // بالمظهر الصحيح من أول إطار؛ هذه القيمة لتمييز الخيار المحدَّد في لوح الضبط فقط.
-  const appearance = useSiteTheme();
-  const [sheetOpen, setSheetOpen] = useState(false);
+  // حجم الخط وتباعد الأسطر وزر ضبط القراءة: الكود نفسه في صفحة قراءة الوصلة.
+  const prefs = useReadingPrefs();
+  const { scale, lineSpacing } = prefs;
   const [performanceMode, setPerformanceMode] = useState(false);
   const [moreOpen, setMoreOpen] = useState(false);
   const moreRef = useRef<HTMLDivElement>(null);
-  const keepAwake = useKeepScreenAwake();
   const touchStartX = useRef<number | null>(null);
-
-  useEffect(() => {
-    setScale(readStoredLyricsScale());
-    setLineSpacing(readStoredLineSpacing());
-  }, []);
 
   useEffect(() => {
     function onClick(e: MouseEvent) {
@@ -116,14 +97,6 @@ export function ReaderScreen({
     // RTL: سحب لليمين (dx > 0) = التالي، لليسار = السابق.
     if (dx > 0) goTo(playlist.nextId);
     else goTo(playlist.prevId);
-  }
-
-  function updateScale(next: number) {
-    setScale(setLyricsScale(next));
-  }
-  function updateLineSpacing(next: LineSpacing) {
-    setLineSpacing(next);
-    persistLineSpacing(next);
   }
 
   const editHref = `/lyrics/${lyricsId}/edit`;
@@ -162,15 +135,7 @@ export function ReaderScreen({
         </button>
         <MenuButton className={iconBtn} />
         <div className="flex-1" />
-        <button type="button" onClick={() => setSheetOpen(true)} aria-label="ضبط القراءة" className={iconBtn}>
-          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-            <path d="m3 7 4-4 4 4" />
-            <path d="M7 3v18" />
-            <path d="M21 6h-7" />
-            <path d="M21 12h-9" />
-            <path d="M21 18h-5" />
-          </svg>
-        </button>
+        <ReadingSettingsButton prefs={prefs} className={iconBtn} />
         {loggedIn && (
           <FavoriteButton lyricsId={lyricsId} initialFavorited={favorited} variant="plain" key={lyricsId} />
         )}
@@ -278,19 +243,6 @@ export function ReaderScreen({
         </div>
       )}
 
-      <ReaderTypeSheet
-        open={sheetOpen}
-        onClose={() => setSheetOpen(false)}
-        scale={scale}
-        onScaleChange={updateScale}
-        lineSpacing={lineSpacing}
-        onLineSpacingChange={updateLineSpacing}
-        appearance={appearance}
-        onAppearanceChange={setSiteTheme}
-        keepAwakeSupported={keepAwake.supported}
-        keepAwakeEnabled={keepAwake.enabled}
-        onToggleKeepAwake={keepAwake.toggle}
-      />
     </div>
   );
 }

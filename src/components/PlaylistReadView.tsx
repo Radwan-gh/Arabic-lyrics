@@ -5,7 +5,7 @@ import { ChevronRight } from "lucide-react";
 import { focusRing } from "@/lib/ui";
 import { MenuButton } from "@/components/MenuButton";
 import { PlaylistStackedBody, type PlaylistBodyItem } from "@/components/PlaylistStackedBody";
-import { ReadingSettingsButton, readingSettingsIconBtn, useLineSpacing } from "@/components/ReadingSettingsButton";
+import { ReadingSettingsButton, readingSettingsIconBtn, useReadingPrefs } from "@/components/ReadingSettingsButton";
 
 interface Props {
   id: string;
@@ -18,7 +18,7 @@ interface Props {
 /** قراءة الوصلة كاملةً: الأناشيد تحت بعضها + فهرس عائم للعناوين. على الموبايل شاشة
  * غامرة بشريط علوي ثابت يحمل اسم الوصلة وزر ضبط القراءة؛ على سطح المكتب داخل التخطيط المعتاد. */
 export function PlaylistReadView({ id, title, description, isPublic, items }: Props) {
-  const [lineSpacing, setLineSpacing] = useLineSpacing();
+  const prefs = useReadingPrefs();
 
   return (
     <div className="flex min-h-dvh flex-col bg-canvas text-ink sm:min-h-0 sm:gap-6 sm:bg-transparent">
@@ -32,7 +32,7 @@ export function PlaylistReadView({ id, title, description, isPublic, items }: Pr
         </Link>
         <MenuButton />
         <span className="min-w-0 flex-1 truncate px-1 text-base font-bold">{title}</span>
-        <ReadingSettingsButton lineSpacing={lineSpacing} onLineSpacingChange={setLineSpacing} />
+        <ReadingSettingsButton prefs={prefs} />
       </header>
 
       <div className="px-5 pb-4 pt-4 sm:border-b sm:border-neutral-200 sm:px-0 sm:pt-0">
@@ -46,8 +46,7 @@ export function PlaylistReadView({ id, title, description, isPublic, items }: Pr
           <h1 className="text-[26px] font-extrabold sm:text-3xl">{title}</h1>
           <div className="hidden sm:block">
             <ReadingSettingsButton
-              lineSpacing={lineSpacing}
-              onLineSpacingChange={setLineSpacing}
+              prefs={prefs}
               className={`${readingSettingsIconBtn} border border-neutral-200 bg-surface`}
             />
           </div>
@@ -58,7 +57,7 @@ export function PlaylistReadView({ id, title, description, isPublic, items }: Pr
         </p>
       </div>
 
-      <PlaylistStackedBody items={items} lineSpacing={lineSpacing} />
+      <PlaylistStackedBody items={items} lineSpacing={prefs.lineSpacing} />
     </div>
   );
 }

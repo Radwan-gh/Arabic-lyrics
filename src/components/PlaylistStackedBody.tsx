@@ -4,14 +4,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { ChevronDown, ChevronLeft, ChevronRight, ChevronsDownUp, ChevronsUpDown, ListOrdered, X } from "lucide-react";
 import { LyricsProse } from "@/components/LyricsProse";
 import { focusRing } from "@/lib/ui";
-import { LINE_SPACING_DEFAULT, type LineSpacing } from "@/lib/lyrics-reading-prefs";
-
-// `!` لتغلب leading-loose المضمّنة في نمط نص الأنشودة.
-const LINE_SPACING_OVERRIDE: Record<LineSpacing, string> = {
-  compact: "!leading-relaxed",
-  comfortable: "!leading-loose",
-  wide: "!leading-[2.5]",
-};
+import { LINE_SPACING_DEFAULT, LINE_SPACING_IMPORTANT_CLS, type LineSpacing } from "@/lib/lyrics-reading-prefs";
 
 export interface PlaylistBodyItem {
   lyricsId: string;
@@ -171,7 +164,7 @@ export function PlaylistStackedBody({
                 {isOpen && (
                   <LyricsProse
                     html={item.contentHtml}
-                    className={`mx-2 mt-3 border-t border-neutral-100 pt-4 ${LINE_SPACING_OVERRIDE[lineSpacing]}`}
+                    className={`mx-2 mt-3 border-t border-neutral-100 pt-4 ${LINE_SPACING_IMPORTANT_CLS[lineSpacing]}`}
                   />
                 )}
               </div>

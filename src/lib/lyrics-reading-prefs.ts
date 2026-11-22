@@ -19,6 +19,12 @@ export const LINE_SPACING_CLS: Record<LineSpacing, string> = {
   comfortable: "leading-loose",
   wide: "leading-[2.5]",
 };
+/** النسخة نفسها بـ`!` لتغلب leading-loose المضمّنة في نمط نص الأنشودة (lyricsProseCls). */
+export const LINE_SPACING_IMPORTANT_CLS: Record<LineSpacing, string> = {
+  compact: "!leading-relaxed",
+  comfortable: "!leading-loose",
+  wide: "!leading-[2.5]",
+};
 
 const LINE_SPACING_KEY = "arabic-lyrics:line-spacing";
 
