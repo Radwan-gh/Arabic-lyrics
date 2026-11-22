@@ -4,7 +4,7 @@ import Link from "next/link";
 import { ChevronLeft } from "lucide-react";
 import { focusRing } from "@/lib/ui";
 import { PlaylistStackedBody, type PlaylistBodyItem } from "@/components/PlaylistStackedBody";
-import { ReadingControlsBar } from "@/components/ReadingControlsBar";
+import { ReadingSettingsButton, readingSettingsIconBtn, useLineSpacing } from "@/components/ReadingSettingsButton";
 
 interface Props {
   title: string;
@@ -14,20 +14,26 @@ interface Props {
 }
 
 export function PublicPlaylistView({ title, description, ownerName, items }: Props) {
+  const [lineSpacing, setLineSpacing] = useLineSpacing();
   return (
     <div className="flex flex-col gap-6">
       <header className="border-b border-neutral-200 pb-4">
         <p className="text-xs font-medium uppercase tracking-wide text-accent">وصلة أناشيد مشتركة</p>
-        <h1 className="mt-1 text-3xl font-extrabold">{title}</h1>
+        <div className="mt-1 flex items-start justify-between gap-3">
+          <h1 className="text-3xl font-extrabold">{title}</h1>
+          <ReadingSettingsButton
+            lineSpacing={lineSpacing}
+            onLineSpacingChange={setLineSpacing}
+            className={`${readingSettingsIconBtn} border border-neutral-200 bg-surface`}
+          />
+        </div>
         {description && <p className="mt-1 text-neutral-600">{description}</p>}
         <p className="mt-2 text-sm text-neutral-500">
           أعدّها {ownerName} · {items.length} نشيد
         </p>
       </header>
 
-      <ReadingControlsBar />
-
-      <PlaylistStackedBody items={items} />
+      <PlaylistStackedBody items={items} lineSpacing={lineSpacing} />
 
       <footer className="pt-2 text-center text-sm text-neutral-500">
         <Link href="/" className={`inline-flex items-center gap-1 rounded-sm hover:text-accent ${focusRing}`}>

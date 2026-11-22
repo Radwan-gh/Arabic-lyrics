@@ -76,7 +76,7 @@ export function ReaderTypeSheet({
         onClick={onClose}
         className={`absolute inset-0 ${t.backdrop}`}
       />
-      <div className={`absolute inset-x-0 bottom-0 flex max-h-[85vh] flex-col gap-5 overflow-y-auto rounded-t-3xl px-6 pb-8 pt-2.5 shadow-2xl ${t.surface}`}>
+      <div className={`absolute inset-x-0 bottom-0 mx-auto flex max-h-[85vh] max-w-lg flex-col gap-5 overflow-y-auto rounded-t-3xl px-6 pb-8 pt-2.5 shadow-2xl sm:bottom-6 sm:rounded-3xl ${t.surface}`}>
         <span aria-hidden="true" className={`mx-auto h-1.5 w-11 rounded-full ${t.handle}`} />
 
         <div className="flex flex-col gap-2.5">

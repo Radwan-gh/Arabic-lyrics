@@ -4,6 +4,14 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { ChevronLeft, ChevronRight, ListOrdered, X } from "lucide-react";
 import { LyricsProse } from "@/components/LyricsProse";
 import { focusRing } from "@/lib/ui";
+import { LINE_SPACING_DEFAULT, type LineSpacing } from "@/lib/lyrics-reading-prefs";
+
+// `!` لتغلب leading-loose المضمّنة في نمط نص الأنشودة.
+const LINE_SPACING_OVERRIDE: Record<LineSpacing, string> = {
+  compact: "!leading-relaxed",
+  comfortable: "!leading-loose",
+  wide: "!leading-[2.5]",
+};
 
 export interface PlaylistBodyItem {
   lyricsId: string;
@@ -20,7 +28,13 @@ const sectionId = (lyricsId: string) => `nasheed-${lyricsId}`;
  * مع «فهرس عائم» أسفل الشاشة يُظهر النشيد الحالي وموضعه، وزرّي السابق/التالي، ويفتح
  * لوحًا بعناوين كل أناشيد الوصلة للقفز إلى أيٍّ منها. مشترك بين عرض المالك والرابط العام.
  */
-export function PlaylistStackedBody({ items }: { items: PlaylistBodyItem[] }) {
+export function PlaylistStackedBody({
+  items,
+  lineSpacing = LINE_SPACING_DEFAULT,
+}: {
+  items: PlaylistBodyItem[];
+  lineSpacing?: LineSpacing;
+}) {
   const [current, setCurrent] = useState(0);
   const [indexOpen, setIndexOpen] = useState(false);
   // أثناء التمرير الناعم بعد القفز يبقى المؤشّر على الهدف بدل المرور بما بينهما.
@@ -102,7 +116,7 @@ export function PlaylistStackedBody({ items }: { items: PlaylistBodyItem[] }) {
                 {item.artist && <p className="mt-0.5 text-sm text-accent">{item.artist}</p>}
               </div>
             </header>
-            <LyricsProse html={item.contentHtml} className="mt-4" />
+            <LyricsProse html={item.contentHtml} className={`mt-4 ${LINE_SPACING_OVERRIDE[lineSpacing]}`} />
           </article>
         ))}
         <p className="py-2 text-center text-sm text-ink-5">انتهت الوصلة · {num(items.length)} نشيداً</p>
