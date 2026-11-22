@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
-import { ChevronLeft, ChevronRight, ListOrdered, X } from "lucide-react";
+import { ChevronDown, ChevronLeft, ChevronRight, ChevronsDownUp, ChevronsUpDown, ListOrdered, X } from "lucide-react";
 import { LyricsProse } from "@/components/LyricsProse";
 import { focusRing } from "@/lib/ui";
 import { LINE_SPACING_DEFAULT, type LineSpacing } from "@/lib/lyrics-reading-prefs";
@@ -25,6 +25,7 @@ const sectionId = (lyricsId: string) => `nasheed-${lyricsId}`;
 
 /**
  * جسم قراءة الوصلة: الأناشيد كاملةً تحت بعضها بالترتيب (قراءة متتالية بلا نقرات)،
+ * ولكل نشيد طيّ/فتح بالضغط على عنوانه (مع «طيّ الكل/فتح الكل»)،
  * مع «فهرس عائم» أسفل الشاشة يُظهر النشيد الحالي وموضعه، وزرّي السابق/التالي، ويفتح
  * لوحًا بعناوين كل أناشيد الوصلة للقفز إلى أيٍّ منها. مشترك بين عرض المالك والرابط العام.
  */
@@ -37,6 +38,18 @@ export function PlaylistStackedBody({
 }) {
   const [current, setCurrent] = useState(0);
   const [indexOpen, setIndexOpen] = useState(false);
+  // الأناشيد المطويّة (تبدأ كلها مفتوحة للقراءة).
+  const [collapsed, setCollapsed] = useState<ReadonlySet<string>>(() => new Set());
+  const allCollapsed = items.length > 0 && collapsed.size >= items.length;
+
+  function toggle(lyricsId: string) {
+    setCollapsed((prev) => {
+      const next = new Set(prev);
+      if (next.has(lyricsId)) next.delete(lyricsId);
+      else next.add(lyricsId);
+      return next;
+    });
+  }
   // أثناء التمرير الناعم بعد القفز يبقى المؤشّر على الهدف بدل المرور بما بينهما.
   const lockUntil = useRef(0);
 
@@ -77,6 +90,13 @@ export function PlaylistStackedBody({
       if (!item) return;
       setIndexOpen(false);
       setCurrent(index);
+      // القفز إلى نشيد مطويّ يفتحه.
+      setCollapsed((prev) => {
+        if (!prev.has(item.lyricsId)) return prev;
+        const next = new Set(prev);
+        next.delete(item.lyricsId);
+        return next;
+      });
       lockUntil.current = Date.now() + 800;
       document.getElementById(sectionId(item.lyricsId))?.scrollIntoView({ behavior: "smooth", block: "start" });
     },
@@ -94,31 +114,70 @@ export function PlaylistStackedBody({
   return (
     <>
       <div className="flex flex-col gap-3 pb-28 sm:gap-4">
-        {items.map((item, index) => (
-          <article
-            key={item.lyricsId}
-            id={sectionId(item.lyricsId)}
-            aria-labelledby={`${sectionId(item.lyricsId)}-title`}
-            className="scroll-mt-16 bg-surface px-5 py-6 sm:scroll-mt-20 sm:rounded-xl sm:border sm:border-neutral-200 sm:p-6 sm:shadow-sm"
-          >
-            <header className="flex items-start gap-3 border-b border-neutral-100 pb-3">
-              <span
-                className="mt-1 inline-flex h-7 min-w-7 shrink-0 items-center justify-center rounded-full bg-emerald-50 px-2 text-sm font-semibold text-accent-strong"
-                aria-hidden="true"
-              >
-                {num(index + 1)}
-              </span>
-              <div className="min-w-0">
-                <h2 id={`${sectionId(item.lyricsId)}-title`} className="font-naskh text-xl font-bold leading-snug sm:text-2xl">
-                  <span className="sr-only">النشيد {num(index + 1)}: </span>
-                  {item.title}
-                </h2>
-                {item.artist && <p className="mt-0.5 text-sm text-accent">{item.artist}</p>}
+        {items.length > 1 && (
+          <div className="-mb-1 flex justify-end px-3 sm:-mb-2 sm:px-0">
+            <button
+              type="button"
+              onClick={() => setCollapsed(allCollapsed ? new Set() : new Set(items.map((i) => i.lyricsId)))}
+              className={`inline-flex h-11 items-center gap-1.5 rounded-xl px-3 text-sm font-semibold text-accent transition-colors hover:bg-ink/5 ${focusRing}`}
+            >
+              {allCollapsed ? (
+                <ChevronsUpDown className="h-4 w-4" aria-hidden="true" />
+              ) : (
+                <ChevronsDownUp className="h-4 w-4" aria-hidden="true" />
+              )}
+              {allCollapsed ? "فتح الكل" : "طيّ الكل"}
+            </button>
+          </div>
+        )}
+        {items.map((item, index) => {
+          const id = sectionId(item.lyricsId);
+          const isOpen = !collapsed.has(item.lyricsId);
+          return (
+            <article
+              key={item.lyricsId}
+              id={id}
+              aria-labelledby={`${id}-title`}
+              className={`scroll-mt-16 bg-surface px-3 sm:scroll-mt-20 sm:rounded-xl sm:border sm:border-neutral-200 sm:px-4 sm:shadow-sm ${
+                isOpen ? "pb-6 pt-3 sm:pb-6 sm:pt-4" : "py-2 sm:py-2"
+              }`}
+            >
+              <h2 id={`${id}-title`} className="font-naskh">
+                <button
+                  type="button"
+                  onClick={() => toggle(item.lyricsId)}
+                  aria-expanded={isOpen}
+                  aria-controls={`${id}-body`}
+                  className={`flex min-h-12 w-full items-center gap-3 rounded-xl px-2 py-2 text-start transition-colors hover:bg-ink/5 ${focusRing}`}
+                >
+                  <span
+                    className="inline-flex h-7 min-w-7 shrink-0 items-center justify-center rounded-full bg-emerald-50 px-2 text-sm font-semibold text-accent-strong"
+                    aria-hidden="true"
+                  >
+                    {num(index + 1)}
+                  </span>
+                  <span className="min-w-0 flex-1">
+                    <span className="sr-only">النشيد {num(index + 1)}: </span>
+                    <span className="block text-xl font-bold leading-snug sm:text-2xl">{item.title}</span>
+                    {item.artist && <span className="mt-0.5 block font-sans text-sm font-normal text-accent">{item.artist}</span>}
+                  </span>
+                  <ChevronDown
+                    className={`h-5 w-5 shrink-0 text-ink-5 transition-transform ${isOpen ? "rotate-180" : ""}`}
+                    aria-hidden="true"
+                  />
+                </button>
+              </h2>
+              <div id={`${id}-body`} hidden={!isOpen}>
+                {isOpen && (
+                  <LyricsProse
+                    html={item.contentHtml}
+                    className={`mx-2 mt-3 border-t border-neutral-100 pt-4 ${LINE_SPACING_OVERRIDE[lineSpacing]}`}
+                  />
+                )}
               </div>
-            </header>
-            <LyricsProse html={item.contentHtml} className={`mt-4 ${LINE_SPACING_OVERRIDE[lineSpacing]}`} />
-          </article>
-        ))}
+            </article>
+          );
+        })}
         <p className="py-2 text-center text-sm text-ink-5">انتهت الوصلة · {num(items.length)} نشيداً</p>
       </div>
 
