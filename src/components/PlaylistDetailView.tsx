@@ -3,8 +3,8 @@
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import {
+  BookOpen,
   ChevronRight,
-  Eye,
   Globe,
   Lock,
   Copy,
@@ -165,9 +165,9 @@ export function PlaylistDetailView({ playlist, shareUrl }: { playlist: PlaylistD
           />
         </div>
         {playlist.description && <p className="mt-1 text-neutral-500">{playlist.description}</p>}
-        <Link href={`/playlists/${playlist.id}/view`} className={`mt-2 inline-flex ${btnSecondary} px-3 py-1.5`}>
-          <Eye className="h-4 w-4" aria-hidden="true" />
-          عرض الوصلة
+        <Link href={`/playlists/${playlist.id}/view`} className={`mt-3 ${btnPrimary}`}>
+          <BookOpen className="h-4 w-4" aria-hidden="true" />
+          اقرأ الوصلة كاملة
         </Link>
       </div>
 
