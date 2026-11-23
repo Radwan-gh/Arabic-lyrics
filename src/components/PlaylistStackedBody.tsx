@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState, type ReactNode } from "react";
 import { ChevronDown, ChevronLeft, ChevronRight, ChevronsDownUp, ChevronsUpDown, ListOrdered, X } from "lucide-react";
 import { LyricsProse } from "@/components/LyricsProse";
 import { focusRing } from "@/lib/ui";
@@ -25,9 +25,12 @@ const sectionId = (lyricsId: string) => `nasheed-${lyricsId}`;
 export function PlaylistStackedBody({
   items,
   lineSpacing = LINE_SPACING_DEFAULT,
+  footer,
 }: {
   items: PlaylistBodyItem[];
   lineSpacing?: LineSpacing;
+  /** محتوى بعد نهاية الوصلة (داخل الحشوة السفلية فلا يغطّيه الشريط العائم). */
+  footer?: ReactNode;
 }) {
   const [current, setCurrent] = useState(0);
   const [indexOpen, setIndexOpen] = useState(false);
@@ -98,9 +101,12 @@ export function PlaylistStackedBody({
 
   if (items.length === 0) {
     return (
-      <p className="mx-4 rounded-lg border border-dashed border-neutral-300 p-8 text-center text-neutral-500 sm:mx-0">
-        هذه الوصلة فارغة.
-      </p>
+      <div className="flex flex-col gap-4 pb-8">
+        <p className="mx-4 rounded-lg border border-dashed border-neutral-300 p-8 text-center text-neutral-500 sm:mx-0">
+          هذه الوصلة فارغة.
+        </p>
+        {footer}
+      </div>
     );
   }
 
@@ -172,6 +178,7 @@ export function PlaylistStackedBody({
           );
         })}
         <p className="py-2 text-center text-sm text-ink-5">انتهت الوصلة · {num(items.length)} نشيداً</p>
+        {footer}
       </div>
 
       <FloatingIndexBar
